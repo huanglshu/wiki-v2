@@ -34,8 +34,6 @@
 - [Special Thanks](#special-thanks)
 - [Contribute](#contributors)
 
-[Follow our Twitter feed](https://twitter.com/requarks) to learn about upcoming updates and new releases!
-
 <h2 align="center">Donate</h2>
 
 <div align="center">
