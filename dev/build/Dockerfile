@@ -1,9 +1,14 @@
 # ====================
 # --- Build Assets ---
 # ====================
-FROM node:24-alpine AS assets
+FROM harbor.gdalpha.com/alpha-tools/nodejs:24.14.0-alpine3.23 AS assets
 
-RUN apk add yarn g++ make cmake python3 --no-cache
+ENV NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node \
+    npm_config_build_from_source=true
+
+RUN sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.aliyun.com#g' /etc/apk/repositories && \
+    npm config set registry https://registry.npmmirror.com && \
+    apk add yarn g++ make cmake python3 py3-setuptools --no-cache
 
 WORKDIR /wiki
 
@@ -11,11 +16,14 @@ COPY ./client ./client
 COPY ./dev ./dev
 COPY ./patches ./patches
 COPY ./package.json ./package.json
+COPY ./yarn.lock ./yarn.lock
 COPY ./.babelrc ./.babelrc
 COPY ./.eslintignore ./.eslintignore
 COPY ./.eslintrc.yml ./.eslintrc.yml
 
-RUN yarn cache clean
+RUN sed -i 's#https://registry.npmjs.org#https://registry.npmmirror.com#g; s#https://registry.yarnpkg.com#https://registry.npmmirror.com#g' yarn.lock && \
+    yarn config set registry https://registry.npmmirror.com && \
+    yarn cache clean
 RUN yarn --frozen-lockfile --non-interactive
 RUN yarn build
 RUN rm -rf /wiki/node_modules
@@ -25,10 +33,12 @@ RUN yarn patch-package
 # ===============
 # --- Release ---
 # ===============
-FROM node:24-alpine
+FROM harbor.gdalpha.com/alpha-tools/nodejs:24.14.0-alpine3.23
 LABEL maintainer="requarks.io"
 
-RUN apk add bash curl git openssh gnupg sqlite --no-cache && \
+RUN sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.aliyun.com#g' /etc/apk/repositories && \
+    npm config set registry https://registry.npmmirror.com && \
+    apk add bash curl git openssh gnupg sqlite --no-cache && \
     mkdir -p /wiki && \
     mkdir -p /logs && \
     mkdir -p /wiki/data/content && \
