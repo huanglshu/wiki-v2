@@ -22,8 +22,7 @@ module.exports = async (pageId) => {
     let output = page.content
 
     if (_.isEmpty(page.content)) {
-      await WIKI.models.knex.destroy()
-      WIKI.logger.warn(`Failed to render page ID ${pageId} because content was empty: [ FAILED ]`)
+      throw new Error(`Page ID ${pageId} has no content to render`)
     }
 
     for (let core of pipeline) {
