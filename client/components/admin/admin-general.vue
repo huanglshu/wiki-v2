@@ -3,45 +3,45 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-categorize.svg', alt='General', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-categorize.svg', alt='常规', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:general.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:general.subtitle') }}
+            .headline.primary--text.animated.fadeInLeft 常规
+            .subtitle-1.grey--text.animated.fadeInLeft 管理站点设置
           v-spacer
           v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
-            span {{$t('common:actions.apply')}}
+            span 应用
         v-form.pt-3
           v-layout(row wrap)
             v-flex(lg6 xs12)
               v-form
                 v-card.animated.fadeInUp
                   v-toolbar(color='primary', dark, dense, flat)
-                    v-toolbar-title.subtitle-1 {{ $t('admin:general.siteInfo') }}
-                  .overline.grey--text.pa-4 {{$t('admin:general.general')}}
+                    v-toolbar-title.subtitle-1 站点信息
+                  .overline.grey--text.pa-4 基本信息
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      :label='$t(`admin:general.siteUrl`)'
+                      label='站点地址'
                       required
                       :counter='255'
                       v-model='config.host'
                       prepend-icon='mdi-label-variant-outline'
-                      :hint='$t(`admin:general.siteUrlHint`)'
+                      hint='用户访问 Wiki 的完整地址，包含协议和域名。'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      :label='$t(`admin:general.siteTitle`)'
+                      label='系统名称'
                       required
                       :counter='50'
                       v-model='config.title'
                       prepend-icon='mdi-earth'
-                      :hint='$t(`admin:general.siteTitleHint`)'
+                      hint='显示在浏览器标题栏及顶部导航中的站点名称。'
                       persistent-hint
                       )
                   v-divider
-                  .overline.grey--text.pa-4 {{$t('admin:general.logo')}}
+                  .overline.grey--text.pa-4 站点标志
                   .pt-2.pb-7.pl-10.pr-3
                     .d-flex.align-center
                       v-avatar(size='100', tile)
@@ -53,73 +53,73 @@
                       .ml-4(style='flex: 1 1 auto;')
                         v-text-field(
                           outlined
-                          :label='$t(`admin:general.logoUrl`)'
+                          label='标志图片地址'
                           v-model='config.logoUrl'
-                          :hint='$t(`admin:general.logoUrlHint`)'
+                          hint='站点标志图片的 URL 或资源路径。'
                           persistent-hint
                           append-icon='mdi-folder-image'
                           @click:append='browseLogo'
                           @keyup.enter='refreshLogo'
                         )
                   v-divider
-                  .overline.grey--text.pa-4 {{$t('admin:general.footerCopyright')}}
+                  .overline.grey--text.pa-4 页脚与版权
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      :label='$t(`admin:general.companyName`)'
+                      label='公司名称'
                       v-model='config.company'
                       :counter='255'
                       prepend-icon='mdi-domain'
                       persistent-hint
-                      :hint='$t(`admin:general.companyNameHint`)'
+                      hint='显示在页脚版权信息中的公司或组织名称。'
                       )
                     v-select.mt-3(
                       outlined
-                      :label='$t(`admin:general.contentLicense`)'
+                      label='内容许可协议'
                       :items='contentLicenses'
                       v-model='config.contentLicense'
                       prepend-icon='mdi-creative-commons'
                       :return-object='false'
-                      :hint='$t(`admin:general.contentLicenseHint`)'
+                      hint='选择站点内容使用的版权许可协议。'
                       persistent-hint
                     )
                     v-text-field.mt-3(
                       outlined
-                      :label='$t(`admin:general.footerOverride`)'
+                      label='自定义页脚'
                       v-model='config.footerOverride'
                       prepend-icon='mdi-page-layout-footer'
                       append-icon='mdi-language-markdown'
                       persistent-hint
-                      :hint='$t(`admin:general.footerOverrideHint`)'
+                      hint='使用 Markdown 自定义站点页脚内容。'
                       )
                   v-divider
-                  .overline.grey--text.pa-4 SEO
+                  .overline.grey--text.pa-4 搜索引擎优化
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      :label='$t(`admin:general.siteDescription`)'
+                      label='站点描述'
                       :counter='255'
                       v-model='config.description'
                       prepend-icon='mdi-compass'
-                      :hint='$t(`admin:general.siteDescriptionHint`)'
+                      hint='用于搜索引擎和社交分享的站点简介。'
                       persistent-hint
                       )
                     v-select.mt-3(
                       outlined
-                      :label='$t(`admin:general.metaRobots`)'
+                      label='搜索引擎索引规则'
                       multiple
                       :items='metaRobots'
                       v-model='config.robots'
                       prepend-icon='mdi-compass'
                       :return-object='false'
-                      :hint='$t(`admin:general.metaRobotsHint`)'
+                      hint='控制搜索引擎如何索引和跟踪站点。'
                       persistent-hint
                       )
 
             v-flex(lg6 xs12)
               v-card.animated.fadeInUp.wait-p4s
                 v-toolbar(color='indigo', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 Features
+                  v-toolbar-title.subtitle-1 功能
                 v-card-text
                   //- v-switch(
                   //-   inset
@@ -155,11 +155,11 @@
                   //- v-divider.mt-3
                   v-switch.mt-0(
                     inset
-                    label='Comments'
+                    label='评论'
                     color='indigo'
                     v-model='config.featurePageComments'
                     persistent-hint
-                    hint='Allow users to leave comments on pages.'
+                    hint='允许用户在页面上发表评论。'
                     )
 
                   //- v-divider.mt-3
@@ -175,84 +175,84 @@
 
               v-card.mt-5.animated.fadeInUp.wait-p6s
                 v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 URL Handling
+                  v-toolbar-title.subtitle-1 URL 处理
                 v-card-text
                   v-text-field(
                     outlined
-                    :label='$t(`admin:general.pageExtensions`)'
+                    label='页面扩展名'
                     v-model='config.pageExtensions'
                     prepend-icon='mdi-format-text-wrapping-overflow'
-                    :hint='$t(`admin:general.pageExtensionsHint`)'
+                    hint='可选的页面 URL 扩展名，使用逗号分隔。'
                     persistent-hint
                     )
 
               v-card.mt-5.animated.fadeInUp.wait-p7s
                 v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 {{$t('admin:general.editShortcuts')}}
+                  v-toolbar-title.subtitle-1 编辑快捷方式
                 v-card-text
                   v-switch.mt-0(
                     inset
-                    :label='$t(`admin:general.editFab`)'
+                    label='显示悬浮编辑按钮'
                     color='primary'
                     v-model='config.editFab'
                     persistent-hint
-                    :hint='$t(`admin:general.editFabHint`)'
+                    hint='在页面角落显示可快速进入编辑模式的按钮。'
                     )
                 v-divider
-                .overline.grey--text.pa-4 {{$t('admin:general.editMenuBar')}}
+                .overline.grey--text.pa-4 编辑菜单栏
                 .px-3.pb-3
                   v-switch.mt-0.ml-1(
                     inset
-                    :label='$t(`admin:general.displayEditMenuBar`)'
+                    label='显示编辑菜单栏'
                     color='primary'
                     v-model='config.editMenuBar'
                     persistent-hint
-                    :hint='$t(`admin:general.displayEditMenuBarHint`)'
+                    hint='在页面顶部显示编辑操作菜单。'
                     )
                   v-switch.mt-4.ml-1(
                     v-if='config.editMenuBar'
                     inset
-                    :label='$t(`admin:general.displayEditMenuBtn`)'
+                    label='显示编辑按钮'
                     color='primary'
                     v-model='config.editMenuBtn'
                     persistent-hint
-                    :hint='$t(`admin:general.displayEditMenuBtnHint`)'
+                    hint='在编辑菜单栏中显示“编辑”按钮。'
                     )
                   v-switch.mt-4.ml-1(
                     v-if='config.editMenuBar'
                     inset
-                    :label='$t(`admin:general.displayEditMenuExternalBtn`)'
+                    label='显示外部编辑按钮'
                     color='primary'
                     v-model='config.editMenuExternalBtn'
                     persistent-hint
-                    :hint='$t(`admin:general.displayEditMenuExternalBtnHint`)'
+                    hint='在编辑菜单栏中显示跳转到外部编辑器或服务的按钮。'
                     )
                 template(v-if='config.editMenuBar && config.editMenuExternalBtn')
                   v-divider
-                  .overline.grey--text.pa-4 External Edit Button
+                  .overline.grey--text.pa-4 外部编辑按钮
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      :label='$t(`admin:general.editMenuExternalName`)'
+                      label='外部编辑按钮名称'
                       v-model='config.editMenuExternalName'
                       prepend-icon='mdi-format-title'
-                      :hint='$t(`admin:general.editMenuExternalNameHint`)'
+                      hint='外部编辑按钮上显示的名称。'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      :label='$t(`admin:general.editMenuExternalIcon`)'
+                      label='外部编辑按钮图标'
                       v-model='config.editMenuExternalIcon'
                       prepend-icon='mdi-dice-5'
-                      :hint='$t(`admin:general.editMenuExternalIconHint`)'
+                      hint='外部编辑按钮使用的 Material Design 图标名称。'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      :label='$t(`admin:general.editMenuExternalUrl`)'
+                      label='外部编辑网址'
                       v-model='config.editMenuExternalUrl'
                       prepend-icon='mdi-near-me'
-                      :hint='$t(`admin:general.editMenuExternalUrlHint`)'
+                      hint='点击外部编辑按钮后打开的网址模板。'
                       persistent-hint
                       )
 
@@ -306,10 +306,10 @@ export default {
         editMenuExternalUrl: ''
       },
       metaRobots: [
-        { text: 'Index', value: 'index' },
-        { text: 'Follow', value: 'follow' },
-        { text: 'No Index', value: 'noindex' },
-        { text: 'No Follow', value: 'nofollow' }
+        { text: '允许索引', value: 'index' },
+        { text: '跟踪链接', value: 'follow' },
+        { text: '禁止索引', value: 'noindex' },
+        { text: '不跟踪链接', value: 'nofollow' }
       ]
     }
   },
@@ -322,15 +322,15 @@ export default {
     activeModal: sync('editor/activeModal'),
     contentLicenses () {
       return [
-        { value: '', text: this.$t('common:license.none') },
-        { value: 'alr', text: this.$t('common:license.alr') },
-        { value: 'cc0', text: this.$t('common:license.cc0') },
-        { value: 'ccby', text: this.$t('common:license.ccby') },
-        { value: 'ccbysa', text: this.$t('common:license.ccbysa') },
-        { value: 'ccbynd', text: this.$t('common:license.ccbynd') },
-        { value: 'ccbync', text: this.$t('common:license.ccbync') },
-        { value: 'ccbyncsa', text: this.$t('common:license.ccbyncsa') },
-        { value: 'ccbyncnd', text: this.$t('common:license.ccbyncnd') }
+        { value: '', text: '无' },
+        { value: 'alr', text: '保留所有权利' },
+        { value: 'cc0', text: 'CC0 1.0 公共领域贡献' },
+        { value: 'ccby', text: 'CC BY 4.0 署名' },
+        { value: 'ccbysa', text: 'CC BY-SA 4.0 署名-相同方式共享' },
+        { value: 'ccbynd', text: 'CC BY-ND 4.0 署名-禁止演绎' },
+        { value: 'ccbync', text: 'CC BY-NC 4.0 署名-非商业性使用' },
+        { value: 'ccbyncsa', text: 'CC BY-NC-SA 4.0 署名-非商业性使用-相同方式共享' },
+        { value: 'ccbyncnd', text: 'CC BY-NC-ND 4.0 署名-非商业性使用-禁止演绎' }
       ]
     }
   },
@@ -340,7 +340,7 @@ export default {
       if (titleRegex.test(title)) {
         this.$store.commit('showNotification', {
           style: 'error',
-          message: this.$t('admin:general.siteTitleInvalidChars'),
+          message: '系统名称不能包含字符 <、> 或 "。',
           icon: 'alert'
         })
         return
@@ -434,7 +434,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: this.$t('admin:general.saveSuccess'),
+          message: '站点配置保存成功。',
           icon: 'check'
         })
         this.siteTitle = this.config.title

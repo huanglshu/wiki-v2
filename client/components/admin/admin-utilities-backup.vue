@@ -1,13 +1,13 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 Export for Wiki.js 3.x
+      .subtitle-1 导出为 Wiki.js 3.x
     v-card-text
       .text-center
         img.animated.fadeInUp.wait-p1s(src='/_assets/svg/icon-big-parcel.svg')
-        .body-2 Export to a .wkbackup migration package
+        .body-2 导出为 .wkbackup 迁移包
       v-divider.my-4
-      .body-2 What do you want to include?
+      .body-2 选择要包含的内容：
       v-checkbox(
         v-for='choice of entityChoices'
         :class='choice.requires ? `ml-6` : ``'
@@ -25,17 +25,17 @@
             .text-caption {{choice.hint}}
 
       v-alert.mt-7(color='blue-grey darken-2', outlined, icon='mdi-information-outline', prominent)
-        .body-2 The package is written to the #[strong backup] folder of your Wiki.js data path, and offered as a download once it's ready.
-        .body-2 Import it from Wiki.js 3.x using #[strong Administration → Utilities → Import from Wiki.js 2.x]. The file is read by your browser, so it's never uploaded anywhere.
+        .body-2 迁移包会写入 Wiki.js 数据目录下的 #[strong backup] 文件夹，完成后可下载。
+        .body-2 可在 Wiki.js 3.x 中通过 #[strong 管理 → 其他 → 从 Wiki.js 2.x 导入] 导入。文件由浏览器读取，不会上传到任何位置。
 
       v-alert.mt-3(color='deep-orange', outlined, icon='mdi-alert', prominent)
-        .body-2 The package carries hashed user passwords, 2FA secrets and site configuration keys, and it is neither encrypted nor signed. Treat it as you would the database itself.
-        .body-2 Carrying those credentials is what lets everyone keep their password and their authenticator app after the migration.
+        .body-2 迁移包包含用户密码哈希、双重验证密钥和站点配置密钥，且未加密或签名。请像保管数据库一样妥善保管。
+        .body-2 保留这些凭据可让用户迁移后继续使用原密码和身份验证器。
 
     v-card-chin
       v-btn.px-3(depressed, color='deep-orange darken-2', :disabled='entities.length < 1', @click='startBackup').ml-0
         v-icon(left, color='white') mdi-package-variant-closed
-        span.white--text Create Package
+        span.white--text 创建迁移包
     v-dialog(
       v-model='isLoading'
       persistent
@@ -49,8 +49,8 @@
             color='#FFF'
             style='margin: 0 auto;'
           )
-          .mt-5.body-1.white--text Creating package...
-          .caption Please wait, this may take a while
+          .mt-5.body-1.white--text 正在创建迁移包...
+          .caption 请稍候，此操作可能需要一段时间
           v-progress-linear.mt-5(
             color='white'
             :value='progress'
@@ -66,7 +66,7 @@
       v-card(color='green darken-2', dark)
         v-card-text.pa-10.text-center
           v-icon(size='60') mdi-check-circle-outline
-          .mt-5.body-1.white--text Package created
+          .mt-5.body-1.white--text 迁移包创建完成
           .mt-2.caption.white--text {{filename}}
           .caption(v-if='fileSize') {{prettyFileSize}}
           .mt-3.caption.text-truncate(v-if='filePath', :title='filePath') {{filePath}}
@@ -78,12 +78,12 @@
             @click='downloadBackup'
           )
             v-icon(left) mdi-download
-            span Download
+            span 下载
           v-btn.px-5(
             color='white'
             text
             @click='isSuccess = false'
-          ) Close
+          ) 关闭
           v-spacer
     v-dialog(
       v-model='isFailed'
@@ -93,13 +93,13 @@
       v-card(color='red darken-2', dark)
         v-toolbar(color='red darken-2', dense)
           v-icon mdi-alert
-          .body-2.pl-3 Package creation failed
+          .body-2.pl-3 迁移包创建失败
           v-spacer
           v-btn.px-5(
             color='white'
             text
             @click='isFailed = false'
-            ) Close
+            ) 关闭
         v-card-text.pa-5.red.darken-4.white--text
           span {{errorMessage}}
 </template>
@@ -132,51 +132,51 @@ export default {
       return [
         {
           key: 'assets',
-          label: 'Assets',
-          hint: 'Media files such as images, documents, etc.'
+          label: '资源文件',
+          hint: '图片、文档等媒体文件。'
         },
         {
           key: 'navigation',
-          label: 'Navigation',
-          hint: 'Sidebar links when using Static or Custom Navigation.'
+          label: '导航',
+          hint: '使用静态或自定义导航时的侧边栏链接。'
         },
         {
           key: 'pages',
-          label: 'Pages',
-          hint: 'Page content, tags and related metadata. Rendered HTML is not included, as Wiki.js 3.x renders pages itself.'
+          label: '页面',
+          hint: '页面内容、标签及相关元数据。不包含渲染后的 HTML，因为 Wiki.js 3.x 会自行渲染页面。'
         },
         // -> Neither of these makes sense without the pages they belong to.
         {
           key: 'history',
-          label: 'Pages History',
-          hint: 'All previous versions of pages and their related metadata.',
+          label: '页面历史',
+          hint: '页面的所有历史版本及相关元数据。',
           requires: 'pages'
         },
         {
           key: 'comments',
-          label: 'Comments',
-          hint: 'Comments made using the default comment module only.',
+          label: '评论',
+          hint: '仅包含使用内置评论模块发表的评论。',
           requires: 'pages'
         },
         {
           key: 'settings',
-          label: 'Settings',
-          hint: 'Site configuration and modules settings.'
+          label: '设置',
+          hint: '站点配置和模块设置。'
         },
         {
           key: 'groups',
-          label: 'User Groups',
-          hint: 'Group permissions and page rules.'
+          label: '用户组',
+          hint: '组权限及页面规则。'
         },
         {
           key: 'users',
-          label: 'Users',
-          hint: 'Users metadata, group memberships, password hashes and 2FA secrets.'
+          label: '用户',
+          hint: '用户元数据、用户组关系、密码哈希和双重验证密钥。'
         }
       ]
     },
     prettyFileSize () {
-      const units = ['bytes', 'KB', 'MB', 'GB', 'TB']
+      const units = ['字节', 'KB', 'MB', 'GB', 'TB']
       let size = this.fileSize
       let unit = 0
       while (size >= 1024 && unit < units.length - 1) {
@@ -222,11 +222,11 @@ export default {
         })
         const respStatusObj = _get(respStatus, 'data.system.backupStatus', {})
         if (!respStatusObj) {
-          throw new Error('An unexpected error occured.')
+          throw new Error('发生意外错误。')
         } else {
           switch (respStatusObj.status) {
             case 'error': {
-              throw new Error(respStatusObj.message || 'An unexpected error occured.')
+              throw new Error(respStatusObj.message || '发生意外错误。')
             }
             case 'running': {
               this.progress = respStatusObj.progress || 0
@@ -246,7 +246,7 @@ export default {
               break
             }
             default: {
-              throw new Error('Invalid backup status.')
+              throw new Error('备份状态无效。')
             }
           }
         }
@@ -289,7 +289,7 @@ export default {
 
           const respBackupObj = _get(respBackup, 'data.system.createBackup', {})
           if (!_get(respBackupObj, 'responseResult.succeeded', false)) {
-            this.errorMessage = _get(respBackupObj, 'responseResult.message', 'An unexpected error occurred')
+            this.errorMessage = _get(respBackupObj, 'responseResult.message', '发生意外错误。')
             this.isLoading = false
             this.isFailed = true
             return

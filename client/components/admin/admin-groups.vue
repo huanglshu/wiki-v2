@@ -3,10 +3,10 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-people.svg', alt='Groups', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-people.svg', alt='组', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft Groups
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s Manage groups and their permissions
+            .headline.blue--text.text--darken-2.animated.fadeInLeft 组
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 浏览和管理用户组
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/groups', target='_blank')
             v-icon mdi-help-circle
@@ -16,15 +16,15 @@
             template(v-slot:activator='{ on }')
               v-btn.animated.fadeInDown(color='primary', depressed, v-on='on', large)
                 v-icon(left) mdi-plus
-                span New Group
+                span 新建组
             v-card
-              .dialog-header.is-short New Group
+              .dialog-header.is-short 新建组
               v-card-text.pt-5
                 v-text-field.md2(
                   outlined
                   prepend-icon='mdi-account-group'
                   v-model='newGroupName'
-                  label='Group Name'
+                  label='组名称'
                   counter='255'
                   @keyup.enter='createGroup'
                   @keyup.esc='newGroupDialog = false'
@@ -32,8 +32,8 @@
                   )
               v-card-chin
                 v-spacer
-                v-btn(text, @click='newGroupDialog = false') Cancel
-                v-btn(color='primary', @click='createGroup') Create
+                v-btn(text, @click='newGroupDialog = false') 取消
+                v-btn(color='primary', @click='createGroup') 创建
         v-card.mt-3.animated.fadeInUp
           v-data-table(
             :items='groups'
@@ -57,9 +57,9 @@
                   v-tooltip(left, v-if='props.item.isSystem')
                     template(v-slot:activator='{ on }')
                       v-icon(v-on='on') mdi-lock-outline
-                    span System Group
+                    span 系统组
             template(slot='no-data')
-              v-alert.ma-3(icon='mdi-alert', :value='true', outline) No groups to display.
+              v-alert.ma-3(icon='mdi-alert', :value='true', outline) 暂无可显示的组。
           .text-xs-center.py-2(v-if='pageCount > 1')
             v-pagination(v-model='pagination', :length='pageCount')
 </template>
@@ -80,11 +80,11 @@ export default {
       pageCount: 0,
       groups: [],
       headers: [
-        { text: 'ID', value: 'id', width: 80, sortable: true },
-        { text: 'Name', value: 'name' },
-        { text: 'Users', value: 'userCount', width: 200 },
-        { text: 'Created', value: 'createdAt', width: 250 },
-        { text: 'Last Updated', value: 'updatedAt', width: 250 },
+        { text: '编号', value: 'id', width: 80, sortable: true },
+        { text: '名称', value: 'name' },
+        { text: '用户数', value: 'userCount', width: 200 },
+        { text: '创建时间', value: 'createdAt', width: 250 },
+        { text: '最后更新', value: 'updatedAt', width: 250 },
         { text: '', value: 'isSystem', width: 20, sortable: false }
       ],
       search: '',
@@ -104,7 +104,7 @@ export default {
     async refresh() {
       await this.$apollo.queries.groups.refetch()
       this.$store.commit('showNotification', {
-        message: 'Groups have been refreshed.',
+        message: '组列表已刷新。',
         style: 'success',
         icon: 'cached'
       })
@@ -113,7 +113,7 @@ export default {
       if (_.trim(this.newGroupName).length < 1) {
         this.$store.commit('showNotification', {
           style: 'red',
-          message: 'Enter a group name.',
+          message: '请输入组名称。',
           icon: 'warning'
         })
         return
@@ -143,7 +143,7 @@ export default {
         this.newGroupName = ''
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `Group has been created successfully.`,
+          message: `组创建成功。`,
           icon: 'check'
         })
       } catch (err) {

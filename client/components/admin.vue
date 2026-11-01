@@ -3,7 +3,7 @@
     nav-header(hide-search)
       template(slot='mid')
         v-spacer
-        .overline.grey--text {{$t('admin:adminArea')}}
+        span.admin-area-title.white--text {{$t('admin:adminArea')}}
         v-spacer
     v-navigation-drawer.pb-0.admin-sidebar(v-model='adminDrawerShown', app, fixed, clipped, :right='$vuetify.rtl', permanent, width='300', :class='$vuetify.theme.dark ? `grey darken-4` : ``')
       vue-scroll(:ops='scrollStyle')
@@ -25,7 +25,7 @@
               v-list-item-title {{ $t('admin:navigation.title') }}
             v-list-item(to='/pages', color='primary', v-if='hasPermission([`manage:system`, `write:pages`, `manage:pages`, `delete:pages`])')
               v-list-item-avatar(size='24', tile): v-icon mdi-file-document-outline
-              v-list-item-title {{ $t('admin:pages.title') }}
+              v-list-item-title 页面
               v-list-item-action(style='min-width:auto;')
                 v-chip(x-small, :color='$vuetify.theme.dark ? `grey darken-3-d4` : `grey lighten-5`')
                   .caption.grey--text {{ info.pagesTotal }}
@@ -43,13 +43,13 @@
             v-subheader.pl-4 {{ $t('admin:nav.users') }}
             v-list-item(to='/groups', color='primary', v-if='hasPermission([`manage:system`, `manage:groups`, `write:groups`])')
               v-list-item-avatar(size='24', tile): v-icon mdi-account-group
-              v-list-item-title {{ $t('admin:groups.title') }}
+              v-list-item-title 组
               v-list-item-action(style='min-width:auto;')
                 v-chip(x-small, :color='$vuetify.theme.dark ? `grey darken-3-d4` : `grey lighten-4`')
                   .caption.grey--text {{ info.groupsTotal }}
             v-list-item(to='/users', color='primary', v-if='hasPermission([`manage:system`, `manage:groups`, `write:groups`, `manage:users`, `write:users`])')
               v-list-item-avatar(size='24', tile): v-icon mdi-account-box
-              v-list-item-title {{ $t('admin:users.title') }}
+              v-list-item-title 用户
               v-list-item-action(style='min-width:auto;')
                 v-chip(x-small, :color='$vuetify.theme.dark ? `grey darken-3-d4` : `grey lighten-4`')
                   .caption.grey--text {{ info.usersTotal }}
@@ -247,6 +247,13 @@ export default {
   &.theme--light .application--wrap {
     background-color: lighten(mc('grey', '200'), 2%);
   }
+}
+
+.nav-header .admin-area-title {
+  color: #fff !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+  line-height: 1.2;
 }
 
 .admin-router {

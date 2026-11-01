@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img(src='/_assets/svg/icon-console.svg', alt='Developer Tools', style='width: 80px;')
+          img(src='/_assets/svg/icon-console.svg', alt='开发工具', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text Developer Tools
-            .subtitle-1.grey--text Flags
+            .headline.primary--text 开发工具
+            .subtitle-1.grey--text 标志
           v-spacer
           v-btn(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
@@ -14,23 +14,23 @@
 
         v-card.mt-3(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `white grey--text text--darken-3`')
           v-alert(color='red', :value='true', icon='mdi-alert', dark, prominent)
-            span Do NOT enable these flags unless you know what you're doing!
-            .caption Doing so may result in data loss or broken installation!
+            span 除非明确了解这些标志的作用，否则请勿启用！
+            .caption 启用后可能导致数据丢失或安装损坏！
           v-card-text
             v-switch.mt-3(
               color='primary'
-              hint='Log detailed debug info on LDAP/AD login attempts.'
+              hint='记录 LDAP/AD 登录尝试的详细调试信息。'
               persistent-hint
-              label='LDAP Debug'
+              label='LDAP 调试'
               v-model='flags.ldapdebug'
               inset
             )
             v-divider.mt-3
             v-switch.mt-3(
               color='red'
-              hint='Log all queries made to the database to console.'
+              hint='将所有数据库查询记录到控制台。'
               persistent-hint
-              label='SQL Query Logging'
+              label='SQL 查询日志'
               v-model='flags.sqllog'
               inset
             )
@@ -66,7 +66,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: 'Flags applied successfully.',
+          message: '标志已成功应用。',
           icon: 'check'
         })
       } catch (err) {

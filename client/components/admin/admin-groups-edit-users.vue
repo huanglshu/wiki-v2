@@ -6,7 +6,7 @@
         flat
         prepend-inner-icon='mdi-magnify'
         v-model='search'
-        label='Search Group Users...'
+        label='搜索组内用户...'
         hide-details
         dense
         style='max-width: 450px;'
@@ -14,7 +14,7 @@
       v-spacer
       v-btn(color='primary', depressed, @click='searchUserDialog = true', :disabled='group.id === 2')
         v-icon(left) mdi-clipboard-account
-        | Assign User
+        | 分配用户
     v-data-table(
       :items='group.users',
       :headers='headers',
@@ -34,14 +34,14 @@
             v-list-item(:to='`/users/` + item.id')
               v-list-item-action: v-icon(color='primary') mdi-account-outline
               v-list-item-content
-                v-list-item-title View User Profile
+                v-list-item-title 查看用户资料
             template(v-if='item.id !== 2')
               v-list-item(@click='unassignUser(item.id)')
                 v-list-item-action: v-icon(color='orange') mdi-account-remove-outline
                 v-list-item-content
-                  v-list-item-title Unassign
+                  v-list-item-title 取消分配
       template(slot='no-data')
-        v-alert.ma-3(icon='mdi-alert', outlined) No users to display.
+        v-alert.ma-3(icon='mdi-alert', outlined) 暂无可显示的用户。
     .text-center.py-2(v-if='group.users.length > 15')
       v-pagination(v-model='pagination', :length='pageCount')
 
@@ -67,10 +67,10 @@ export default {
   data() {
     return {
       headers: [
-        { text: 'ID', value: 'id', width: 70 },
-        { text: 'Name', value: 'name' },
-        { text: 'Email', value: 'email' },
-        { text: 'Actions', value: 'actions', sortable: false, width: 50 }
+        { text: '编号', value: 'id', width: 70 },
+        { text: '名称', value: 'name' },
+        { text: '邮箱', value: 'email' },
+        { text: '操作', value: 'actions', sortable: false, width: 50 }
       ],
       searchUserDialog: false,
       pagination: 1,
@@ -106,7 +106,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `User has been assigned to ${this.group.name}.`,
+          message: `用户已分配到 ${this.group.name}。`,
           icon: 'assignment_ind'
         })
         this.$emit('refresh')
@@ -132,7 +132,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `User has been unassigned from ${this.group.name}.`,
+          message: `用户已从 ${this.group.name} 移出。`,
           icon: 'assignment_ind'
         })
         this.$emit('refresh')

@@ -6,7 +6,7 @@
         color='orange darken-2'
         outlined
         icon='mdi-lock-outline'
-        ) This group has access to everything.
+        ) 此组拥有全部访问权限。
     template(v-else)
       v-card-title(:class='$vuetify.theme.dark ? `grey darken-3-d5` : ``')
         v-alert.radius-7.caption(
@@ -14,11 +14,11 @@
           color='grey'
           outlined
           icon='mdi-information'
-          ) You must enable global content permissions (under Permissions tab) for page rules to have any effect.
+          ) 必须先启用全局内容权限（在“权限”标签页中），页面规则才会生效。
         v-spacer
         v-btn.mx-2(depressed, color='primary', @click='addRule')
           v-icon(left) mdi-plus
-          | Add Rule
+          | 添加规则
         v-menu(
           right
           offset-y
@@ -31,26 +31,26 @@
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-application-import
-              v-list-item-title Load Preset
+              v-list-item-title 加载预设
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-application-export
-              v-list-item-title Save As Preset
+              v-list-item-title 保存为预设
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-cloud-upload
-              v-list-item-title Import Rules
+              v-list-item-title 导入规则
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-cloud-download
-              v-list-item-title Export Rules
+              v-list-item-title 导出规则
       v-card-text(:class='$vuetify.theme.dark ? `grey darken-4-l5` : `white`')
         .rules
           .caption(v-if='group.pageRules.length === 0')
-            em(:class='$vuetify.theme.dark ? `grey--text` : `blue-grey--text`') This group has no page rules yet.
+            em(:class='$vuetify.theme.dark ? `grey--text` : `blue-grey--text`') 此组尚未设置页面规则。
           .rule(v-for='rule of group.pageRules', :key='rule.id')
             v-btn.ma-0.radius-4.rule-deny-btn(
               solo
@@ -66,7 +66,7 @@
               solo
               :items='roles'
               v-model='rule.roles'
-              placeholder='Select Role(s)...'
+              placeholder='选择角色...'
               hide-details
               multiple
               chips
@@ -80,7 +80,7 @@
               )
               template(slot='selection', slot-scope='{ item, index }')
                 v-chip.white--text.ml-0(v-if='index <= 1', small, label, :color='rule.deny ? `red` : `green`').caption {{ item.value }}
-                v-chip.white--text.ml-0(v-if='index === 2', small, label, :color='rule.deny ? `red lighten-2` : `green lighten-2`').caption + {{ rule.roles.length - 2 }} more
+                v-chip.white--text.ml-0(v-if='index === 2', small, label, :color='rule.deny ? `red lighten-2` : `green lighten-2`').caption + {{ rule.roles.length - 2 }} 项
               template(slot='item', slot-scope='props')
                 v-list-item-action(style='min-width: 30px;')
                   v-checkbox(
@@ -98,7 +98,7 @@
               solo
               :items='matches'
               v-model='rule.match'
-              placeholder='Match...'
+              placeholder='匹配方式...'
               hide-details
               height='48px'
               style='flex: 0 1 250px;'
@@ -117,7 +117,7 @@
               solo
               :items='locales'
               v-model='rule.locales'
-              placeholder='Any Locale'
+              placeholder='任意语言'
               item-value='code'
               item-text='name'
               multiple
@@ -129,7 +129,7 @@
               )
               template(slot='selection', slot-scope='{ item, index }')
                 v-chip.white--text.ml-0(v-if='rule.locales.length === 1', small, label, :color='rule.deny ? `red` : `green`').caption {{ item.code.toUpperCase() }}
-                v-chip.white--text.ml-0(v-else-if='index === 0', small, label, :color='rule.deny ? `red` : `green`').caption {{ rule.locales.length }} locales
+                v-chip.white--text.ml-0(v-else-if='index === 0', small, label, :color='rule.deny ? `red` : `green`').caption {{ rule.locales.length }} 种语言
               v-list-item(slot='prepend-item', @click='rule.locales = []')
                 v-list-item-action(style='min-width: 30px;')
                   v-checkbox(
@@ -140,7 +140,7 @@
                   )
                 v-icon.mr-2(:color='rule.deny ? `red` : `green`') mdi-earth
                 v-list-item-content
-                  v-list-item-title.body-2 Any Locale
+                  v-list-item-title.body-2 任意语言
               v-divider(slot='prepend-item')
               template(slot='item', slot-scope='props')
                 v-list-item-action(style='min-width: 30px;')
@@ -158,9 +158,9 @@
             v-text-field(
               solo
               v-model='rule.path'
-              label='Path'
+              label='路径'
               :prefix='(rule.match !== `END` && rule.match !== `TAG`) ? `/` : null'
-              :placeholder='rule.match === `REGEX` ? `Regular Expression` : rule.match === `TAG` ? `Tag` : `Path`'
+              :placeholder='rule.match === `REGEX` ? `正则表达式` : rule.match === `TAG` ? `标签` : `路径`'
               :suffix='rule.match === `REGEX` ? `/` : null'
               hide-details
               :color='$vuetify.theme.dark ? `grey` : `blue-grey`'
@@ -170,28 +170,28 @@
               v-icon(:color='$vuetify.theme.dark ? `grey` : `blue-grey`') mdi-close
 
         v-divider.mt-3
-        .overline.py-3 Rules Order
-        .body-2.pl-3 Rules are applied in order of path specificity. A more precise path will always override a less defined path.
-        .body-2.pl-5 For example, #[span.teal--text /geography/countries] will override #[span.teal--text /geography].
-        .body-2.pl-3.pt-2 When 2 rules have the same specificity, the priority is given from lowest to highest as follows:
+        .overline.py-3 规则顺序
+        .body-2.pl-3 规则按照路径精确程度依次应用，更精确的路径会覆盖范围更宽的路径。
+        .body-2.pl-5 例如，#[span.teal--text /geography/countries] 会覆盖 #[span.teal--text /geography]。
+        .body-2.pl-3.pt-2 两条规则精确程度相同时，优先级从低到高如下：
         .body-2.pl-3.pt-1
           ul
             li
-              strong Path Starts With...
-              em.caption.pl-1 (lowest)
+              strong 路径开头匹配...
+              em.caption.pl-1 （最低）
             li
-              strong Path Ends With...
+              strong 路径结尾匹配...
             li
-              strong Path Matches Regex...
+              strong 路径匹配正则表达式...
             li
-              strong Tag Matches...
+              strong 标签匹配...
             li
-              strong Path Is Exactly...
-              em.caption.pl-1 (highest)
-        .body-2.pl-3.pt-2 When 2 rules have the same path specificity AND the same match type, #[strong.red--text DENY] will always override an #[strong.green--text ALLOW] rule.
+              strong 路径完全匹配...
+              em.caption.pl-1 （最高）
+        .body-2.pl-3.pt-2 两条规则路径精确程度和匹配类型都相同时，#[strong.red--text 拒绝] 规则始终优先于 #[strong.green--text 允许] 规则。
         v-divider.mt-3
-        .overline.py-3 Regular Expressions
-        span Expressions that are deemed unsafe or could result in exponential time processing will be rejected upon saving.
+        .overline.py-3 正则表达式
+        span 保存时会拒绝不安全或可能造成指数级处理时间的表达式。
 
 </template>
 
@@ -213,27 +213,27 @@ export default {
   data() {
     return {
       roles: [
-        { text: 'Read Pages', value: 'read:pages', icon: 'mdi-file-eye-outline' },
-        { text: 'Create + Edit Pages', value: 'write:pages', icon: 'mdi-file-plus-outline' },
-        { text: 'Rename / Move Pages', value: 'manage:pages', icon: 'mdi-file-document-edit-outline' },
-        { text: 'Delete Pages', value: 'delete:pages', icon: 'mdi-file-remove-outline' },
-        { text: 'View Pages Source', value: 'read:source', icon: 'mdi-code-tags' },
-        { text: 'View Pages History', value: 'read:history', icon: 'mdi-history' },
-        { text: 'Read / Use Assets', value: 'read:assets', icon: 'mdi-image-search-outline' },
-        { text: 'Upload Assets', value: 'write:assets', icon: 'mdi-image-plus' },
-        { text: 'Edit + Delete Assets', value: 'manage:assets', icon: 'mdi-image-size-select-large' },
-        { text: 'Edit Scripts', value: 'write:scripts', icon: 'mdi-language-javascript' },
-        { text: 'Edit Styles', value: 'write:styles', icon: 'mdi-language-css3' },
-        { text: 'Read Comments', value: 'read:comments', icon: 'mdi-comment-search-outline' },
-        { text: 'Create Comments', value: 'write:comments', icon: 'mdi-comment-plus-outline' },
-        { text: 'Edit + Delete Comments', value: 'manage:comments', icon: 'mdi-comment-remove-outline' }
+        { text: '查看页面', value: 'read:pages', icon: 'mdi-file-eye-outline' },
+        { text: '创建和编辑页面', value: 'write:pages', icon: 'mdi-file-plus-outline' },
+        { text: '重命名 / 移动页面', value: 'manage:pages', icon: 'mdi-file-document-edit-outline' },
+        { text: '删除页面', value: 'delete:pages', icon: 'mdi-file-remove-outline' },
+        { text: '查看页面源码', value: 'read:source', icon: 'mdi-code-tags' },
+        { text: '查看页面历史', value: 'read:history', icon: 'mdi-history' },
+        { text: '查看和使用资源', value: 'read:assets', icon: 'mdi-image-search-outline' },
+        { text: '上传资源', value: 'write:assets', icon: 'mdi-image-plus' },
+        { text: '编辑和删除资源', value: 'manage:assets', icon: 'mdi-image-size-select-large' },
+        { text: '编辑脚本', value: 'write:scripts', icon: 'mdi-language-javascript' },
+        { text: '编辑样式', value: 'write:styles', icon: 'mdi-language-css3' },
+        { text: '查看评论', value: 'read:comments', icon: 'mdi-comment-search-outline' },
+        { text: '发表评论', value: 'write:comments', icon: 'mdi-comment-plus-outline' },
+        { text: '编辑和删除评论', value: 'manage:comments', icon: 'mdi-comment-remove-outline' }
       ],
       matches: [
-        { text: 'Path Starts With...', value: 'START', icon: '/...' },
-        { text: 'Path is Exactly...', value: 'EXACT', icon: '=' },
-        { text: 'Path Ends With...', value: 'END', icon: '.../' },
-        { text: 'Path Matches Regex...', value: 'REGEX', icon: '$.*' },
-        { text: 'Tag Matches...', value: 'TAG', icon: 'T' }
+        { text: '路径开头匹配...', value: 'START', icon: '/...' },
+        { text: '路径完全匹配...', value: 'EXACT', icon: '=' },
+        { text: '路径结尾匹配...', value: 'END', icon: '.../' },
+        { text: '路径匹配正则表达式...', value: 'REGEX', icon: '$.*' },
+        { text: '标签匹配...', value: 'TAG', icon: 'T' }
       ]
     }
   },
@@ -261,7 +261,7 @@ export default {
     comingSoon() {
       this.$store.commit('showNotification', {
         style: 'indigo',
-        message: `Coming soon...`,
+        message: `即将推出...`,
         icon: 'directions_boat'
       })
     },

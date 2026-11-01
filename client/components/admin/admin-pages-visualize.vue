@@ -3,10 +3,10 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-venn-diagram.svg', alt='Visualize Pages', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-venn-diagram.svg', alt='页面结构可视化', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft Visualize Pages
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s Dendrogram representation of your pages
+            .headline.blue--text.text--darken-2.animated.fadeInLeft 页面可视化
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 以多种图表展示页面结构
           v-spacer
           v-select.mx-5.animated.fadeInDown.wait-p1s(
             v-if='locales.length > 0'
@@ -22,15 +22,15 @@
           v-btn-toggle.animated.fadeInDown(v-model='graphMode', color='primary', dense, rounded)
             v-btn.px-5(value='htree')
               v-icon(left, :color='graphMode === `htree` ? `primary` : `grey darken-3`') mdi-sitemap
-              span.text-none Hierarchical Tree
+              span.text-none 层级树
             v-btn.px-5(value='hradial')
               v-icon(left, :color='graphMode === `hradial` ? `primary` : `grey darken-3`') mdi-chart-donut-variant
-              span.text-none Hierarchical Radial
+              span.text-none 层级放射图
             v-btn.px-5(value='rradial')
               v-icon(left, :color='graphMode === `rradial` ? `primary` : `grey darken-3`') mdi-blur-radial
-              span.text-none Relational Radial
+              span.text-none 关系放射图
         .admin-pages-visualize-svg(ref='svgContainer', v-show='pages.length >= 1')
-        v-alert(v-if='pages.length < 1', outlined, type='warning', style='max-width: 650px; margin: 0 auto;') Looks like there's no data yet to graph!
+        v-alert(v-if='pages.length < 1', outlined, type='warning', style='max-width: 650px; margin: 0 auto;') 暂无可生成图表的页面数据。
 </template>
 
 <script>
@@ -57,6 +57,11 @@ export default {
     },
     graphMode () {
       this.redraw()
+    }
+  },
+  computed: {
+    currentLocaleName () {
+      return _.get(_.find(siteLangs, ['code', this.currentLocale]), 'name', this.currentLocale)
     }
   },
   methods: {
@@ -112,7 +117,7 @@ export default {
           children: descendantsByChild.map(_.partial(recurse, depth + 1))
         }
       }
-      const root = { path: this.currentLocale, title: this.currentLocale, links: [] }
+      const root = { path: this.currentLocale, title: this.currentLocaleName, links: [] }
       // start at depth=2 because we're taking {locale} as the root and
       // all paths start with {locale}/
       return recurse(2, [root, pages])
@@ -173,8 +178,8 @@ export default {
         .on('mouseout', outed)
         .on('click', d => this.goToPage(d))
         .call(text => text.append('title').text(d => `${d.data.path}
-          ${d.outgoing.length} outgoing
-          ${d.incoming.length} incoming`))
+          ${d.outgoing.length} 个出链
+          ${d.incoming.length} 个入链`))
         .clone(true).lower()
         .attr('stroke', this.$vuetify.theme.dark ? '#222' : 'white')
 

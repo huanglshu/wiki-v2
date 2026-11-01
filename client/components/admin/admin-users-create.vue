@@ -3,11 +3,11 @@
     v-card
       .dialog-header.is-short
         v-icon.mr-3(color='white') mdi-plus
-        span New User
+        span 新建用户
         v-spacer
         v-btn.mx-0(color='white', outlined, disabled, dark)
           v-icon(left) mdi-database-import
-          span Bulk Import
+          span 批量导入
       v-card-text.pt-5
         v-select(
           :items='providers'
@@ -16,13 +16,13 @@
           outlined
           prepend-icon='mdi-domain'
           v-model='provider'
-          label='Provider'
+          label='身份验证方式'
           )
         v-text-field(
           outlined
           prepend-icon='mdi-at'
           v-model='email'
-          label='Email Address'
+          label='邮箱地址'
           key='newUserEmail'
           persistent-hint
           ref='emailInput'
@@ -33,7 +33,7 @@
           prepend-icon='mdi-lock-outline'
           append-icon='mdi-dice-5'
           v-model='password'
-          :label='mustChangePwd ? `Temporary Password` : `Password`'
+          :label='mustChangePwd ? `临时密码` : `密码`'
           counter='255'
           @click:append='generatePwd'
           key='newUserPassword'
@@ -43,8 +43,8 @@
           outlined
           prepend-icon='mdi-account-outline'
           v-model='name'
-          label='Name'
-          :hint='provider === `local` ? `Can be changed by the user.` : `May be overwritten by the provider during login.`'
+          label='名称'
+          :hint='provider === `local` ? `用户可自行修改。` : `登录时可能被身份验证提供方覆盖。`'
           key='newUserName'
           persistent-hint
           )
@@ -56,8 +56,8 @@
           outlined
           prepend-icon='mdi-account-group'
           v-model='group'
-          label='Assign to Group(s)...'
-          hint='Note that you cannot assign users to the Administrators or Guests groups from this dialog.'
+          label='分配到用户组...'
+          hint='无法通过此对话框将用户分配到管理员组或访客组。'
           persistent-hint
           clearable
           multiple
@@ -65,7 +65,7 @@
         v-divider
         v-checkbox(
           color='primary'
-          label='Require password change on first login'
+          label='首次登录时要求修改密码'
           v-if='provider === `local`'
           v-model='mustChangePwd'
           hide-details
@@ -79,13 +79,13 @@
         //- )
       v-card-chin
         v-spacer
-        v-btn(text, @click='isShown = false') Cancel
+        v-btn(text, @click='isShown = false') 取消
         v-btn.px-3(depressed, color='primary', @click='newUser(false)')
           v-icon(left) mdi-chevron-right
-          span Create
+          span 创建
         v-btn.px-3(depressed, color='primary', @click='newUser(true)')
           v-icon(left) mdi-chevron-double-right
-          span Create and Close
+          span 创建并关闭
 </template>
 
 <script>
@@ -195,7 +195,7 @@ export default {
         if (_.get(resp, 'data.users.create.responseResult.succeeded', false)) {
           this.$store.commit('showNotification', {
             style: 'success',
-            message: 'New user created successfully.',
+            message: '新用户创建成功。',
             icon: 'check'
           })
 
@@ -212,7 +212,7 @@ export default {
         } else {
           this.$store.commit('showNotification', {
             style: 'red',
-            message: _.get(resp, 'data.users.create.responseResult.message', 'An unexpected error occurred.'),
+            message: _.get(resp, 'data.users.create.responseResult.message', '发生意外错误。'),
             icon: 'alert'
           })
         }

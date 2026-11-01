@@ -9,7 +9,7 @@
             outlined
             :value='true'
             icon='mdi-lock-outline'
-            ) This is a system group. Some permissions cannot be modified.
+            ) 这是系统组，部分权限不能修改。
         v-flex(xs12, md6, lg4, v-for='pmGroup in permissions', :key='pmGroup.category')
           v-card.md2(flat, :class='$vuetify.theme.dark ? "grey darken-3-d5" : "grey lighten-5"')
             .overline.px-5.pt-5.pb-3.grey--text.text--darken-2 {{pmGroup.category}}
@@ -18,8 +18,8 @@
                 v-checkbox.pt-0(
                   style='justify-content: space-between;'
                   :key='pm.permission'
-                  :label='pm.permission'
-                  :hint='pm.hint'
+                  :label='permissionLabels[pm.permission] || pm.permission'
+                  :hint='permissionHints[pm.permission] || pm.hint'
                   persistent-hint
                   color='primary'
                   v-model='group.permissions'
@@ -40,9 +40,57 @@ export default {
   },
   data() {
     return {
+      permissionLabels: {
+        'read:pages': '查看页面',
+        'write:pages': '创建和编辑页面',
+        'manage:pages': '移动页面',
+        'delete:pages': '删除页面',
+        'write:styles': '插入 CSS 样式',
+        'write:scripts': '插入 JavaScript',
+        'read:source': '查看页面源码',
+        'read:history': '查看页面历史',
+        'read:assets': '查看和使用资源文件',
+        'write:assets': '上传资源文件',
+        'manage:assets': '管理资源文件',
+        'read:comments': '查看评论',
+        'write:comments': '发表评论',
+        'manage:comments': '管理评论',
+        'write:users': '创建和授权用户',
+        'manage:users': '管理用户',
+        'write:groups': '管理组及内容权限',
+        'manage:groups': '管理组及全部权限',
+        'manage:navigation': '管理导航',
+        'manage:theme': '管理主题',
+        'manage:api': '管理 API 密钥',
+        'manage:system': '管理系统'
+      },
+      permissionHints: {
+        'read:pages': '可以查看页面规则允许的页面。',
+        'write:pages': '可以创建和编辑页面规则允许的页面。',
+        'manage:pages': '可以移动页面规则允许的页面。',
+        'delete:pages': '可以删除页面规则允许的页面。',
+        'write:styles': '可以在页面中插入 CSS 样式。',
+        'write:scripts': '可以在页面中插入 JavaScript。',
+        'read:source': '可以查看页面规则允许的页面源码。',
+        'read:history': '可以查看页面规则允许的页面历史。',
+        'read:assets': '可以查看和使用图片、文件等资源。',
+        'write:assets': '可以上传图片、文件等新资源。',
+        'manage:assets': '可以编辑和删除现有资源。',
+        'read:comments': '可以查看评论。',
+        'write:comments': '可以发表新评论。',
+        'manage:comments': '可以编辑和删除现有评论。',
+        'write:users': '可以创建和授权用户，但不能修改现有用户，且只能分配到非管理组。',
+        'manage:users': '可以创建、授权和修改所有用户，但只能分配到非管理组。',
+        'write:groups': '可以管理组、设置内容权限和页面规则，但只能分配到非管理组。',
+        'manage:groups': '可以管理组及除系统管理外的全部权限，并可将用户分配到任意组。',
+        'manage:navigation': '可以管理站点导航。',
+        'manage:theme': '可以管理和修改主题。',
+        'manage:api': '可以生成和撤销 API 密钥。',
+        'manage:system': '可以管理和访问所有内容，属于根管理员。'
+      },
       permissions: [
         {
-          category: 'Content',
+          category: '内容',
           items: [
             {
               permission: 'read:pages',
@@ -145,7 +193,7 @@ export default {
           ]
         },
         {
-          category: 'Users',
+          category: '用户',
           items: [
             {
               permission: 'write:users',
@@ -178,7 +226,7 @@ export default {
           ]
         },
         {
-          category: 'Administration',
+          category: '管理',
           items: [
             {
               permission: 'manage:navigation',

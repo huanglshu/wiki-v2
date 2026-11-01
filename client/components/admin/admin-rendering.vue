@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-process.svg', alt='Rendering', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-process.svg', alt='渲染', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:rendering.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:rendering.subtitle') }}
+            .headline.primary--text.animated.fadeInLeft 渲染
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理文档渲染管线与解析模块
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/rendering', target='_blank')
             v-icon mdi-help-circle
@@ -23,7 +23,7 @@
           flat
           dark
           )
-          .subtitle-1 Pipeline
+          .subtitle-1 处理管线
         v-expansion-panels.adm-rendering-pipeline(
           v-model='selectedCore'
           accordion
@@ -80,7 +80,7 @@
             v-switch(
               dark
               color='white'
-              label='Enabled'
+              label='启用'
               v-model='currentRenderer.isEnabled'
               hide-details
               inset
@@ -88,10 +88,10 @@
           v-card-info(color='blue')
             div
               div {{currentRenderer.description}}
-              span.caption: a(href='https://docs.requarks.io/en/rendering', target='_blank') Documentation
+              span.caption: a(href='https://docs.requarks.io/en/rendering', target='_blank') 文档
           v-card-text.pb-4.pl-4
-            .overline.mb-5 Rendering Module Configuration
-            .body-2.ml-3(v-if='!currentRenderer.config || currentRenderer.config.length < 1'): em This rendering module has no configuration options you can modify.
+            .overline.mb-5 渲染模块配置
+            .body-2.ml-3(v-if='!currentRenderer.config || currentRenderer.config.length < 1'): em 此渲染模块没有可修改的配置项。
             template(v-else, v-for='(cfg, idx) in currentRenderer.config')
               v-select(
                 v-if='cfg.value.type === "string" && cfg.value.enum'
@@ -140,6 +140,7 @@ import { StatusIndicator } from 'vue-status-indicator'
 
 import renderersQuery from 'gql/admin/rendering/rendering-query-renderers.gql'
 import renderersSaveMutation from 'gql/admin/rendering/rendering-mutation-save-renderers.gql'
+import { translateAdminModules, translateRenderingCore } from '../../helpers/admin-module-zh'
 
 export default {
   components: {
@@ -171,7 +172,7 @@ export default {
     async refresh () {
       await this.$apollo.queries.renderers.refetch()
       this.$store.commit('showNotification', {
-        message: 'Rendering active configuration has been reloaded.',
+        message: '渲染配置已重新加载。',
         style: 'success',
         icon: 'cached'
       })
@@ -192,7 +193,7 @@ export default {
         }
       })
       this.$store.commit('showNotification', {
-        message: 'Rendering configuration saved successfully.',
+        message: '渲染配置保存成功。',
         style: 'success',
         icon: 'check'
       })
@@ -204,13 +205,13 @@ export default {
       query: renderersQuery,
       fetchPolicy: 'network-only',
       update: (data) => {
-        let renderers = _.cloneDeep(data.rendering.renderers).map(str => ({
+        let renderers = translateAdminModules('rendering', _.cloneDeep(data.rendering.renderers).map(str => ({
           ...str,
           config: _.sortBy(str.config.map(cfg => ({
             ...cfg,
             value: JSON.parse(cfg.value)
           })), [t => t.value.order])
-        }))
+        })))
         // Build tree
         const graph = new DepGraph({ circular: true })
         const rawCores = _.filter(renderers, ['dependsOn', null]).map(core => {
@@ -233,7 +234,7 @@ export default {
         _.reverse(graph.overallOrder()).map(coreKey => {
           orderedCores.push(_.find(rawCores, ['key', coreKey]))
         })
-        return orderedCores
+        return orderedCores.map(translateRenderingCore)
       },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-rendering-refresh')

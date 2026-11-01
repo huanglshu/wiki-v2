@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-line-chart.svg', alt='Analytics', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-line-chart.svg', alt='网站分析', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{ $t('admin:analytics.title') }}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:analytics.subtitle') }}
+            .headline.primary--text.animated.fadeInLeft 网站分析
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理网站分析服务及跟踪设置
           v-spacer
           v-btn.animated.fadeInDown.wait-p2s.mr-3(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
@@ -41,7 +41,7 @@
             v-switch(
               dark
               color='blue lighten-5'
-              label='Active'
+              label='启用'
               v-model='provider.isEnabled'
               hide-details
               inset
@@ -111,6 +111,7 @@ import _ from 'lodash'
 
 import providersQuery from 'gql/admin/analytics/analytics-query-providers.gql'
 import providersSaveMutation from 'gql/admin/analytics/analytics-mutation-save-providers.gql'
+import { translateAdminModules } from '../../helpers/admin-module-zh'
 
 export default {
   data() {
@@ -165,13 +166,13 @@ export default {
     providers: {
       query: providersQuery,
       fetchPolicy: 'network-only',
-      update: (data) => _.cloneDeep(data.analytics.providers).map(str => ({
+      update: (data) => translateAdminModules('analytics', _.cloneDeep(data.analytics.providers).map(str => ({
         ...str,
         config: _.sortBy(str.config.map(cfg => ({
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      })),
+      }))),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-analytics-refresh')
       }

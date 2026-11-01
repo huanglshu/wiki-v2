@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-cloud-storage.svg', alt='Storage', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-cloud-storage.svg', alt='存储', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('admin:storage.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{$t('admin:storage.subtitle')}}
+            .headline.primary--text.animated.fadeInLeft 存储
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理内容与文件存储目标
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/storage', target='_blank')
             v-icon mdi-help-circle
@@ -87,7 +87,7 @@
             v-switch(
               dark
               color='blue lighten-5'
-              label='Active'
+              label='启用'
               v-model='target.isEnabled'
               hide-details
               inset
@@ -230,6 +230,7 @@ import statusQuery from 'gql/admin/storage/storage-query-status.gql'
 import targetsQuery from 'gql/admin/storage/storage-query-targets.gql'
 import targetExecuteActionMutation from 'gql/admin/storage/storage-mutation-executeaction.gql'
 import targetsSaveMutation from 'gql/admin/storage/storage-mutation-save-targets.gql'
+import { translateAdminModules } from '../../helpers/admin-module-zh'
 
 momentDurationFormatSetup(moment)
 
@@ -270,7 +271,7 @@ export default {
     async refresh() {
       await this.$apollo.queries.targets.refetch()
       this.$store.commit('showNotification', {
-        message: 'List of storage targets has been refreshed.',
+        message: '存储目标列表已刷新。',
         style: 'success',
         icon: 'cached'
       })
@@ -290,15 +291,15 @@ export default {
         }
       })
       this.$store.commit('showNotification', {
-        message: 'Storage configuration saved successfully.',
+        message: '存储配置保存成功。',
         style: 'success',
         icon: 'check'
       })
       this.$store.commit(`loadingStop`, 'admin-storage-savetargets')
     },
     getDefaultSchedule(val) {
-      if (!val) { return 'N/A' }
-      return moment.duration(val).format('y [years], M [months], d [days], h [hours], m [minutes]')
+      if (!val) { return '不适用' }
+      return moment.duration(val).format('y [年], M [个月], d [天], h [小时], m [分钟]')
     },
     async executeAction(targetKey, handler) {
       this.$store.commit(`loadingStart`, 'admin-storage-executeaction')
@@ -313,7 +314,7 @@ export default {
           }
         })
         this.$store.commit('showNotification', {
-          message: 'Action completed.',
+          message: '操作已完成。',
           style: 'success',
           icon: 'check'
         })
@@ -329,13 +330,13 @@ export default {
     targets: {
       query: targetsQuery,
       fetchPolicy: 'network-only',
-      update: (data) => _.cloneDeep(data.storage.targets).map(str => ({
+      update: (data) => translateAdminModules('storage', _.cloneDeep(data.storage.targets).map(str => ({
         ...str,
         config: _.sortBy(str.config.map(cfg => ({
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      })),
+      }))),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-storage-targets-refresh')
       }

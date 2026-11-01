@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-chat-bubble.svg', alt='Comments', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-chat-bubble.svg', alt='评论', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('admin:comments.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:comments.subtitle')}}
+            .headline.primary--text.animated.fadeInLeft 评论
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 管理页面评论服务
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/comments', target='_blank')
             v-icon mdi-help-circle
@@ -102,6 +102,8 @@
 import _ from 'lodash'
 import gql from 'graphql-tag'
 
+import { translateAdminModules } from '../../helpers/admin-module-zh'
+
 export default {
   data() {
     return {
@@ -190,13 +192,13 @@ export default {
         }
       `,
       fetchPolicy: 'network-only',
-      update: (data) => _.cloneDeep(data.comments.providers).map(str => ({
+      update: (data) => translateAdminModules('comments', _.cloneDeep(data.comments.providers).map(str => ({
         ...str,
         config: _.sortBy(str.config.map(cfg => ({
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      })),
+      }))),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-comments-refresh')
       }

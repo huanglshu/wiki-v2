@@ -1,72 +1,72 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 {{ $t('admin:utilities.telemetryTitle') }}
+      .subtitle-1 遥测
     v-form
       v-card-text
-        .subtitle-2 What is telemetry?
-        .body-2.mt-3 Telemetry allows the developers of Wiki.js to improve the software by collecting basic anonymized data about its usage and the host info. #[br] This is entirely optional and #[strong absolutely no] private data (such as content or personal data) is collected.
-        .body-2.mt-3 For maximum privacy, a random client ID is generated during setup. This ID is used to group requests together while keeping complete anonymity. You can reset and generate a new one below at any time.
+        .subtitle-2 什么是遥测？
+        .body-2.mt-3 遥测允许 Wiki.js 开发者收集使用情况及主机环境的基本匿名数据，从而改进软件。#[br] 此功能完全可选，且 #[strong 绝不会] 收集内容或个人数据等隐私信息。
+        .body-2.mt-3 为最大程度保护隐私，安装时会生成随机客户端 ID。该 ID 仅用于对请求进行匿名分组，可随时在下方重置。
         v-divider.my-4
-        .subtitle-2 What is collected?
-        .body-2.mt-3 When telemetry is enabled, only the following data is transmitted:
+        .subtitle-2 会收集哪些数据？
+        .body-2.mt-3 启用遥测后，仅传输以下数据：
         v-list
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 Version of Wiki.js installed
-              v-list-item-subtitle.caption: em e.g. v2.0.123
+              v-list-item-title.body-2 已安装的 Wiki.js 版本
+              v-list-item-subtitle.caption: em 例如 v2.0.123
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 Basic OS information
-              v-list-item-subtitle.caption: em Platform (Linux, macOS or Windows), Total CPU cores and DB type (PostgreSQL, MySQL, MariaDB, SQLite or SQL Server)
+              v-list-item-title.body-2 操作系统基本信息
+              v-list-item-subtitle.caption: em 平台（Linux、macOS 或 Windows）、CPU 核心总数及数据库类型（PostgreSQL、MySQL、MariaDB、SQLite 或 SQL Server）
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 Crash debug data
-              v-list-item-subtitle.caption: em Stack trace of the error
+              v-list-item-title.body-2 崩溃调试数据
+              v-list-item-subtitle.caption: em 错误堆栈信息
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 Setup analytics
-              v-list-item-subtitle.caption: em Installation checkpoint reached
-        .body-2 Note that crash debug data is stored for a maximum of 30 days while analytics are stored for a maximum of 16 months, after which it is permanently deleted.
+              v-list-item-title.body-2 安装统计
+              v-list-item-subtitle.caption: em 已到达的安装阶段
+        .body-2 崩溃调试数据最长保存 30 天，统计数据最长保存 16 个月，之后将被永久删除。
         v-divider.my-4
-        .subtitle-2 What is it used for?
-        .body-2.mt-3 Telemetry is used by developers to improve Wiki.js, mostly for the following reasons:
+        .subtitle-2 数据有什么用途？
+        .body-2.mt-3 开发者使用遥测数据改进 Wiki.js，主要用于以下目的：
         v-list(dense)
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2 Identify critical bugs more easily and fix them in a timely manner.
+            v-list-item-content: v-list-item-title: .body-2 更容易识别关键缺陷并及时修复。
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2 Understand the upgrade rate of current installations.
+            v-list-item-content: v-list-item-title: .body-2 了解当前安装的升级情况。
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2  Optimize performance and testing scenarios based on most popular environments.
-        .body-2 Only authorized developers have access to the data. It is not shared to any 3rd party nor is it used for any other application than improving Wiki.js.
+            v-list-item-content: v-list-item-title: .body-2 根据常见运行环境优化性能和测试场景。
+        .body-2 仅授权开发者可访问这些数据，不会与任何第三方共享，也不会用于改进 Wiki.js 之外的其他用途。
         v-divider.my-4
-        .subtitle-2 Settings
+        .subtitle-2 设置
         .mt-3
           v-switch.mt-0(
             v-model='telemetry',
-            label='Enable Telemetry',
+            label='启用遥测',
             color='primary',
-            hint='Allow Wiki.js to transmit telemetry data.',
+            hint='允许 Wiki.js 传输遥测数据。',
             persistent-hint
           )
         v-divider.my-4
-        .subtitle-2.mt-3.grey--text.text--darken-1 Client ID
+        .subtitle-2.mt-3.grey--text.text--darken-1 客户端 ID
         .body-2.mt-2 {{clientId}}
       v-card-chin
         v-btn.px-3(depressed, color='success', @click='updateTelemetry')
           v-icon(left) mdi-chevron-right
-          | Save Changes
+          | 保存更改
         v-spacer
         v-btn.px-3(outlined, color='grey', @click='resetClientId')
           v-icon(left) mdi-autorenew
-          span Reset Client ID
+          span 重置客户端 ID
 
 </template>
 
@@ -81,7 +81,7 @@ export default {
   data() {
     return {
       telemetry: false,
-      clientId: 'N/A'
+      clientId: '不适用'
     }
   },
   methods: {
@@ -99,7 +99,7 @@ export default {
         const resp = _.get(respRaw, 'data.system.setTelemetry.responseResult', {})
         if (resp.succeeded) {
           this.$store.commit('showNotification', {
-            message: 'Telemetry updated successfully.',
+            message: '遥测设置更新成功。',
             style: 'success',
             icon: 'check'
           })
@@ -125,7 +125,7 @@ export default {
         if (resp.succeeded) {
           this.$apollo.queries.telemetry.refetch()
           this.$store.commit('showNotification', {
-            message: 'Telemetry Client ID reset successfully.',
+            message: '遥测客户端 ID 重置成功。',
             style: 'success',
             icon: 'check'
           })
@@ -147,7 +147,7 @@ export default {
       manual: true,
       result ({ data }) {
         this.telemetry = _.get(data, 'system.info.telemetry', false)
-        this.clientId = _.get(data, 'system.info.telemetryClientId', 'N/A')
+        this.clientId = _.get(data, 'system.info.telemetryClientId', '不适用')
       },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-utilities-telemetry-refresh')

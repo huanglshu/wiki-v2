@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', alt='Search Engine', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', alt='搜索引擎', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft {{$t('admin:search.title')}}
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:search.subtitle')}}
+            .headline.primary--text.animated.fadeInLeft 搜索引擎
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 管理网站页面搜索服务
           v-spacer
           v-btn.mr-3.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/search', target='_blank')
             v-icon mdi-help-circle
@@ -105,6 +105,7 @@ import _ from 'lodash'
 import enginesQuery from 'gql/admin/search/search-query-engines.gql'
 import enginesSaveMutation from 'gql/admin/search/search-mutation-save-engines.gql'
 import enginesRebuildMutation from 'gql/admin/search/search-mutation-rebuild-index.gql'
+import { translateAdminModules } from '../../helpers/admin-module-zh'
 
 export default {
   data() {
@@ -183,13 +184,13 @@ export default {
     engines: {
       query: enginesQuery,
       fetchPolicy: 'network-only',
-      update: (data) => _.cloneDeep(data.search.searchEngines).map(str => ({
+      update: (data) => translateAdminModules('search', _.cloneDeep(data.search.searchEngines).map(str => ({
         ...str,
         config: _.sortBy(str.config.map(cfg => ({
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      })),
+      }))),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-search-refresh')
       }

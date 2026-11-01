@@ -3,10 +3,10 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-file.svg', alt='Page', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-file.svg', alt='页面', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft Pages
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s Manage pages
+            .headline.blue--text.text--darken-2.animated.fadeInLeft 页面
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 浏览、筛选和管理页面
           v-spacer
           v-btn.animated.fadeInDown.wait-p1s(icon, color='grey', outlined, @click='refresh')
             v-icon.grey--text mdi-refresh
@@ -15,7 +15,7 @@
           //-   span Recycle Bin
           v-btn.animated.fadeInDown(color='primary', depressed, large, to='pages/visualize')
             v-icon(left) mdi-graph
-            span Visualize
+            span 可视化
         v-card.mt-3.animated.fadeInUp
           .pa-2.d-flex.align-center(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-3`')
             v-text-field(
@@ -23,7 +23,7 @@
               flat
               v-model='search'
               prepend-inner-icon='mdi-file-search-outline'
-              label='Search Pages...'
+              label='搜索页面...'
               hide-details
               dense
               style='max-width: 400px;'
@@ -34,7 +34,7 @@
               flat
               hide-details
               dense
-              label='Locale'
+              label='语言'
               :items='langs'
               v-model='selectedLang'
               style='max-width: 250px;'
@@ -44,7 +44,7 @@
               flat
               hide-details
               dense
-              label='Publish State'
+              label='发布状态'
               :items='states'
               v-model='selectedState'
               style='max-width: 250px;'
@@ -70,12 +70,12 @@
                   .body-2: strong {{ props.item.title }}
                   .caption {{ props.item.description }}
                 td.admin-pages-path
-                  v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ props.item.locale }}
+                  v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ getLocaleName(props.item.locale) }}
                   span.ml-2.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`') / {{ props.item.path }}
                 td {{ props.item.createdAt | moment('calendar') }}
                 td {{ props.item.updatedAt | moment('calendar') }}
             template(slot='no-data')
-              v-alert.ma-3(icon='mdi-alert', :value='true', outlined) No pages to display.
+              v-alert.ma-3(icon='mdi-alert', :value='true', outlined) 暂无可显示的页面。
           .text-center.py-2.animated.fadeInDown(v-if='this.pageTotal > 1')
             v-pagination(v-model='pagination', :length='pageTotal')
 </template>
@@ -83,6 +83,8 @@
 <script>
 import _ from 'lodash'
 import pagesQuery from 'gql/admin/pages/pages-query-list.gql'
+
+/* global siteLangs */
 
 export default {
   data() {
@@ -92,19 +94,19 @@ export default {
       pages: [],
       pageTotal: 0,
       headers: [
-        { text: 'ID', value: 'id', width: 80, sortable: true },
-        { text: 'Title', value: 'title' },
-        { text: 'Path', value: 'path' },
-        { text: 'Created', value: 'createdAt', width: 250 },
-        { text: 'Last Updated', value: 'updatedAt', width: 250 }
+        { text: '编号', value: 'id', width: 80, sortable: true },
+        { text: '标题', value: 'title' },
+        { text: '路径', value: 'path' },
+        { text: '创建时间', value: 'createdAt', width: 250 },
+        { text: '最后更新', value: 'updatedAt', width: 250 }
       ],
       search: '',
       selectedLang: null,
       selectedState: null,
       states: [
-        { text: 'All Publishing States', value: null },
-        { text: 'Published', value: true },
-        { text: 'Not Published', value: false }
+        { text: '全部发布状态', value: null },
+        { text: '已发布', value: true },
+        { text: '未发布', value: false }
       ],
       loading: false
     }
@@ -122,20 +124,24 @@ export default {
       })
     },
     langs () {
-      return _.concat({
-        text: 'All Locales',
-        value: null
-      }, _.uniqBy(this.pages, 'locale').map(pg => ({
-        text: pg.locale,
-        value: pg.locale
-      })))
+      const pageLocales = _.uniqBy(this.pages, 'locale').map(pg => {
+        const locale = _.find(siteLangs, ['code', pg.locale])
+        return {
+          text: locale ? locale.name : pg.locale,
+          value: pg.locale
+        }
+      })
+      return _.concat({ text: '全部语言', value: null }, pageLocales)
     }
   },
   methods: {
+    getLocaleName (code) {
+      return _.get(_.find(siteLangs, ['code', code]), 'name', code)
+    },
     async refresh() {
       await this.$apollo.queries.pages.refetch()
       this.$store.commit('showNotification', {
-        message: 'Page list has been refreshed.',
+        message: '页面列表已刷新。',
         style: 'success',
         icon: 'cached'
       })
