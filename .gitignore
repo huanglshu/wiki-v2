@@ -27,7 +27,7 @@ server/views/setup.pug
 .fusebox
 
 # Config Files
-/config.yml
+# /config.yml
 
 # Data directories
 /repo

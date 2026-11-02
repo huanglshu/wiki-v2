@@ -1,0 +1,17 @@
+port: 3000
+bindIP: 0.0.0.0
+db:
+  type: mysql
+  host: 172.30.60.139
+  port: 8001
+  user: root
+  pass: aofei123
+  db: wiki-dev
+
+logLevel: $(LOG_LEVEL:info)
+logFormat: $(LOG_FORMAT:default)
+modules:
+  share:
+    enabled: false
+bodyParserLimit: 100mb
+#admin@auldey.com / lsh19871011
