@@ -3,16 +3,16 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-customer.svg', alt='用户', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-customer.svg', :alt='$t("admin:ui.users.title")', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft 用户
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 浏览、筛选和管理用户
+            .headline.blue--text.text--darken-2.animated.fadeInLeft {{ $t('admin:ui.users.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{ $t('admin:ui.users.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p2s.mr-3(outlined, color='grey', icon, @click='refresh')
             v-icon mdi-refresh
           v-btn.animated.fadeInDown(color='primary', large, depressed, @click='createUser')
             v-icon(left) mdi-plus
-            span 新建用户
+            span {{ $t('admin:ui.users.create') }}
         v-card.mt-3.animated.fadeInUp
           .pa-2.d-flex.align-center(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-3`')
             v-text-field(
@@ -20,7 +20,7 @@
               flat
               v-model='search'
               prepend-inner-icon='mdi-account-search-outline'
-              label='搜索用户...'
+              :label='$t("admin:ui.users.search")'
               hide-details
               style='max-width: 400px;'
               dense
@@ -30,7 +30,7 @@
               solo
               flat
               hide-details
-              label='身份验证方式'
+              :label='$t("admin:ui.users.provider")'
               :items='strategies'
               v-model='filterStrategy'
               item-text='displayName'
@@ -61,7 +61,7 @@
                 td {{ props.item.createdAt | moment('from') }}
                 td
                   span(v-if='props.item.lastLoginAt') {{ props.item.lastLoginAt | moment('from') }}
-                  em.grey--text(v-else) 从未登录
+                  em.grey--text(v-else) {{ $t('admin:ui.users.never') }}
                 td.text-right
                   v-icon.mr-3(v-if='props.item.isSystem') mdi-lock-outline
                   status-indicator(positive, pulse, v-if='props.item.isActive')
@@ -69,7 +69,7 @@
             template(slot='no-data')
               .pa-3
                 v-alert.text-left(icon='mdi-alert', outlined, color='grey')
-                  em.body-2 暂无可显示的用户。
+                  em.body-2 {{ $t('admin:ui.users.empty') }}
           v-card-chin(v-if='pageCount > 1')
             v-spacer
             v-pagination(v-model='pagination', :length='pageCount')
@@ -86,7 +86,7 @@ import { StatusIndicator } from 'vue-status-indicator'
 import UserCreate from './admin-users-create.vue'
 
 const providerTranslations = {
-  local: '本地账户',
+  local: 'admin:ui.users.providers.local',
   ldap: 'LDAP / Active Directory',
   saml: 'SAML',
   oidc: 'OpenID Connect',
@@ -117,12 +117,12 @@ export default {
       pageCount: 0,
       users: [],
       headers: [
-        { text: '编号', value: 'id', width: 80, sortable: true },
-        { text: '名称', value: 'name', sortable: true },
-        { text: '邮箱', value: 'email', sortable: true },
-        { text: '验证方式', value: 'provider', sortable: true },
-        { text: '创建时间', value: 'createdAt', sortable: true },
-        { text: '最后登录', value: 'lastLoginAt', sortable: true },
+        { text: this.$t('admin:ui.users.columns.id'), value: 'id', width: 80, sortable: true },
+        { text: this.$t('admin:ui.users.columns.name'), value: 'name', sortable: true },
+        { text: this.$t('admin:ui.users.columns.email'), value: 'email', sortable: true },
+        { text: this.$t('admin:ui.users.columns.provider'), value: 'provider', sortable: true },
+        { text: this.$t('admin:ui.users.columns.created'), value: 'createdAt', sortable: true },
+        { text: this.$t('admin:ui.users.columns.lastLogin'), value: 'lastLoginAt', sortable: true },
         { text: '', value: 'actions', sortable: false, width: 80 }
       ],
       strategies: [],
@@ -146,14 +146,15 @@ export default {
       await this.$apollo.queries.users.refetch()
       if (notify) {
         this.$store.commit('showNotification', {
-          message: '用户列表已刷新。',
+          message: this.$t('admin:ui.users.refreshSuccess'),
           style: 'success',
           icon: 'cached'
         })
       }
     },
     getStrategyName(key) {
-      return (_.find(this.strategies, ['key', key]) || {}).displayName || providerTranslations[key] || key
+      const displayName = (_.find(this.strategies, ['key', key]) || {}).displayName || providerTranslations[key] || key
+      return this.$te(`admin:ui.users.providers.${key}`) ? this.$t(`admin:ui.users.providers.${key}`) : displayName
     }
   },
   apollo: {
@@ -196,7 +197,7 @@ export default {
       update: (data) => {
         return _.concat({
           key: 'all',
-          displayName: '全部验证方式'
+          displayName: this.$t('admin:ui.users.allProviders')
         }, data.authentication.activeStrategies)
       },
       watchLoading (isLoading) {

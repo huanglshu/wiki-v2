@@ -6,7 +6,7 @@
         color='orange darken-2'
         outlined
         icon='mdi-lock-outline'
-        ) 此组拥有全部访问权限。
+        ) {{ $t('admin:ui.groupRules.allAccess') }}
     template(v-else)
       v-card-title(:class='$vuetify.theme.dark ? `grey darken-3-d5` : ``')
         v-alert.radius-7.caption(
@@ -14,11 +14,11 @@
           color='grey'
           outlined
           icon='mdi-information'
-          ) 必须先启用全局内容权限（在“权限”标签页中），页面规则才会生效。
+          ) {{ $t('admin:ui.groupRules.requireGlobalPermissions') }}
         v-spacer
         v-btn.mx-2(depressed, color='primary', @click='addRule')
           v-icon(left) mdi-plus
-          | 添加规则
+          | {{ $t('admin:ui.groupRules.add') }}
         v-menu(
           right
           offset-y
@@ -31,26 +31,26 @@
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-application-import
-              v-list-item-title 加载预设
+              v-list-item-title {{ $t('admin:ui.groupRules.loadPreset') }}
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-application-export
-              v-list-item-title 保存为预设
+              v-list-item-title {{ $t('admin:ui.groupRules.savePreset') }}
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-cloud-upload
-              v-list-item-title 导入规则
+              v-list-item-title {{ $t('admin:ui.groupRules.importRules') }}
             v-divider
             v-list-item(@click='comingSoon')
               v-list-item-avatar
                 v-icon mdi-cloud-download
-              v-list-item-title 导出规则
+              v-list-item-title {{ $t('admin:ui.groupRules.exportRules') }}
       v-card-text(:class='$vuetify.theme.dark ? `grey darken-4-l5` : `white`')
         .rules
           .caption(v-if='group.pageRules.length === 0')
-            em(:class='$vuetify.theme.dark ? `grey--text` : `blue-grey--text`') 此组尚未设置页面规则。
+            em(:class='$vuetify.theme.dark ? `grey--text` : `blue-grey--text`') {{ $t('admin:ui.groupRules.empty') }}
           .rule(v-for='rule of group.pageRules', :key='rule.id')
             v-btn.ma-0.radius-4.rule-deny-btn(
               solo
@@ -66,7 +66,7 @@
               solo
               :items='roles'
               v-model='rule.roles'
-              placeholder='选择角色...'
+              :placeholder='$t("admin:ui.groupRules.selectRoles")'
               hide-details
               multiple
               chips
@@ -79,8 +79,8 @@
               dense
               )
               template(slot='selection', slot-scope='{ item, index }')
-                v-chip.white--text.ml-0(v-if='index <= 1', small, label, :color='rule.deny ? `red` : `green`').caption {{ item.value }}
-                v-chip.white--text.ml-0(v-if='index === 2', small, label, :color='rule.deny ? `red lighten-2` : `green lighten-2`').caption + {{ rule.roles.length - 2 }} 项
+                v-chip.white--text.ml-0(v-if='index <= 1', small, label, :color='rule.deny ? `red` : `green`').caption {{ roleText(item) }}
+                v-chip.white--text.ml-0(v-if='index === 2', small, label, :color='rule.deny ? `red lighten-2` : `green lighten-2`').caption + {{ rule.roles.length - 2 }} {{ $t('admin:ui.groupRules.items') }}
               template(slot='item', slot-scope='props')
                 v-list-item-action(style='min-width: 30px;')
                   v-checkbox(
@@ -90,7 +90,7 @@
                   )
                 v-icon.mr-2(:color='rule.deny ? `red` : `green`') {{props.item.icon}}
                 v-list-item-content
-                  v-list-item-title.body-2 {{props.item.text}}
+                  v-list-item-title.body-2 {{ roleText(props.item) }}
                 v-chip.mr-2.grey--text(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`').caption {{props.item.value}}
 
             //- Match
@@ -98,26 +98,26 @@
               solo
               :items='matches'
               v-model='rule.match'
-              placeholder='匹配方式...'
+              :placeholder='$t("admin:ui.groupRules.matchPlaceholder")'
               hide-details
               height='48px'
               style='flex: 0 1 250px;'
               dense
               )
               template(slot='selection', slot-scope='{ item, index }')
-                .body-2 {{item.text}}
+                .body-2 {{ matchText(item) }}
               template(slot='item', slot-scope='data')
                 v-list-item-avatar
                   v-avatar.white--text.radius-4(color='blue', size='30', tile) {{ data.item.icon }}
                 v-list-item-content
-                  v-list-item-title(v-html='data.item.text')
+                  v-list-item-title(v-html='matchText(data.item)')
             //- Locales
             v-select.mr-1(
               :background-color='$vuetify.theme.dark ? `grey darken-3-d5` : `blue-grey lighten-5`'
               solo
               :items='locales'
               v-model='rule.locales'
-              placeholder='任意语言'
+              :placeholder='$t("admin:ui.groupRules.anyLocale")'
               item-value='code'
               item-text='name'
               multiple
@@ -129,7 +129,7 @@
               )
               template(slot='selection', slot-scope='{ item, index }')
                 v-chip.white--text.ml-0(v-if='rule.locales.length === 1', small, label, :color='rule.deny ? `red` : `green`').caption {{ item.code.toUpperCase() }}
-                v-chip.white--text.ml-0(v-else-if='index === 0', small, label, :color='rule.deny ? `red` : `green`').caption {{ rule.locales.length }} 种语言
+                v-chip.white--text.ml-0(v-else-if='index === 0', small, label, :color='rule.deny ? `red` : `green`').caption {{ rule.locales.length }} {{ $t('admin:ui.groupRules.locales') }}
               v-list-item(slot='prepend-item', @click='rule.locales = []')
                 v-list-item-action(style='min-width: 30px;')
                   v-checkbox(
@@ -140,7 +140,7 @@
                   )
                 v-icon.mr-2(:color='rule.deny ? `red` : `green`') mdi-earth
                 v-list-item-content
-                  v-list-item-title.body-2 任意语言
+                  v-list-item-title.body-2 {{ $t('admin:ui.groupRules.anyLocale') }}
               v-divider(slot='prepend-item')
               template(slot='item', slot-scope='props')
                 v-list-item-action(style='min-width: 30px;')
@@ -158,9 +158,9 @@
             v-text-field(
               solo
               v-model='rule.path'
-              label='路径'
+              :label='$t("admin:ui.groupRules.path")'
               :prefix='(rule.match !== `END` && rule.match !== `TAG`) ? `/` : null'
-              :placeholder='rule.match === `REGEX` ? `正则表达式` : rule.match === `TAG` ? `标签` : `路径`'
+              :placeholder='rule.match === `REGEX` ? $t("admin:ui.groupRules.regex") : rule.match === `TAG` ? $t("admin:ui.groupRules.tag") : $t("admin:ui.groupRules.path")'
               :suffix='rule.match === `REGEX` ? `/` : null'
               hide-details
               :color='$vuetify.theme.dark ? `grey` : `blue-grey`'
@@ -170,28 +170,28 @@
               v-icon(:color='$vuetify.theme.dark ? `grey` : `blue-grey`') mdi-close
 
         v-divider.mt-3
-        .overline.py-3 规则顺序
-        .body-2.pl-3 规则按照路径精确程度依次应用，更精确的路径会覆盖范围更宽的路径。
-        .body-2.pl-5 例如，#[span.teal--text /geography/countries] 会覆盖 #[span.teal--text /geography]。
-        .body-2.pl-3.pt-2 两条规则精确程度相同时，优先级从低到高如下：
+        .overline.py-3 {{ $t('admin:ui.groupRules.order') }}
+        .body-2.pl-3 {{ $t('admin:ui.groupRules.orderHint') }}
+        .body-2.pl-5 {{ $t('admin:ui.groupRules.orderExample') }}
+        .body-2.pl-3.pt-2 {{ $t('admin:ui.groupRules.orderPriority') }}
         .body-2.pl-3.pt-1
           ul
             li
-              strong 路径开头匹配...
-              em.caption.pl-1 （最低）
+              strong {{ $t('admin:ui.groupRules.matches.start') }}
+              em.caption.pl-1 {{ $t('admin:ui.groupRules.lowest') }}
             li
-              strong 路径结尾匹配...
+              strong {{ $t('admin:ui.groupRules.matches.end') }}
             li
-              strong 路径匹配正则表达式...
+              strong {{ $t('admin:ui.groupRules.matches.regex') }}
             li
-              strong 标签匹配...
+              strong {{ $t('admin:ui.groupRules.matches.tag') }}
             li
-              strong 路径完全匹配...
-              em.caption.pl-1 （最高）
-        .body-2.pl-3.pt-2 两条规则路径精确程度和匹配类型都相同时，#[strong.red--text 拒绝] 规则始终优先于 #[strong.green--text 允许] 规则。
+              strong {{ $t('admin:ui.groupRules.matches.exact') }}
+              em.caption.pl-1 {{ $t('admin:ui.groupRules.highest') }}
+        .body-2.pl-3.pt-2 {{ $t('admin:ui.groupRules.denyPriority') }}
         v-divider.mt-3
-        .overline.py-3 正则表达式
-        span 保存时会拒绝不安全或可能造成指数级处理时间的表达式。
+        .overline.py-3 {{ $t('admin:ui.groupRules.regexTitle') }}
+        span {{ $t('admin:ui.groupRules.regexHint') }}
 
 </template>
 
@@ -213,27 +213,27 @@ export default {
   data() {
     return {
       roles: [
-        { text: '查看页面', value: 'read:pages', icon: 'mdi-file-eye-outline' },
-        { text: '创建和编辑页面', value: 'write:pages', icon: 'mdi-file-plus-outline' },
-        { text: '重命名 / 移动页面', value: 'manage:pages', icon: 'mdi-file-document-edit-outline' },
-        { text: '删除页面', value: 'delete:pages', icon: 'mdi-file-remove-outline' },
-        { text: '查看页面源码', value: 'read:source', icon: 'mdi-code-tags' },
-        { text: '查看页面历史', value: 'read:history', icon: 'mdi-history' },
-        { text: '查看和使用资源', value: 'read:assets', icon: 'mdi-image-search-outline' },
-        { text: '上传资源', value: 'write:assets', icon: 'mdi-image-plus' },
-        { text: '编辑和删除资源', value: 'manage:assets', icon: 'mdi-image-size-select-large' },
-        { text: '编辑脚本', value: 'write:scripts', icon: 'mdi-language-javascript' },
-        { text: '编辑样式', value: 'write:styles', icon: 'mdi-language-css3' },
-        { text: '查看评论', value: 'read:comments', icon: 'mdi-comment-search-outline' },
-        { text: '发表评论', value: 'write:comments', icon: 'mdi-comment-plus-outline' },
-        { text: '编辑和删除评论', value: 'manage:comments', icon: 'mdi-comment-remove-outline' }
+        { labelKey: 'admin:ui.groupRules.roles.readPages', value: 'read:pages', icon: 'mdi-file-eye-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.writePages', value: 'write:pages', icon: 'mdi-file-plus-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.managePages', value: 'manage:pages', icon: 'mdi-file-document-edit-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.deletePages', value: 'delete:pages', icon: 'mdi-file-remove-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.readSource', value: 'read:source', icon: 'mdi-code-tags' },
+        { labelKey: 'admin:ui.groupRules.roles.readHistory', value: 'read:history', icon: 'mdi-history' },
+        { labelKey: 'admin:ui.groupRules.roles.readAssets', value: 'read:assets', icon: 'mdi-image-search-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.writeAssets', value: 'write:assets', icon: 'mdi-image-plus' },
+        { labelKey: 'admin:ui.groupRules.roles.manageAssets', value: 'manage:assets', icon: 'mdi-image-size-select-large' },
+        { labelKey: 'admin:ui.groupRules.roles.writeScripts', value: 'write:scripts', icon: 'mdi-language-javascript' },
+        { labelKey: 'admin:ui.groupRules.roles.writeStyles', value: 'write:styles', icon: 'mdi-language-css3' },
+        { labelKey: 'admin:ui.groupRules.roles.readComments', value: 'read:comments', icon: 'mdi-comment-search-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.writeComments', value: 'write:comments', icon: 'mdi-comment-plus-outline' },
+        { labelKey: 'admin:ui.groupRules.roles.manageComments', value: 'manage:comments', icon: 'mdi-comment-remove-outline' }
       ],
       matches: [
-        { text: '路径开头匹配...', value: 'START', icon: '/...' },
-        { text: '路径完全匹配...', value: 'EXACT', icon: '=' },
-        { text: '路径结尾匹配...', value: 'END', icon: '.../' },
-        { text: '路径匹配正则表达式...', value: 'REGEX', icon: '$.*' },
-        { text: '标签匹配...', value: 'TAG', icon: 'T' }
+        { textKey: 'admin:ui.groupRules.matches.start', value: 'START', icon: '/...' },
+        { textKey: 'admin:ui.groupRules.matches.exact', value: 'EXACT', icon: '=' },
+        { textKey: 'admin:ui.groupRules.matches.end', value: 'END', icon: '.../' },
+        { textKey: 'admin:ui.groupRules.matches.regex', value: 'REGEX', icon: '$.*' },
+        { textKey: 'admin:ui.groupRules.matches.tag', value: 'TAG', icon: 'T' }
       ]
     }
   },
@@ -245,6 +245,12 @@ export default {
     locales() { return siteLangs }
   },
   methods: {
+    roleText (role) {
+      return this.$te(role.labelKey) ? this.$t(role.labelKey) : role.value
+    },
+    matchText (match) {
+      return this.$te(match.textKey) ? this.$t(match.textKey) : match.value
+    },
     addRule(group) {
       this.group.pageRules.push({
         id: nanoid(),
@@ -261,7 +267,7 @@ export default {
     comingSoon() {
       this.$store.commit('showNotification', {
         style: 'indigo',
-        message: `即将推出...`,
+        message: this.$t('admin:ui.groupRules.comingSoon'),
         icon: 'directions_boat'
       })
     },

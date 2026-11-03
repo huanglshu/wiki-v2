@@ -22,7 +22,8 @@ export default {
           ],
           backendOptions: [
             {
-              expirationTime: 1000 * 60 * 60 * 24 // 24h
+              expirationTime: 1000 * 60 * 60 * 24, // 24h
+              defaultVersion: '2026-11-04'
             },
             {
               loadPath: '{{lng}}/{{ns}}',
@@ -55,8 +56,8 @@ export default {
         lng: siteConfig.lang,
         load: 'currentOnly',
         lowerCaseLng: true,
-        fallbackLng: siteConfig.lang,
-        ns: ['common', 'auth']
+        fallbackLng: 'en',
+        ns: ['common', 'auth', 'admin']
       })
     return new VueI18Next(i18next)
   }

@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const graphHelper = require('../../helpers/graph')
+const { getStorageStatusMessage } = require('../../helpers/storage-status')
 
 /* global WIKI */
 
@@ -28,7 +29,7 @@ module.exports = {
                 key,
                 value: JSON.stringify({
                   ...configData,
-                  value: (configData.sensitive && value.length > 0) ? '********' : value
+                  value: (configData.sensitive && !_.isEmpty(value)) ? '********' : (_.isNil(value) ? '' : value)
                 })
               })
             }
@@ -43,9 +44,10 @@ module.exports = {
         const targetInfo = _.find(WIKI.data.storage, ['key', tgt.key]) || {}
         return {
           key: tgt.key,
+          titleKey: targetInfo.titleKey,
           title: targetInfo.title,
-          status: _.get(tgt, 'state.status', 'pending'),
-          message: _.get(tgt, 'state.message', 'Initializing...'),
+          status: _.get(tgt, 'state.status') || 'pending',
+          message: getStorageStatusMessage(_.get(tgt, 'state.message')),
           lastAttempt: _.get(tgt, 'state.lastAttempt', null)
         }
       })

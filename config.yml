@@ -1,5 +1,6 @@
 port: 3000
 bindIP: 0.0.0.0
+offline: true
 db:
   type: mysql
   host: 172.30.60.139

@@ -1,13 +1,13 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 导出为 Wiki.js 3.x
+      .subtitle-1 {{ $t('admin:ui.utilities.backup.title') }}
     v-card-text
       .text-center
         img.animated.fadeInUp.wait-p1s(src='/_assets/svg/icon-big-parcel.svg')
-        .body-2 导出为 .wkbackup 迁移包
+        .body-2 {{ $t('admin:ui.utilities.backup.intro') }}
       v-divider.my-4
-      .body-2 选择要包含的内容：
+      .body-2 {{ $t('admin:ui.utilities.backup.choose') }}
       v-checkbox(
         v-for='choice of entityChoices'
         :class='choice.requires ? `ml-6` : ``'
@@ -25,17 +25,17 @@
             .text-caption {{choice.hint}}
 
       v-alert.mt-7(color='blue-grey darken-2', outlined, icon='mdi-information-outline', prominent)
-        .body-2 迁移包会写入 Wiki.js 数据目录下的 #[strong backup] 文件夹，完成后可下载。
-        .body-2 可在 Wiki.js 3.x 中通过 #[strong 管理 → 其他 → 从 Wiki.js 2.x 导入] 导入。文件由浏览器读取，不会上传到任何位置。
+        .body-2 {{ $t('admin:ui.utilities.backup.location') }}
+        .body-2 {{ $t('admin:ui.utilities.backup.importHint') }}
 
       v-alert.mt-3(color='deep-orange', outlined, icon='mdi-alert', prominent)
-        .body-2 迁移包包含用户密码哈希、双重验证密钥和站点配置密钥，且未加密或签名。请像保管数据库一样妥善保管。
-        .body-2 保留这些凭据可让用户迁移后继续使用原密码和身份验证器。
+        .body-2 {{ $t('admin:ui.utilities.backup.warning') }}
+        .body-2 {{ $t('admin:ui.utilities.backup.credentialsHint') }}
 
     v-card-chin
       v-btn.px-3(depressed, color='deep-orange darken-2', :disabled='entities.length < 1', @click='startBackup').ml-0
         v-icon(left, color='white') mdi-package-variant-closed
-        span.white--text 创建迁移包
+        span.white--text {{ $t('admin:ui.utilities.backup.start') }}
     v-dialog(
       v-model='isLoading'
       persistent
@@ -49,8 +49,8 @@
             color='#FFF'
             style='margin: 0 auto;'
           )
-          .mt-5.body-1.white--text 正在创建迁移包...
-          .caption 请稍候，此操作可能需要一段时间
+          .mt-5.body-1.white--text {{ $t('admin:ui.utilities.backup.running') }}
+          .caption {{ $t('admin:ui.utilities.backup.wait') }}
           v-progress-linear.mt-5(
             color='white'
             :value='progress'
@@ -66,7 +66,7 @@
       v-card(color='green darken-2', dark)
         v-card-text.pa-10.text-center
           v-icon(size='60') mdi-check-circle-outline
-          .mt-5.body-1.white--text 迁移包创建完成
+          .mt-5.body-1.white--text {{ $t('admin:ui.utilities.backup.success') }}
           .mt-2.caption.white--text {{filename}}
           .caption(v-if='fileSize') {{prettyFileSize}}
           .mt-3.caption.text-truncate(v-if='filePath', :title='filePath') {{filePath}}
@@ -78,12 +78,12 @@
             @click='downloadBackup'
           )
             v-icon(left) mdi-download
-            span 下载
+            span {{ $t('common:actions.download') }}
           v-btn.px-5(
             color='white'
             text
             @click='isSuccess = false'
-          ) 关闭
+          ) {{ $t('common:actions.close') }}
           v-spacer
     v-dialog(
       v-model='isFailed'
@@ -93,13 +93,13 @@
       v-card(color='red darken-2', dark)
         v-toolbar(color='red darken-2', dense)
           v-icon mdi-alert
-          .body-2.pl-3 迁移包创建失败
+          .body-2.pl-3 {{ $t('admin:ui.utilities.backup.failed') }}
           v-spacer
           v-btn.px-5(
             color='white'
             text
             @click='isFailed = false'
-            ) 关闭
+            ) {{ $t('common:actions.close') }}
         v-card-text.pa-5.red.darken-4.white--text
           span {{errorMessage}}
 </template>
@@ -132,51 +132,61 @@ export default {
       return [
         {
           key: 'assets',
-          label: '资源文件',
-          hint: '图片、文档等媒体文件。'
+          labelKey: 'admin:ui.utilities.backup.entities.assets',
+          hintKey: 'admin:ui.utilities.backup.entities.assetsHint'
         },
         {
           key: 'navigation',
-          label: '导航',
-          hint: '使用静态或自定义导航时的侧边栏链接。'
+          labelKey: 'admin:ui.utilities.backup.entities.navigation',
+          hintKey: 'admin:ui.utilities.backup.entities.navigationHint'
         },
         {
           key: 'pages',
-          label: '页面',
-          hint: '页面内容、标签及相关元数据。不包含渲染后的 HTML，因为 Wiki.js 3.x 会自行渲染页面。'
+          labelKey: 'admin:ui.utilities.backup.entities.pages',
+          hintKey: 'admin:ui.utilities.backup.entities.pagesHint'
         },
         // -> Neither of these makes sense without the pages they belong to.
         {
           key: 'history',
-          label: '页面历史',
-          hint: '页面的所有历史版本及相关元数据。',
+          labelKey: 'admin:ui.utilities.backup.entities.history',
+          hintKey: 'admin:ui.utilities.backup.entities.historyHint',
           requires: 'pages'
         },
         {
           key: 'comments',
-          label: '评论',
-          hint: '仅包含使用内置评论模块发表的评论。',
+          labelKey: 'admin:ui.utilities.backup.entities.comments',
+          hintKey: 'admin:ui.utilities.backup.entities.commentsHint',
           requires: 'pages'
         },
         {
           key: 'settings',
-          label: '设置',
-          hint: '站点配置和模块设置。'
+          labelKey: 'admin:ui.utilities.backup.entities.settings',
+          hintKey: 'admin:ui.utilities.backup.entities.settingsHint'
         },
         {
           key: 'groups',
-          label: '用户组',
-          hint: '组权限及页面规则。'
+          labelKey: 'admin:ui.utilities.backup.entities.groups',
+          hintKey: 'admin:ui.utilities.backup.entities.groupsHint'
         },
         {
           key: 'users',
-          label: '用户',
-          hint: '用户元数据、用户组关系、密码哈希和双重验证密钥。'
+          labelKey: 'admin:ui.utilities.backup.entities.users',
+          hintKey: 'admin:ui.utilities.backup.entities.usersHint'
         }
-      ]
+      ].map(item => ({
+        ...item,
+        label: this.$t(item.labelKey),
+        hint: this.$t(item.hintKey)
+      }))
     },
     prettyFileSize () {
-      const units = ['字节', 'KB', 'MB', 'GB', 'TB']
+      const units = [
+        this.$t('admin:ui.utilities.backup.units.bytes'),
+        'KB',
+        'MB',
+        'GB',
+        'TB'
+      ]
       let size = this.fileSize
       let unit = 0
       while (size >= 1024 && unit < units.length - 1) {
@@ -222,11 +232,11 @@ export default {
         })
         const respStatusObj = _get(respStatus, 'data.system.backupStatus', {})
         if (!respStatusObj) {
-          throw new Error('发生意外错误。')
+          throw new Error(this.$t('common:error.unexpected'))
         } else {
           switch (respStatusObj.status) {
             case 'error': {
-              throw new Error(respStatusObj.message || '发生意外错误。')
+              throw new Error(respStatusObj.message || this.$t('common:error.unexpected'))
             }
             case 'running': {
               this.progress = respStatusObj.progress || 0
@@ -246,7 +256,7 @@ export default {
               break
             }
             default: {
-              throw new Error('备份状态无效。')
+              throw new Error(this.$t('admin:ui.utilities.backup.invalidStatus'))
             }
           }
         }
@@ -289,7 +299,7 @@ export default {
 
           const respBackupObj = _get(respBackup, 'data.system.createBackup', {})
           if (!_get(respBackupObj, 'responseResult.succeeded', false)) {
-            this.errorMessage = _get(respBackupObj, 'responseResult.message', '发生意外错误。')
+            this.errorMessage = _get(respBackupObj, 'responseResult.message', this.$t('common:error.unexpected'))
             this.isLoading = false
             this.isFailed = true
             return

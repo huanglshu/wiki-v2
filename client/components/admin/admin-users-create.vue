@@ -3,11 +3,11 @@
     v-card
       .dialog-header.is-short
         v-icon.mr-3(color='white') mdi-plus
-        span 新建用户
+        span {{ $t('admin:ui.usersCreate.title') }}
         v-spacer
         v-btn.mx-0(color='white', outlined, disabled, dark)
           v-icon(left) mdi-database-import
-          span 批量导入
+          span {{ $t('admin:ui.usersCreate.bulkImport') }}
       v-card-text.pt-5
         v-select(
           :items='providers'
@@ -16,13 +16,13 @@
           outlined
           prepend-icon='mdi-domain'
           v-model='provider'
-          label='身份验证方式'
+          :label='$t("admin:ui.usersCreate.provider")'
           )
         v-text-field(
           outlined
           prepend-icon='mdi-at'
           v-model='email'
-          label='邮箱地址'
+          :label='$t("admin:ui.usersCreate.email")'
           key='newUserEmail'
           persistent-hint
           ref='emailInput'
@@ -33,7 +33,7 @@
           prepend-icon='mdi-lock-outline'
           append-icon='mdi-dice-5'
           v-model='password'
-          :label='mustChangePwd ? `临时密码` : `密码`'
+          :label='mustChangePwd ? $t("admin:ui.usersCreate.temporaryPassword") : $t("admin:ui.usersCreate.password")'
           counter='255'
           @click:append='generatePwd'
           key='newUserPassword'
@@ -43,8 +43,8 @@
           outlined
           prepend-icon='mdi-account-outline'
           v-model='name'
-          label='名称'
-          :hint='provider === `local` ? `用户可自行修改。` : `登录时可能被身份验证提供方覆盖。`'
+          :label='$t("admin:ui.usersCreate.name")'
+          :hint='provider === `local` ? $t("admin:ui.usersCreate.nameHintLocal") : $t("admin:ui.usersCreate.nameHintProvider")'
           key='newUserName'
           persistent-hint
           )
@@ -56,8 +56,8 @@
           outlined
           prepend-icon='mdi-account-group'
           v-model='group'
-          label='分配到用户组...'
-          hint='无法通过此对话框将用户分配到管理员组或访客组。'
+          :label='$t("admin:ui.usersCreate.group")'
+          :hint='$t("admin:ui.usersCreate.groupHint")'
           persistent-hint
           clearable
           multiple
@@ -65,7 +65,7 @@
         v-divider
         v-checkbox(
           color='primary'
-          label='首次登录时要求修改密码'
+          :label='$t("admin:ui.usersCreate.requirePasswordChange")'
           v-if='provider === `local`'
           v-model='mustChangePwd'
           hide-details
@@ -79,13 +79,13 @@
         //- )
       v-card-chin
         v-spacer
-        v-btn(text, @click='isShown = false') 取消
+        v-btn(text, @click='isShown = false') {{ $t('common:actions.cancel') }}
         v-btn.px-3(depressed, color='primary', @click='newUser(false)')
           v-icon(left) mdi-chevron-right
-          span 创建
+          span {{ $t('common:actions.create') }}
         v-btn.px-3(depressed, color='primary', @click='newUser(true)')
           v-icon(left) mdi-chevron-double-right
-          span 创建并关闭
+          span {{ $t('admin:ui.usersCreate.createAndClose') }}
 </template>
 
 <script>
@@ -195,7 +195,7 @@ export default {
         if (_.get(resp, 'data.users.create.responseResult.succeeded', false)) {
           this.$store.commit('showNotification', {
             style: 'success',
-            message: '新用户创建成功。',
+            message: this.$t('admin:ui.usersCreate.success'),
             icon: 'check'
           })
 
@@ -212,7 +212,7 @@ export default {
         } else {
           this.$store.commit('showNotification', {
             style: 'red',
-            message: _.get(resp, 'data.users.create.responseResult.message', '发生意外错误。'),
+            message: _.get(resp, 'data.users.create.responseResult.message', this.$t('common:error.unexpected')),
             icon: 'alert'
           })
         }

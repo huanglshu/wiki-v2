@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-chat-bubble.svg', alt='评论', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-chat-bubble.svg', :alt='$t("admin:comments.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 评论
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 管理页面评论服务
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:comments.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{ $t('admin:comments.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/comments', target='_blank')
             v-icon mdi-help-circle
@@ -28,8 +28,8 @@
                   v-icon(color='primary', v-else-if='provider.key === selectedProvider') mdi-checkbox-marked-circle-outline
                   v-icon(color='grey', v-else) mdi-checkbox-blank-circle-outline
                 v-list-item-content
-                  v-list-item-title.body-2(:class='!provider.isAvailable ? `grey--text` : (selectedProvider === provider.key ? `primary--text` : ``)') {{ provider.title }}
-                  v-list-item-subtitle: .caption(:class='!provider.isAvailable ? `grey--text text--lighten-1` : (selectedProvider === provider.key ? `blue--text ` : ``)') {{ provider.description }}
+                  v-list-item-title.body-2(:class='!provider.isAvailable ? `grey--text` : (selectedProvider === provider.key ? `primary--text` : ``)') {{ provider.titleKey ? $t(provider.titleKey) : provider.title }}
+                  v-list-item-subtitle: .caption(:class='!provider.isAvailable ? `grey--text text--lighten-1` : (selectedProvider === provider.key ? `blue--text ` : ``)') {{ provider.descriptionKey ? $t(provider.descriptionKey) : provider.description }}
                 v-list-item-avatar(v-if='selectedProvider === provider.key', size='24')
                   v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
               v-divider(v-if='idx < providers.length - 1')
@@ -37,14 +37,14 @@
       v-flex(lg9, xs12)
         v-card.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{provider.title}}
+            .subtitle-1 {{ provider.titleKey ? $t(provider.titleKey) : provider.title }}
           v-card-info(color='blue')
             div
-              div {{provider.description}}
+              div {{ provider.descriptionKey ? $t(provider.descriptionKey) : provider.description }}
               span.caption: a(:href='provider.website') {{provider.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='provider.logo', :alt='provider.title')
+              img(:src='provider.logo', :alt='provider.titleKey ? $t(provider.titleKey) : provider.title')
           v-card-text
             .overline.my-5 {{$t('admin:comments.providerConfig')}}
             .body-2.ml-3(v-if='!provider.config || provider.config.length < 1'): em {{$t('admin:comments.providerNoConfig')}}
@@ -102,7 +102,7 @@
 import _ from 'lodash'
 import gql from 'graphql-tag'
 
-import { translateAdminModules } from '../../helpers/admin-module-zh'
+import { translateAdminModules } from '../../helpers/admin-module'
 
 export default {
   data() {
@@ -178,6 +178,8 @@ export default {
             providers {
               isEnabled
               key
+              titleKey
+              descriptionKey
               title
               description
               logo
@@ -198,7 +200,7 @@ export default {
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      }))),
+      })), this.$t),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-comments-refresh')
       }

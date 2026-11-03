@@ -3,45 +3,45 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-categorize.svg', alt='常规', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-categorize.svg', :alt='$t("admin:general.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 常规
-            .subtitle-1.grey--text.animated.fadeInLeft 管理站点设置
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:general.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:ui.general.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
-            span 应用
+            span {{ $t('common:actions.apply') }}
         v-form.pt-3
           v-layout(row wrap)
             v-flex(lg6 xs12)
               v-form
                 v-card.animated.fadeInUp
                   v-toolbar(color='primary', dark, dense, flat)
-                    v-toolbar-title.subtitle-1 站点信息
-                  .overline.grey--text.pa-4 基本信息
+                    v-toolbar-title.subtitle-1 {{ $t('admin:ui.general.siteInfo') }}
+                  .overline.grey--text.pa-4 {{ $t('admin:ui.general.basicInfo') }}
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      label='站点地址'
+                      :label='$t("admin:ui.general.host.label")'
                       required
                       :counter='255'
                       v-model='config.host'
                       prepend-icon='mdi-label-variant-outline'
-                      hint='用户访问 Wiki 的完整地址，包含协议和域名。'
+                      :hint='$t("admin:ui.general.host.hint")'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      label='系统名称'
+                      :label='$t("admin:ui.general.title.label")'
                       required
                       :counter='50'
                       v-model='config.title'
                       prepend-icon='mdi-earth'
-                      hint='显示在浏览器标题栏及顶部导航中的站点名称。'
+                      :hint='$t("admin:ui.general.title.hint")'
                       persistent-hint
                       )
                   v-divider
-                  .overline.grey--text.pa-4 站点标志
+                  .overline.grey--text.pa-4 {{ $t('admin:ui.general.siteLogo') }}
                   .pt-2.pb-7.pl-10.pr-3
                     .d-flex.align-center
                       v-avatar(size='100', tile)
@@ -53,73 +53,73 @@
                       .ml-4(style='flex: 1 1 auto;')
                         v-text-field(
                           outlined
-                          label='标志图片地址'
+                          :label='$t("admin:ui.general.logoUrl.label")'
                           v-model='config.logoUrl'
-                          hint='站点标志图片的 URL 或资源路径。'
+                          :hint='$t("admin:ui.general.logoUrl.hint")'
                           persistent-hint
                           append-icon='mdi-folder-image'
                           @click:append='browseLogo'
                           @keyup.enter='refreshLogo'
                         )
                   v-divider
-                  .overline.grey--text.pa-4 页脚与版权
+                  .overline.grey--text.pa-4 {{ $t('admin:ui.general.footerCopyright') }}
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      label='公司名称'
+                      :label='$t("admin:ui.general.company.label")'
                       v-model='config.company'
                       :counter='255'
                       prepend-icon='mdi-domain'
                       persistent-hint
-                      hint='显示在页脚版权信息中的公司或组织名称。'
+                      :hint='$t("admin:ui.general.company.hint")'
                       )
                     v-select.mt-3(
                       outlined
-                      label='内容许可协议'
+                      :label='$t("admin:ui.general.contentLicense.label")'
                       :items='contentLicenses'
                       v-model='config.contentLicense'
                       prepend-icon='mdi-creative-commons'
                       :return-object='false'
-                      hint='选择站点内容使用的版权许可协议。'
+                      :hint='$t("admin:ui.general.contentLicense.hint")'
                       persistent-hint
                     )
                     v-text-field.mt-3(
                       outlined
-                      label='自定义页脚'
+                      :label='$t("admin:ui.general.footerOverride.label")'
                       v-model='config.footerOverride'
                       prepend-icon='mdi-page-layout-footer'
                       append-icon='mdi-language-markdown'
                       persistent-hint
-                      hint='使用 Markdown 自定义站点页脚内容。'
+                      :hint='$t("admin:ui.general.footerOverride.hint")'
                       )
                   v-divider
-                  .overline.grey--text.pa-4 搜索引擎优化
+                  .overline.grey--text.pa-4 {{ $t('admin:ui.general.seo') }}
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      label='站点描述'
+                      :label='$t("admin:ui.general.description.label")'
                       :counter='255'
                       v-model='config.description'
                       prepend-icon='mdi-compass'
-                      hint='用于搜索引擎和社交分享的站点简介。'
+                      :hint='$t("admin:ui.general.description.hint")'
                       persistent-hint
                       )
                     v-select.mt-3(
                       outlined
-                      label='搜索引擎索引规则'
+                      :label='$t("admin:ui.general.robots.label")'
                       multiple
                       :items='metaRobots'
                       v-model='config.robots'
                       prepend-icon='mdi-compass'
                       :return-object='false'
-                      hint='控制搜索引擎如何索引和跟踪站点。'
+                      :hint='$t("admin:ui.general.robots.hint")'
                       persistent-hint
                       )
 
             v-flex(lg6 xs12)
               v-card.animated.fadeInUp.wait-p4s
                 v-toolbar(color='indigo', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 功能
+                  v-toolbar-title.subtitle-1 {{ $t('admin:ui.general.features') }}
                 v-card-text
                   //- v-switch(
                   //-   inset
@@ -155,11 +155,11 @@
                   //- v-divider.mt-3
                   v-switch.mt-0(
                     inset
-                    label='评论'
+                    :label='$t("admin:ui.general.comments.label")'
                     color='indigo'
                     v-model='config.featurePageComments'
                     persistent-hint
-                    hint='允许用户在页面上发表评论。'
+                    :hint='$t("admin:ui.general.comments.hint")'
                     )
 
                   //- v-divider.mt-3
@@ -175,84 +175,84 @@
 
               v-card.mt-5.animated.fadeInUp.wait-p6s
                 v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 URL 处理
+                  v-toolbar-title.subtitle-1 {{ $t('admin:ui.general.urlHandling') }}
                 v-card-text
                   v-text-field(
                     outlined
-                    label='页面扩展名'
+                    :label='$t("admin:ui.general.pageExtensions.label")'
                     v-model='config.pageExtensions'
                     prepend-icon='mdi-format-text-wrapping-overflow'
-                    hint='可选的页面 URL 扩展名，使用逗号分隔。'
+                    :hint='$t("admin:ui.general.pageExtensions.hint")'
                     persistent-hint
                     )
 
               v-card.mt-5.animated.fadeInUp.wait-p7s
                 v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 编辑快捷方式
+                  v-toolbar-title.subtitle-1 {{ $t('admin:ui.general.editShortcuts') }}
                 v-card-text
                   v-switch.mt-0(
                     inset
-                    label='显示悬浮编辑按钮'
+                    :label='$t("admin:ui.general.editFab.label")'
                     color='primary'
                     v-model='config.editFab'
                     persistent-hint
-                    hint='在页面角落显示可快速进入编辑模式的按钮。'
+                    :hint='$t("admin:ui.general.editFab.hint")'
                     )
                 v-divider
-                .overline.grey--text.pa-4 编辑菜单栏
+                .overline.grey--text.pa-4 {{ $t('admin:ui.general.editMenuBar') }}
                 .px-3.pb-3
                   v-switch.mt-0.ml-1(
                     inset
-                    label='显示编辑菜单栏'
+                    :label='$t("admin:ui.general.showEditMenuBar.label")'
                     color='primary'
                     v-model='config.editMenuBar'
                     persistent-hint
-                    hint='在页面顶部显示编辑操作菜单。'
+                    :hint='$t("admin:ui.general.showEditMenuBar.hint")'
                     )
                   v-switch.mt-4.ml-1(
                     v-if='config.editMenuBar'
                     inset
-                    label='显示编辑按钮'
+                    :label='$t("admin:ui.general.showEditButton.label")'
                     color='primary'
                     v-model='config.editMenuBtn'
                     persistent-hint
-                    hint='在编辑菜单栏中显示“编辑”按钮。'
+                    :hint='$t("admin:ui.general.showEditButton.hint")'
                     )
                   v-switch.mt-4.ml-1(
                     v-if='config.editMenuBar'
                     inset
-                    label='显示外部编辑按钮'
+                    :label='$t("admin:ui.general.showExternalEditButton.label")'
                     color='primary'
                     v-model='config.editMenuExternalBtn'
                     persistent-hint
-                    hint='在编辑菜单栏中显示跳转到外部编辑器或服务的按钮。'
+                    :hint='$t("admin:ui.general.showExternalEditButton.hint")'
                     )
                 template(v-if='config.editMenuBar && config.editMenuExternalBtn')
                   v-divider
-                  .overline.grey--text.pa-4 外部编辑按钮
+                  .overline.grey--text.pa-4 {{ $t('admin:ui.general.externalEditButton') }}
                   .px-3.pb-3
                     v-text-field(
                       outlined
-                      label='外部编辑按钮名称'
+                      :label='$t("admin:ui.general.externalEditName.label")'
                       v-model='config.editMenuExternalName'
                       prepend-icon='mdi-format-title'
-                      hint='外部编辑按钮上显示的名称。'
+                      :hint='$t("admin:ui.general.externalEditName.hint")'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      label='外部编辑按钮图标'
+                      :label='$t("admin:ui.general.externalEditIcon.label")'
                       v-model='config.editMenuExternalIcon'
                       prepend-icon='mdi-dice-5'
-                      hint='外部编辑按钮使用的 Material Design 图标名称。'
+                      :hint='$t("admin:ui.general.externalEditIcon.hint")'
                       persistent-hint
                       )
                     v-text-field.mt-3(
                       outlined
-                      label='外部编辑网址'
+                      :label='$t("admin:ui.general.externalEditUrl.label")'
                       v-model='config.editMenuExternalUrl'
                       prepend-icon='mdi-near-me'
-                      hint='点击外部编辑按钮后打开的网址模板。'
+                      :hint='$t("admin:ui.general.externalEditUrl.hint")'
                       persistent-hint
                       )
 
@@ -306,10 +306,10 @@ export default {
         editMenuExternalUrl: ''
       },
       metaRobots: [
-        { text: '允许索引', value: 'index' },
-        { text: '跟踪链接', value: 'follow' },
-        { text: '禁止索引', value: 'noindex' },
-        { text: '不跟踪链接', value: 'nofollow' }
+        { textKey: 'admin:ui.general.robots.index', value: 'index' },
+        { textKey: 'admin:ui.general.robots.follow', value: 'follow' },
+        { textKey: 'admin:ui.general.robots.noindex', value: 'noindex' },
+        { textKey: 'admin:ui.general.robots.nofollow', value: 'nofollow' }
       ]
     }
   },
@@ -322,16 +322,19 @@ export default {
     activeModal: sync('editor/activeModal'),
     contentLicenses () {
       return [
-        { value: '', text: '无' },
-        { value: 'alr', text: '保留所有权利' },
-        { value: 'cc0', text: 'CC0 1.0 公共领域贡献' },
-        { value: 'ccby', text: 'CC BY 4.0 署名' },
-        { value: 'ccbysa', text: 'CC BY-SA 4.0 署名-相同方式共享' },
-        { value: 'ccbynd', text: 'CC BY-ND 4.0 署名-禁止演绎' },
-        { value: 'ccbync', text: 'CC BY-NC 4.0 署名-非商业性使用' },
-        { value: 'ccbyncsa', text: 'CC BY-NC-SA 4.0 署名-非商业性使用-相同方式共享' },
-        { value: 'ccbyncnd', text: 'CC BY-NC-ND 4.0 署名-非商业性使用-禁止演绎' }
-      ]
+        { value: '', textKey: 'admin:ui.general.licenses.none' },
+        { value: 'alr', textKey: 'admin:ui.general.licenses.allRightsReserved' },
+        { value: 'cc0', textKey: 'admin:ui.general.licenses.cc0' },
+        { value: 'ccby', textKey: 'admin:ui.general.licenses.ccby' },
+        { value: 'ccbysa', textKey: 'admin:ui.general.licenses.ccbysa' },
+        { value: 'ccbynd', textKey: 'admin:ui.general.licenses.ccbynd' },
+        { value: 'ccbync', textKey: 'admin:ui.general.licenses.ccbync' },
+        { value: 'ccbyncsa', textKey: 'admin:ui.general.licenses.ccbyncsa' },
+        { value: 'ccbyncnd', textKey: 'admin:ui.general.licenses.ccbyncnd' }
+      ].map(item => ({
+        ...item,
+        text: this.$t(item.textKey)
+      }))
     }
   },
   methods: {
@@ -340,7 +343,7 @@ export default {
       if (titleRegex.test(title)) {
         this.$store.commit('showNotification', {
           style: 'error',
-          message: '系统名称不能包含字符 <、> 或 "。',
+          message: this.$t('admin:ui.general.titleInvalid'),
           icon: 'alert'
         })
         return
@@ -434,7 +437,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '站点配置保存成功。',
+          message: this.$t('admin:ui.general.saveSuccess'),
           icon: 'check'
         })
         this.siteTitle = this.config.title

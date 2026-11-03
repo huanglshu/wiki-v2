@@ -2,6 +2,7 @@ const _ = require('lodash')
 const fs = require('fs')
 const { pipeline } = require('node:stream/promises')
 const { Transform } = require('node:stream')
+const { getAnalysisSettings } = require('./analyzer')
 
 /* global WIKI */
 
@@ -66,77 +67,59 @@ module.exports = {
       // Elasticsearch 6.x / 7.x
       if (this.config.apiVersion !== '8.x' && !indexExists.body) {
         WIKI.logger.info(`(SEARCH/ELASTICSEARCH) Creating index...`)
-        try {
-          const idxBody = {
-            properties: {
-              suggest: { type: 'completion' },
-              title: { type: 'text', boost: 10.0 },
-              description: { type: 'text', boost: 3.0 },
-              content: { type: 'text', boost: 1.0 },
-              locale: { type: 'keyword' },
-              path: { type: 'text' },
-              tags: { type: 'text', boost: 8.0 }
+        const idxBody = {
+          properties: {
+            suggest: { type: 'completion' },
+            title: { type: 'text', boost: 10.0 },
+            description: { type: 'text', boost: 3.0 },
+            content: { type: 'text', boost: 1.0 },
+            locale: { type: 'keyword' },
+            path: { type: 'text' },
+            tags: { type: 'text', boost: 8.0 }
+          }
+        }
+
+        await this.client.indices.create({
+          index: this.config.indexName,
+          body: {
+            mappings: (this.config.apiVersion === '6.x') ? {
+              _doc: idxBody
+            } : idxBody,
+            settings: {
+              analysis: getAnalysisSettings(this.config)
             }
           }
-
-          await this.client.indices.create({
-            index: this.config.indexName,
-            body: {
-              mappings: (this.config.apiVersion === '6.x') ? {
-                _doc: idxBody
-              } : idxBody,
-              settings: {
-                analysis: {
-                  analyzer: {
-                    default: {
-                      type: this.config.analyzer
-                    }
-                  }
-                }
-              }
-            }
-          })
-        } catch (err) {
-          WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Create Index Error: `, _.get(err, 'meta.body.error', err))
-        }
+        })
       // Elasticsearch 8.x
       } else if (this.config.apiVersion === '8.x' && !indexExists) {
         WIKI.logger.info(`(SEARCH/ELASTICSEARCH) Creating index...`)
-        try {
-          // 8.x Doesn't support boost in mappings, so we will need to boost at query time.
-          const idxBody = {
-            properties: {
-              suggest: { type: 'completion' },
-              title: { type: 'text' },
-              description: { type: 'text' },
-              content: { type: 'text' },
-              locale: { type: 'keyword' },
-              path: { type: 'text' },
-              tags: { type: 'text' }
+        // 8.x Doesn't support boost in mappings, so we will need to boost at query time.
+        const idxBody = {
+          properties: {
+            suggest: { type: 'completion' },
+            title: { type: 'text' },
+            description: { type: 'text' },
+            content: { type: 'text' },
+            locale: { type: 'keyword' },
+            path: { type: 'text' },
+            tags: { type: 'text' }
+          }
+        }
+
+        await this.client.indices.create({
+          index: this.config.indexName,
+          body: {
+            mappings: idxBody,
+            settings: {
+              analysis: getAnalysisSettings(this.config)
             }
           }
-
-          await this.client.indices.create({
-            index: this.config.indexName,
-            body: {
-              mappings: idxBody,
-              settings: {
-                analysis: {
-                  analyzer: {
-                    default: {
-                      type: this.config.analyzer
-                    }
-                  }
-                }
-              }
-            }
-          })
-        } catch (err) {
-          WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Create Index Error: `, _.get(err, 'meta.body.error', err))
-        }
+        })
       }
     } catch (err) {
-      WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Index Check Error: `, _.get(err, 'meta.body.error', err))
+      const error = _.get(err, 'meta.body.error', err)
+      WIKI.logger.error(`(SEARCH/ELASTICSEARCH) Index Create/Check Error: `, error)
+      throw new Error(`Elasticsearch index create/check failed: ${getErrorMessage(error)}`)
     }
   },
   /**
@@ -310,7 +293,13 @@ module.exports = {
    */
   async rebuild() {
     WIKI.logger.info(`(SEARCH/ELASTICSEARCH) Rebuilding Index...`)
-    await this.client.indices.delete({ index: this.config.indexName })
+    try {
+      await this.client.indices.delete({ index: this.config.indexName })
+    } catch (err) {
+      if (_.get(err, 'meta.statusCode') !== 404 && _.get(err, 'statusCode') !== 404) {
+        throw err
+      }
+    }
     await this.createIndex()
 
     const MAX_INDEXING_BYTES = 10 * Math.pow(2, 20) - Buffer.from('[').byteLength - Buffer.from(']').byteLength // 10 MB
@@ -380,6 +369,7 @@ module.exports = {
         })
       } catch (err) {
         WIKI.logger.warn('(SEARCH/ELASTICSEARCH) Failed to send batch to elasticsearch: ', err)
+        throw err
       }
       chunks.length = 0
       bytes = 0
@@ -417,4 +407,11 @@ function getTlsOptions(conf) {
     rejectUnauthorized: conf.verifyTLSCertificate,
     ca: caList
   }
+}
+
+function getErrorMessage(err) {
+  if (_.isString(err)) {
+    return err
+  }
+  return _.get(err, 'reason') || _.get(err, 'type') || _.get(err, 'message') || JSON.stringify(err)
 }

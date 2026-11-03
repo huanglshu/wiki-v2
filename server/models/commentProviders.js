@@ -53,6 +53,8 @@ module.exports = class CommentProvider extends Model {
       }
       WIKI.data.commentProviders = diskProviders.map(provider => ({
         ...provider,
+        titleKey: provider.i18nTitleKey || `admin:modules.comments.${provider.key.toLowerCase()}.title`,
+        descriptionKey: provider.i18nDescriptionKey || `admin:modules.comments.${provider.key.toLowerCase()}.description`,
         props: commonHelper.parseModuleProps(provider.props)
       }))
 

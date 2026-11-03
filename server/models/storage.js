@@ -4,6 +4,7 @@ const fs = require('fs-extra')
 const _ = require('lodash')
 const yaml = require('js-yaml')
 const commonHelper = require('../helpers/common')
+const { getStorageStatusMessage } = require('../helpers/storage-status')
 
 /* global WIKI */
 
@@ -49,6 +50,8 @@ module.exports = class Storage extends Model {
       }
       WIKI.data.storage = diskTargets.map(target => ({
         ...target,
+        titleKey: target.i18nTitleKey || `admin:modules.storage.${target.key.toLowerCase()}.title`,
+        descriptionKey: target.i18nDescriptionKey || `admin:modules.storage.${target.key.toLowerCase()}.description`,
         isAvailable: _.get(target, 'isAvailable', false),
         props: commonHelper.parseModuleProps(target.props)
       }))
@@ -165,7 +168,7 @@ module.exports = class Storage extends Model {
           await WIKI.models.storage.query().patch({
             state: {
               status: 'error',
-              message: err.message,
+              message: getStorageStatusMessage(err.message, 'Storage initialization failed.'),
               lastAttempt: new Date().toISOString()
             }
           }).where('key', target.key)

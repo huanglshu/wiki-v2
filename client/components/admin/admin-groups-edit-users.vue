@@ -6,7 +6,7 @@
         flat
         prepend-inner-icon='mdi-magnify'
         v-model='search'
-        label='搜索组内用户...'
+        :label='$t("admin:ui.groupUsers.search")'
         hide-details
         dense
         style='max-width: 450px;'
@@ -14,7 +14,7 @@
       v-spacer
       v-btn(color='primary', depressed, @click='searchUserDialog = true', :disabled='group.id === 2')
         v-icon(left) mdi-clipboard-account
-        | 分配用户
+        | {{ $t('admin:ui.groupUsers.assign') }}
     v-data-table(
       :items='group.users',
       :headers='headers',
@@ -34,14 +34,14 @@
             v-list-item(:to='`/users/` + item.id')
               v-list-item-action: v-icon(color='primary') mdi-account-outline
               v-list-item-content
-                v-list-item-title 查看用户资料
+                v-list-item-title {{ $t('admin:ui.groupUsers.viewProfile') }}
             template(v-if='item.id !== 2')
               v-list-item(@click='unassignUser(item.id)')
                 v-list-item-action: v-icon(color='orange') mdi-account-remove-outline
                 v-list-item-content
-                  v-list-item-title 取消分配
+                  v-list-item-title {{ $t('admin:ui.groupUsers.unassign') }}
       template(slot='no-data')
-        v-alert.ma-3(icon='mdi-alert', outlined) 暂无可显示的用户。
+        v-alert.ma-3(icon='mdi-alert', outlined) {{ $t('admin:ui.groupUsers.empty') }}
     .text-center.py-2(v-if='group.users.length > 15')
       v-pagination(v-model='pagination', :length='pageCount')
 
@@ -67,10 +67,10 @@ export default {
   data() {
     return {
       headers: [
-        { text: '编号', value: 'id', width: 70 },
-        { text: '名称', value: 'name' },
-        { text: '邮箱', value: 'email' },
-        { text: '操作', value: 'actions', sortable: false, width: 50 }
+        { text: this.$t('admin:ui.groupUsers.columns.id'), value: 'id', width: 70 },
+        { text: this.$t('admin:ui.groupUsers.columns.name'), value: 'name' },
+        { text: this.$t('admin:ui.groupUsers.columns.email'), value: 'email' },
+        { text: this.$t('admin:ui.groupUsers.columns.actions'), value: 'actions', sortable: false, width: 50 }
       ],
       searchUserDialog: false,
       pagination: 1,
@@ -106,7 +106,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `用户已分配到 ${this.group.name}。`,
+          message: this.$t('admin:ui.groupUsers.assignSuccess', { name: this.group.name }),
           icon: 'assignment_ind'
         })
         this.$emit('refresh')
@@ -132,7 +132,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `用户已从 ${this.group.name} 移出。`,
+          message: this.$t('admin:ui.groupUsers.unassignSuccess', { name: this.group.name }),
           icon: 'assignment_ind'
         })
         this.$emit('refresh')

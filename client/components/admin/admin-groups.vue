@@ -3,10 +3,10 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-people.svg', alt='组', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-people.svg', :alt='$t("admin:ui.groups.title")', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft 组
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 浏览和管理用户组
+            .headline.blue--text.text--darken-2.animated.fadeInLeft {{ $t('admin:ui.groups.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:ui.groups.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/groups', target='_blank')
             v-icon mdi-help-circle
@@ -16,15 +16,15 @@
             template(v-slot:activator='{ on }')
               v-btn.animated.fadeInDown(color='primary', depressed, v-on='on', large)
                 v-icon(left) mdi-plus
-                span 新建组
+                span {{ $t('admin:ui.groups.create') }}
             v-card
-              .dialog-header.is-short 新建组
+              .dialog-header.is-short {{ $t('admin:ui.groups.create') }}
               v-card-text.pt-5
                 v-text-field.md2(
                   outlined
                   prepend-icon='mdi-account-group'
                   v-model='newGroupName'
-                  label='组名称'
+                  :label='$t("admin:ui.groups.name")'
                   counter='255'
                   @keyup.enter='createGroup'
                   @keyup.esc='newGroupDialog = false'
@@ -32,8 +32,8 @@
                   )
               v-card-chin
                 v-spacer
-                v-btn(text, @click='newGroupDialog = false') 取消
-                v-btn(color='primary', @click='createGroup') 创建
+                v-btn(text, @click='newGroupDialog = false') {{ $t('common:actions.cancel') }}
+                v-btn(color='primary', @click='createGroup') {{ $t('common:actions.create') }}
         v-card.mt-3.animated.fadeInUp
           v-data-table(
             :items='groups'
@@ -57,9 +57,9 @@
                   v-tooltip(left, v-if='props.item.isSystem')
                     template(v-slot:activator='{ on }')
                       v-icon(v-on='on') mdi-lock-outline
-                    span 系统组
+                    span {{ $t('admin:ui.groups.system') }}
             template(slot='no-data')
-              v-alert.ma-3(icon='mdi-alert', :value='true', outline) 暂无可显示的组。
+              v-alert.ma-3(icon='mdi-alert', :value='true', outline) {{ $t('admin:ui.groups.empty') }}
           .text-xs-center.py-2(v-if='pageCount > 1')
             v-pagination(v-model='pagination', :length='pageCount')
 </template>
@@ -80,11 +80,11 @@ export default {
       pageCount: 0,
       groups: [],
       headers: [
-        { text: '编号', value: 'id', width: 80, sortable: true },
-        { text: '名称', value: 'name' },
-        { text: '用户数', value: 'userCount', width: 200 },
-        { text: '创建时间', value: 'createdAt', width: 250 },
-        { text: '最后更新', value: 'updatedAt', width: 250 },
+        { text: this.$t('admin:ui.groups.columns.id'), value: 'id', width: 80, sortable: true },
+        { text: this.$t('admin:ui.groups.columns.name'), value: 'name' },
+        { text: this.$t('admin:ui.groups.columns.users'), value: 'userCount', width: 200 },
+        { text: this.$t('admin:ui.groups.columns.created'), value: 'createdAt', width: 250 },
+        { text: this.$t('admin:ui.groups.columns.updated'), value: 'updatedAt', width: 250 },
         { text: '', value: 'isSystem', width: 20, sortable: false }
       ],
       search: '',
@@ -104,7 +104,7 @@ export default {
     async refresh() {
       await this.$apollo.queries.groups.refetch()
       this.$store.commit('showNotification', {
-        message: '组列表已刷新。',
+        message: this.$t('admin:ui.groups.refreshSuccess'),
         style: 'success',
         icon: 'cached'
       })
@@ -113,7 +113,7 @@ export default {
       if (_.trim(this.newGroupName).length < 1) {
         this.$store.commit('showNotification', {
           style: 'red',
-          message: '请输入组名称。',
+          message: this.$t('admin:ui.groups.nameRequired'),
           icon: 'warning'
         })
         return
@@ -143,7 +143,7 @@ export default {
         this.newGroupName = ''
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `组创建成功。`,
+          message: this.$t('admin:ui.groups.createSuccess'),
           icon: 'check'
         })
       } catch (err) {

@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-cloud-storage.svg', alt='存储', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-cloud-storage.svg', :alt='$t("admin:storage.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 存储
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理内容与文件存储目标
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:storage.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:storage.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/storage', target='_blank')
             v-icon mdi-help-circle
@@ -28,8 +28,8 @@
                   v-icon(color='primary', v-else-if='tgt.isEnabled', v-ripple, @click='tgt.key !== `local` && (tgt.isEnabled = false)') mdi-checkbox-marked-outline
                   v-icon(color='grey', v-else, v-ripple, @click='tgt.isEnabled = true') mdi-checkbox-blank-outline
                 v-list-item-content
-                  v-list-item-title.body-2(:class='!tgt.isAvailable ? `grey--text` : (selectedTarget === tgt.key ? `primary--text` : ``)') {{ tgt.title }}
-                  v-list-item-subtitle: .caption(:class='!tgt.isAvailable ? `grey--text text--lighten-1` : (selectedTarget === tgt.key ? `blue--text ` : ``)') {{ tgt.description }}
+                  v-list-item-title.body-2(:class='!tgt.isAvailable ? `grey--text` : (selectedTarget === tgt.key ? `primary--text` : ``)') {{ tgt.titleKey ? $t(tgt.titleKey) : tgt.title }}
+                  v-list-item-subtitle: .caption(:class='!tgt.isAvailable ? `grey--text text--lighten-1` : (selectedTarget === tgt.key ? `blue--text ` : ``)') {{ tgt.descriptionKey ? $t(tgt.descriptionKey) : tgt.description }}
                 v-list-item-avatar(v-if='selectedTarget === tgt.key', size='24')
                   v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
               v-divider(v-if='idx < targets.length - 1')
@@ -50,7 +50,7 @@
                   v-list-item-avatar(color='purple')
                     v-icon(color='white') mdi-clock-outline
                   v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
+                    v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
                     v-list-item-subtitle.purple--text.caption {{tgt.status}}
                   v-list-item-action
                     v-progress-circular(indeterminate, :size='20', :width='2', color='purple')
@@ -58,13 +58,13 @@
                   v-list-item-avatar(color='green')
                     v-icon(color='white') mdi-check-circle
                   v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
+                    v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
                     v-list-item-subtitle.green--text.caption {{$t('admin:storage.lastSync', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
                 template(v-else)
                   v-list-item-avatar(color='red')
                     v-icon(color='white') mdi-close-circle-outline
                   v-list-item-content
-                    v-list-item-title.body-2 {{tgt.title}}
+                    v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
                     v-list-item-subtitle.red--text.caption {{$t('admin:storage.lastSyncAttempt', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
                   v-list-item-action
                     v-menu
@@ -82,23 +82,23 @@
       v-flex(xs12, lg9)
         v-card.wiki-form.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{target.title}}
+            .subtitle-1 {{ target.titleKey ? $t(target.titleKey) : target.title }}
             v-spacer
             v-switch(
               dark
               color='blue lighten-5'
-              label='启用'
+              :label='$t("common:actions.enable")'
               v-model='target.isEnabled'
               hide-details
               inset
               )
           v-card-info(color='blue')
             div
-              div {{target.description}}
+              div {{ target.descriptionKey ? $t(target.descriptionKey) : target.description }}
               span.caption: a(:href='target.website') {{target.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='target.logo', :alt='target.title')
+              img(:src='target.logo', :alt='target.titleKey ? $t(target.titleKey) : target.title')
           v-card-text
             v-form
               i18next.body-2(path='admin:storage.targetState', tag='div', v-if='target.isEnabled')
@@ -230,7 +230,7 @@ import statusQuery from 'gql/admin/storage/storage-query-status.gql'
 import targetsQuery from 'gql/admin/storage/storage-query-targets.gql'
 import targetExecuteActionMutation from 'gql/admin/storage/storage-mutation-executeaction.gql'
 import targetsSaveMutation from 'gql/admin/storage/storage-mutation-save-targets.gql'
-import { translateAdminModules } from '../../helpers/admin-module-zh'
+import { translateAdminModules } from '../../helpers/admin-module'
 
 momentDurationFormatSetup(moment)
 
@@ -271,35 +271,42 @@ export default {
     async refresh() {
       await this.$apollo.queries.targets.refetch()
       this.$store.commit('showNotification', {
-        message: '存储目标列表已刷新。',
+        message: this.$t('admin:ui.storage.refreshSuccess'),
         style: 'success',
         icon: 'cached'
       })
     },
     async save() {
       this.$store.commit(`loadingStart`, 'admin-storage-savetargets')
-      await this.$apollo.mutate({
-        mutation: targetsSaveMutation,
-        variables: {
-          targets: this.targets.map(tgt => _.pick(tgt, [
-            'isEnabled',
-            'key',
-            'config',
-            'mode',
-            'syncInterval'
-          ])).map(str => ({...str, config: str.config.map(cfg => ({...cfg, value: JSON.stringify({ v: cfg.value.value })}))}))
+      try {
+        const resp = await this.$apollo.mutate({
+          mutation: targetsSaveMutation,
+          variables: {
+            targets: this.targets.map(tgt => _.pick(tgt, [
+              'isEnabled',
+              'key',
+              'config',
+              'mode',
+              'syncInterval'
+            ])).map(str => ({...str, config: str.config.map(cfg => ({...cfg, value: JSON.stringify({ v: _.get(cfg, 'value.value') })}))}))
+          }
+        })
+        if (!_.get(resp, 'data.storage.updateTargets.responseResult.succeeded', false)) {
+          throw new Error(_.get(resp, 'data.storage.updateTargets.responseResult.message', this.$t('admin:ui.storage.saveError')))
         }
-      })
-      this.$store.commit('showNotification', {
-        message: '存储配置保存成功。',
-        style: 'success',
-        icon: 'check'
-      })
+        this.$store.commit('showNotification', {
+          message: this.$t('admin:ui.storage.saveSuccess'),
+          style: 'success',
+          icon: 'check'
+        })
+      } catch (err) {
+        this.$store.commit('pushGraphError', err)
+      }
       this.$store.commit(`loadingStop`, 'admin-storage-savetargets')
     },
     getDefaultSchedule(val) {
-      if (!val) { return '不适用' }
-      return moment.duration(val).format('y [年], M [个月], d [天], h [小时], m [分钟]')
+      if (!val) { return this.$t('common:notApplicable') }
+      return moment.duration(val).format(this.$t('admin:ui.storage.durationFormat'))
     },
     async executeAction(targetKey, handler) {
       this.$store.commit(`loadingStart`, 'admin-storage-executeaction')
@@ -314,7 +321,7 @@ export default {
           }
         })
         this.$store.commit('showNotification', {
-          message: '操作已完成。',
+          message: this.$t('admin:ui.storage.actionComplete'),
           style: 'success',
           icon: 'check'
         })
@@ -332,11 +339,16 @@ export default {
       fetchPolicy: 'network-only',
       update: (data) => translateAdminModules('storage', _.cloneDeep(data.storage.targets).map(str => ({
         ...str,
-        config: _.sortBy(str.config.map(cfg => ({
-          ...cfg,
-          value: JSON.parse(cfg.value)
-        })), [t => t.value.order])
-      }))),
+        config: _.sortBy(str.config.map(cfg => {
+          let value = {}
+          try {
+            value = JSON.parse(cfg.value)
+          } catch (err) {
+            console.warn(`Invalid storage config for ${cfg.key}`, err)
+          }
+          return { ...cfg, value }
+        }), [t => t.value.order])
+      })), this.$t),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-storage-targets-refresh')
       }

@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-process.svg', alt='渲染', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-process.svg', :alt='$t("admin:rendering.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 渲染
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理文档渲染管线与解析模块
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:rendering.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:rendering.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/rendering', target='_blank')
             v-icon mdi-help-circle
@@ -23,7 +23,7 @@
           flat
           dark
           )
-          .subtitle-1 处理管线
+          .subtitle-1 {{ $t('admin:rendering.pipeline') }}
         v-expansion-panels.adm-rendering-pipeline(
           v-model='selectedCore'
           accordion
@@ -59,8 +59,8 @@
                     v-list-item-avatar(size='24', tile)
                       v-icon(:color='currentRenderer.key === rdr.key ? "primary" : "grey"') {{rdr.icon}}
                     v-list-item-content
-                      v-list-item-title {{rdr.title}}
-                      v-list-item-subtitle: .caption {{rdr.description}}
+                      v-list-item-title {{ rdr.titleKey ? $t(rdr.titleKey) : rdr.title }}
+                      v-list-item-subtitle: .caption {{ rdr.descriptionKey ? $t(rdr.descriptionKey) : rdr.description }}
                     v-list-item-avatar(size='24')
                       status-indicator(v-if='rdr.isEnabled', positive, pulse)
                       status-indicator(v-else, negative, pulse)
@@ -75,23 +75,23 @@
             dense
             )
             v-icon.mr-2 {{currentRenderer.icon}}
-            .subtitle-1 {{currentRenderer.title}}
+            .subtitle-1 {{ currentRenderer.titleKey ? $t(currentRenderer.titleKey) : currentRenderer.title }}
             v-spacer
             v-switch(
               dark
               color='white'
-              label='启用'
+              :label='$t("common:actions.enable")'
               v-model='currentRenderer.isEnabled'
               hide-details
               inset
               )
           v-card-info(color='blue')
             div
-              div {{currentRenderer.description}}
-              span.caption: a(href='https://docs.requarks.io/en/rendering', target='_blank') 文档
+              div {{ currentRenderer.descriptionKey ? $t(currentRenderer.descriptionKey) : currentRenderer.description }}
+              span.caption: a(href='https://docs.requarks.io/en/rendering', target='_blank') {{ $t('admin:rendering.documentation') }}
           v-card-text.pb-4.pl-4
-            .overline.mb-5 渲染模块配置
-            .body-2.ml-3(v-if='!currentRenderer.config || currentRenderer.config.length < 1'): em 此渲染模块没有可修改的配置项。
+            .overline.mb-5 {{ $t('admin:rendering.moduleConfig') }}
+            .body-2.ml-3(v-if='!currentRenderer.config || currentRenderer.config.length < 1'): em {{ $t('admin:rendering.noConfig') }}
             template(v-else, v-for='(cfg, idx) in currentRenderer.config')
               v-select(
                 v-if='cfg.value.type === "string" && cfg.value.enum'
@@ -140,7 +140,7 @@ import { StatusIndicator } from 'vue-status-indicator'
 
 import renderersQuery from 'gql/admin/rendering/rendering-query-renderers.gql'
 import renderersSaveMutation from 'gql/admin/rendering/rendering-mutation-save-renderers.gql'
-import { translateAdminModules, translateRenderingCore } from '../../helpers/admin-module-zh'
+import { translateRenderingCore } from '../../helpers/admin-module'
 
 export default {
   components: {
@@ -172,7 +172,7 @@ export default {
     async refresh () {
       await this.$apollo.queries.renderers.refetch()
       this.$store.commit('showNotification', {
-        message: '渲染配置已重新加载。',
+        message: this.$t('admin:rendering.refreshSuccess'),
         style: 'success',
         icon: 'cached'
       })
@@ -193,7 +193,7 @@ export default {
         }
       })
       this.$store.commit('showNotification', {
-        message: '渲染配置保存成功。',
+        message: this.$t('admin:rendering.saveSuccess'),
         style: 'success',
         icon: 'check'
       })
@@ -205,13 +205,13 @@ export default {
       query: renderersQuery,
       fetchPolicy: 'network-only',
       update: (data) => {
-        let renderers = translateAdminModules('rendering', _.cloneDeep(data.rendering.renderers).map(str => ({
+        let renderers = _.cloneDeep(data.rendering.renderers).map(str => ({
           ...str,
           config: _.sortBy(str.config.map(cfg => ({
             ...cfg,
             value: JSON.parse(cfg.value)
           })), [t => t.value.order])
-        })))
+        }))
         // Build tree
         const graph = new DepGraph({ circular: true })
         const rawCores = _.filter(renderers, ['dependsOn', null]).map(core => {
@@ -234,7 +234,7 @@ export default {
         _.reverse(graph.overallOrder()).map(coreKey => {
           orderedCores.push(_.find(rawCores, ['key', coreKey]))
         })
-        return orderedCores.map(translateRenderingCore)
+        return orderedCores.map(core => translateRenderingCore(core, this.$t))
       },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-rendering-refresh')

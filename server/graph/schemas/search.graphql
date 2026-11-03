@@ -40,6 +40,8 @@ type SearchMutation {
 type SearchEngine {
   isEnabled: Boolean!
   key: String!
+  titleKey: String
+  descriptionKey: String
   title: String!
   description: String
   logo: String

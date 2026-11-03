@@ -1,0 +1,22 @@
+{
+  "data": {
+    "localization": {
+      "locales": [
+        {
+          "availability": 100,
+          "code": "zh",
+          "name": "Chinese Simplified",
+          "nativeName": "中文",
+          "isRTL": false
+        },
+        {
+          "availability": 100,
+          "code": "en",
+          "name": "English",
+          "nativeName": "English",
+          "isRTL": false
+        }
+      ]
+    }
+  }
+}

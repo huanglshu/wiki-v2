@@ -1,13 +1,13 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 导出
+      .subtitle-1 {{ $t('admin:ui.utilities.export.title') }}
     v-card-text
       .text-center
         img.animated.fadeInUp.wait-p1s(src='/_assets/svg/icon-big-parcel.svg')
-        .body-2 导出为压缩包 / 文件系统目录
+        .body-2 {{ $t('admin:ui.utilities.export.intro') }}
       v-divider.my-4
-      .body-2 选择要导出的内容：
+      .body-2 {{ $t('admin:ui.utilities.export.choose') }}
       v-checkbox(
         v-for='choice of entityChoices'
         :key='choice.key'
@@ -23,20 +23,20 @@
             .text-caption {{choice.hint}}
       v-text-field.mt-7(
         outlined
-        label='目标文件夹路径'
-        hint='用于保存导出内容的绝对路径或相对于 Wiki.js 安装目录的路径。注意：目标文件夹必须为空！'
+        :label='$t("admin:ui.utilities.export.pathLabel")'
+        :hint='$t("admin:ui.utilities.export.pathHint")'
         persistent-hint
         v-model='filePath'
       )
 
       v-alert.mt-3(color='deep-orange', outlined, icon='mdi-alert', prominent)
-        .body-2 根据所选内容，压缩包可能包含站点配置密钥和用户密码哈希等敏感数据，请妥善保管。
-        .body-2 如需长期保存备份，建议对压缩包进行加密。
+        .body-2 {{ $t('admin:ui.utilities.export.warning') }}
+        .body-2 {{ $t('admin:ui.utilities.export.encryptHint') }}
 
     v-card-chin
       v-btn.px-3(depressed, color='deep-orange darken-2', :disabled='entities.length < 1', @click='startExport').ml-0
         v-icon(left, color='white') mdi-database-export
-        span.white--text 开始导出
+        span.white--text {{ $t('admin:ui.utilities.export.start') }}
     v-dialog(
       v-model='isLoading'
       persistent
@@ -50,8 +50,8 @@
             color='#FFF'
             style='margin: 0 auto;'
           )
-          .mt-5.body-1.white--text 正在导出...
-          .caption 请稍候，此操作可能需要一段时间
+          .mt-5.body-1.white--text {{ $t('admin:ui.utilities.export.running') }}
+          .caption {{ $t('admin:ui.utilities.export.wait') }}
           v-progress-linear.mt-5(
             color='white'
             :value='progress'
@@ -67,14 +67,14 @@
       v-card(color='green darken-2', dark)
         v-card-text.pa-10.text-center
           v-icon(size='60') mdi-check-circle-outline
-          .my-5.body-1.white--text 导出完成
+          .my-5.body-1.white--text {{ $t('admin:ui.utilities.export.success') }}
         v-card-actions.green.darken-1
           v-spacer
           v-btn.px-5(
             color='white'
             outlined
             @click='isSuccess = false'
-          ) 关闭
+          ) {{ $t('common:actions.close') }}
           v-spacer
     v-dialog(
       v-model='isFailed'
@@ -84,13 +84,13 @@
       v-card(color='red darken-2', dark)
         v-toolbar(color='red darken-2', dense)
           v-icon mdi-alert
-          .body-2.pl-3 导出失败
+          .body-2.pl-3 {{ $t('admin:ui.utilities.export.failed') }}
           v-spacer
           v-btn.px-5(
             color='white'
             text
             @click='isFailed = false'
-            ) 关闭
+            ) {{ $t('common:actions.close') }}
         v-card-text.pa-5.red.darken-4.white--text
           span {{errorMessage}}
 </template>
@@ -121,45 +121,49 @@ export default {
       return [
         {
           key: 'assets',
-          label: '资源文件',
-          hint: '图片、文档等媒体文件。'
+          labelKey: 'admin:ui.utilities.export.entities.assets',
+          hintKey: 'admin:ui.utilities.export.entities.assetsHint'
         },
         {
           key: 'comments',
-          label: '评论',
-          hint: '仅包含使用内置评论模块发表的评论。'
+          labelKey: 'admin:ui.utilities.export.entities.comments',
+          hintKey: 'admin:ui.utilities.export.entities.commentsHint'
         },
         {
           key: 'navigation',
-          label: '导航',
-          hint: '使用静态或自定义导航时的侧边栏链接。'
+          labelKey: 'admin:ui.utilities.export.entities.navigation',
+          hintKey: 'admin:ui.utilities.export.entities.navigationHint'
         },
         {
           key: 'pages',
-          label: '页面',
-          hint: '页面内容、标签及相关元数据。'
+          labelKey: 'admin:ui.utilities.export.entities.pages',
+          hintKey: 'admin:ui.utilities.export.entities.pagesHint'
         },
         {
           key: 'history',
-          label: '页面历史',
-          hint: '页面的所有历史版本及相关元数据。'
+          labelKey: 'admin:ui.utilities.export.entities.history',
+          hintKey: 'admin:ui.utilities.export.entities.historyHint'
         },
         {
           key: 'settings',
-          label: '设置',
-          hint: '站点配置和模块设置。'
+          labelKey: 'admin:ui.utilities.export.entities.settings',
+          hintKey: 'admin:ui.utilities.export.entities.settingsHint'
         },
         {
           key: 'groups',
-          label: '用户组',
-          hint: '组权限及页面规则。'
+          labelKey: 'admin:ui.utilities.export.entities.groups',
+          hintKey: 'admin:ui.utilities.export.entities.groupsHint'
         },
         {
           key: 'users',
-          label: '用户',
-          hint: '用户元数据及用户组关系。'
+          labelKey: 'admin:ui.utilities.export.entities.users',
+          hintKey: 'admin:ui.utilities.export.entities.usersHint'
         }
-      ]
+      ].map(item => ({
+        ...item,
+        label: this.$t(item.labelKey),
+        hint: this.$t(item.hintKey)
+      }))
     }
   },
   methods: {
@@ -182,11 +186,11 @@ export default {
         })
         const respStatusObj = _get(respStatus, 'data.system.exportStatus', {})
         if (!respStatusObj) {
-          throw new Error('发生意外错误。')
+          throw new Error(this.$t('common:error.unexpected'))
         } else {
           switch (respStatusObj.status) {
             case 'error': {
-              throw new Error(respStatusObj.message || '发生意外错误。')
+              throw new Error(respStatusObj.message || this.$t('common:error.unexpected'))
             }
             case 'running': {
               this.progress = respStatusObj.progress || 0
@@ -203,7 +207,7 @@ export default {
               break
             }
             default: {
-              throw new Error('导出状态无效。')
+              throw new Error(this.$t('admin:ui.utilities.export.invalidStatus'))
             }
           }
         }
@@ -249,7 +253,7 @@ export default {
 
           const respExportObj = _get(respExport, 'data.system.export', {})
           if (!_get(respExportObj, 'responseResult.succeeded', false)) {
-            this.errorMessage = _get(respExportObj, 'responseResult.message', '发生意外错误。')
+            this.errorMessage = _get(respExportObj, 'responseResult.message', this.$t('common:error.unexpected'))
             this.isLoading = false
             this.isFailed = true
             return

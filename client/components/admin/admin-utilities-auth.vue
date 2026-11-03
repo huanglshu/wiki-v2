@@ -1,20 +1,20 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 身份验证
+      .subtitle-1 {{ $t('admin:ui.utilities.auth.title') }}
     v-card-text
-      .subtitle-1.pb-3.primary--text 生成新的身份验证公钥 / 私钥证书
-      .body-2 此操作会使所有现有会话令牌失效，并让所有用户退出登录。
-      .body-2.red--text 操作完成后需要重新登录。
+      .subtitle-1.pb-3.primary--text {{ $t('admin:ui.utilities.auth.regenTitle') }}
+      .body-2 {{ $t('admin:ui.utilities.auth.regenHint') }}
+      .body-2.red--text {{ $t('admin:ui.utilities.auth.regenWarning') }}
       v-btn(outlined, color='primary', @click='regenCerts', :disabled='loading').ml-0.mt-3
         v-icon(left) mdi-gesture-double-tap
-        span 继续
+        span {{ $t('common:actions.continue') }}
       v-divider.my-5
-      .subtitle-1.pb-3.primary--text 重置访客用户
-      .body-2 将访客用户重置为默认参数和权限。
+      .subtitle-1.pb-3.primary--text {{ $t('admin:ui.utilities.auth.resetGuestTitle') }}
+      .body-2 {{ $t('admin:ui.utilities.auth.resetGuestHint') }}
       v-btn(outlined, color='primary', @click='resetGuest', :disabled='loading').ml-0.mt-3
         v-icon(left) mdi-gesture-double-tap
-        span 继续
+        span {{ $t('common:actions.continue') }}
 </template>
 
 <script>
@@ -41,7 +41,7 @@ export default {
         const resp = _.get(respRaw, 'data.authentication.regenerateCertificates.responseResult', {})
         if (resp.succeeded) {
           this.$store.commit('showNotification', {
-            message: '新证书生成成功。',
+            message: this.$t('admin:ui.utilities.auth.regenSuccess'),
             style: 'success',
             icon: 'check'
           })
@@ -70,7 +70,7 @@ export default {
         const resp = _.get(respRaw, 'data.authentication.resetGuestUser.responseResult', {})
         if (resp.succeeded) {
           this.$store.commit('showNotification', {
-            message: '访客用户重置成功。',
+            message: this.$t('admin:ui.utilities.auth.resetGuestSuccess'),
             style: 'success',
             icon: 'check'
           })

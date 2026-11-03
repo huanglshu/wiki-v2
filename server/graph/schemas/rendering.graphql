@@ -38,6 +38,8 @@ type RenderingMutation {
 type Renderer {
   isEnabled: Boolean!
   key: String!
+  titleKey: String
+  descriptionKey: String
   title: String!
   description: String
   icon: String

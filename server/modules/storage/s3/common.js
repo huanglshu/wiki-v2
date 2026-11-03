@@ -3,6 +3,7 @@ const { pipeline } = require('node:stream/promises')
 const { Transform } = require('node:stream')
 const _ = require('lodash')
 const pageHelper = require('../../../helpers/page.js')
+const { getObjectKey } = require('./key-path')
 
 /* global WIKI */
 
@@ -57,6 +58,7 @@ module.exports = class S3CompatibleStorage {
 
     this.s3 = new S3(s3Config)
     this.bucketName = bucket
+    this.basePath = this.config.basePath
 
     // determine if a bucket exists and you have permission to access it
     await this.s3.headBucket().promise()
@@ -66,17 +68,17 @@ module.exports = class S3CompatibleStorage {
   async created(page) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Creating file ${page.path}...`)
     const filePath = getFilePath(page, 'path')
-    await this.s3.putObject({ Key: filePath, Body: page.injectMetadata() }).promise()
+    await this.s3.putObject({ Key: getObjectKey(this.basePath, filePath), Body: page.injectMetadata() }).promise()
   }
   async updated(page) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Updating file ${page.path}...`)
     const filePath = getFilePath(page, 'path')
-    await this.s3.putObject({ Key: filePath, Body: page.injectMetadata() }).promise()
+    await this.s3.putObject({ Key: getObjectKey(this.basePath, filePath), Body: page.injectMetadata() }).promise()
   }
   async deleted(page) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Deleting file ${page.path}...`)
     const filePath = getFilePath(page, 'path')
-    await this.s3.deleteObject({ Key: filePath }).promise()
+    await this.s3.deleteObject({ Key: getObjectKey(this.basePath, filePath) }).promise()
   }
   async renamed(page) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Renaming file ${page.path} to ${page.destinationPath}...`)
@@ -90,8 +92,9 @@ module.exports = class S3CompatibleStorage {
         destinationFilePath = `${page.destinationLocaleCode}/${destinationFilePath}`
       }
     }
-    await this.s3.copyObject({ CopySource: `${this.bucketName}/${sourceFilePath}`, Key: destinationFilePath }).promise()
-    await this.s3.deleteObject({ Key: sourceFilePath }).promise()
+    const sourceKey = getObjectKey(this.basePath, sourceFilePath)
+    await this.s3.copyObject({ CopySource: `${this.bucketName}/${sourceKey}`, Key: getObjectKey(this.basePath, destinationFilePath) }).promise()
+    await this.s3.deleteObject({ Key: sourceKey }).promise()
   }
   /**
    * ASSET UPLOAD
@@ -100,7 +103,7 @@ module.exports = class S3CompatibleStorage {
    */
   async assetUploaded (asset) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Creating new file ${asset.path}...`)
-    await this.s3.putObject({ Key: asset.path, Body: asset.data }).promise()
+    await this.s3.putObject({ Key: getObjectKey(this.basePath, asset.path), Body: asset.data }).promise()
   }
   /**
    * ASSET DELETE
@@ -109,7 +112,7 @@ module.exports = class S3CompatibleStorage {
    */
   async assetDeleted (asset) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Deleting file ${asset.path}...`)
-    await this.s3.deleteObject({ Key: asset.path }).promise()
+    await this.s3.deleteObject({ Key: getObjectKey(this.basePath, asset.path) }).promise()
   }
   /**
    * ASSET RENAME
@@ -118,8 +121,9 @@ module.exports = class S3CompatibleStorage {
    */
   async assetRenamed (asset) {
     WIKI.logger.info(`(STORAGE/${this.storageName}) Renaming file from ${asset.path} to ${asset.destinationPath}...`)
-    await this.s3.copyObject({ CopySource: `${this.bucketName}/${asset.path}`, Key: asset.destinationPath }).promise()
-    await this.s3.deleteObject({ Key: asset.path }).promise()
+    const sourceKey = getObjectKey(this.basePath, asset.path)
+    await this.s3.copyObject({ CopySource: `${this.bucketName}/${sourceKey}`, Key: getObjectKey(this.basePath, asset.destinationPath) }).promise()
+    await this.s3.deleteObject({ Key: sourceKey }).promise()
   }
   async getLocalLocation () {
 
@@ -140,7 +144,7 @@ module.exports = class S3CompatibleStorage {
         transform: async (page, enc, cb) => {
           const filePath = getFilePath(page, 'path')
           WIKI.logger.info(`(STORAGE/${this.storageName}) Adding page ${filePath}...`)
-          await this.s3.putObject({ Key: filePath, Body: pageHelper.injectPageMetadata(page) }).promise()
+          await this.s3.putObject({ Key: getObjectKey(this.basePath, filePath), Body: pageHelper.injectPageMetadata(page) }).promise()
           cb()
         }
       })
@@ -156,7 +160,7 @@ module.exports = class S3CompatibleStorage {
         transform: async (asset, enc, cb) => {
           const filename = (asset.folderId && asset.folderId > 0) ? `${_.get(assetFolders, asset.folderId)}/${asset.filename}` : asset.filename
           WIKI.logger.info(`(STORAGE/${this.storageName}) Adding asset ${filename}...`)
-          await this.s3.putObject({ Key: filename, Body: asset.data }).promise()
+          await this.s3.putObject({ Key: getObjectKey(this.basePath, filename), Body: asset.data }).promise()
           cb()
         }
       })

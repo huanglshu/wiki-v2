@@ -49,6 +49,8 @@ module.exports = class Analytics extends Model {
       }
       WIKI.data.analytics = diskProviders.map(provider => ({
         ...provider,
+        titleKey: provider.i18nTitleKey || `admin:modules.analytics.${provider.key.toLowerCase()}.title`,
+        descriptionKey: provider.i18nDescriptionKey || `admin:modules.analytics.${provider.key.toLowerCase()}.description`,
         props: commonHelper.parseModuleProps(provider.props)
       }))
 

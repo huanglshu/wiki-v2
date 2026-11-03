@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img(src='/_assets/svg/icon-console.svg', alt='开发工具', style='width: 80px;')
+          img(src='/_assets/svg/icon-console.svg', :alt='$t("admin:ui.devFlags.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text 开发工具
-            .subtitle-1.grey--text 标志
+            .headline.primary--text {{ $t('admin:ui.devFlags.title') }}
+            .subtitle-1.grey--text {{ $t('admin:ui.devFlags.subtitle') }}
           v-spacer
           v-btn(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
@@ -14,23 +14,23 @@
 
         v-card.mt-3(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `white grey--text text--darken-3`')
           v-alert(color='red', :value='true', icon='mdi-alert', dark, prominent)
-            span 除非明确了解这些标志的作用，否则请勿启用！
-            .caption 启用后可能导致数据丢失或安装损坏！
+            span {{ $t('admin:ui.devFlags.warning') }}
+            .caption {{ $t('admin:ui.devFlags.warning2') }}
           v-card-text
             v-switch.mt-3(
               color='primary'
-              hint='记录 LDAP/AD 登录尝试的详细调试信息。'
+              :hint='$t("admin:ui.devFlags.ldap.hint")'
               persistent-hint
-              label='LDAP 调试'
+              :label='$t("admin:ui.devFlags.ldap.label")'
               v-model='flags.ldapdebug'
               inset
             )
             v-divider.mt-3
             v-switch.mt-3(
               color='red'
-              hint='将所有数据库查询记录到控制台。'
+              :hint='$t("admin:ui.devFlags.sql.hint")'
               persistent-hint
-              label='SQL 查询日志'
+              :label='$t("admin:ui.devFlags.sql.label")'
               v-model='flags.sqllog'
               inset
             )
@@ -66,7 +66,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '标志已成功应用。',
+          message: this.$t('admin:ui.devFlags.saveSuccess'),
           icon: 'check'
         })
       } catch (err) {

@@ -49,6 +49,8 @@ module.exports = class SearchEngine extends Model {
       }
       WIKI.data.searchEngines = diskSearchEngines.map(searchEngine => ({
         ...searchEngine,
+        titleKey: searchEngine.i18nTitleKey || `admin:modules.search.${searchEngine.key.toLowerCase()}.title`,
+        descriptionKey: searchEngine.i18nDescriptionKey || `admin:modules.search.${searchEngine.key.toLowerCase()}.description`,
         props: commonHelper.parseModuleProps(searchEngine.props)
       }))
 

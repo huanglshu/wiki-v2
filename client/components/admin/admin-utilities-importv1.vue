@@ -1,22 +1,22 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 从 Wiki.js 1.x 导入
+      .subtitle-1 {{ $t('admin:ui.utilities.importv1.title') }}
     v-card-text
       .text-center
         img.animated.fadeInUp.wait-p1s(src='/_assets/svg/icon-software.svg')
-        .body-2 从 Wiki.js 1.x 导入
+        .body-2 {{ $t('admin:ui.utilities.importv1.title') }}
       v-divider.my-4
-      .body-2 可使用此工具从 Wiki.js 1.x 安装导入数据。请选择要导入的内容：
+      .body-2 {{ $t('admin:ui.utilities.importv1.intro') }}
       v-checkbox(
-        label='内容 + 上传文件'
+        :label='$t("admin:ui.utilities.importv1.contentAndUploads")'
         value='content'
         color='deep-orange darken-2'
         v-model='importFilters'
         hide-details
         )
         template(v-slot:label)
-          strong.deep-orange--text.text--darken-2 内容 + 上传文件
+          strong.deep-orange--text.text--darken-2 {{ $t('admin:ui.utilities.importv1.contentAndUploads') }}
       .pl-8(v-if='wantContent')
         v-radio-group(v-model='contentMode', hide-details)
           v-radio(
@@ -25,21 +25,21 @@
             )
             template(v-slot:label)
               div
-                span 从 Git 连接导入
-                .caption: em #[strong.primary--text 推荐] | 同时自动配置 Git 存储模块。
+                span {{ $t('admin:ui.utilities.importv1.fromGit') }}
+                .caption: em {{ $t('admin:ui.utilities.importv1.fromGitHint') }}
         .pl-8.mt-5(v-if='needGit')
           v-row
             v-col(cols='8')
               v-select(
-                label='身份验证方式'
-                :items='gitAuthModes'
+                :label='$t("admin:ui.utilities.importv1.authMode")'
+                :items='localizedGitAuthModes'
                 v-model='gitAuthMode'
                 outlined
                 hide-details
               )
             v-col(cols='4')
               v-switch(
-                label='验证 SSL 证书'
+                :label='$t("admin:ui.utilities.importv1.verifySsl")'
                 v-model='gitVerifySSL'
                 hide-details
                 color='primary'
@@ -47,14 +47,14 @@
             v-col(cols='8')
               v-text-field(
                 outlined
-                label='仓库地址'
+                :label='$t("admin:ui.utilities.importv1.repoUrl")'
                 :placeholder='(gitAuthMode === `ssh`) ? `e.g. git@github.com:orgname/repo.git` : `e.g. https://github.com/orgname/repo.git`'
                 hide-details
                 v-model='gitRepoUrl'
               )
             v-col(cols='4')
               v-text-field(
-                label='分支'
+                :label='$t("admin:ui.utilities.importv1.branch")'
                 placeholder='e.g. master'
                 v-model='gitRepoBranch'
                 outlined
@@ -63,7 +63,7 @@
             v-col(v-if='gitAuthMode === `ssh`', cols='12')
               v-textarea(
                 outlined
-                label='私钥内容'
+                :label='$t("admin:ui.utilities.importv1.privateKey")'
                 placeholder='-----BEGIN RSA PRIVATE KEY-----\n...\n-----END RSA PRIVATE KEY-----'
                 hide-details
                 v-model='gitPrivKey'
@@ -71,7 +71,7 @@
             template(v-else-if='gitAuthMode === `basic`')
               v-col(cols='6')
                 v-text-field(
-                  label='用户名'
+                  :label='$t("admin:ui.utilities.importv1.username")'
                   v-model='gitUsername'
                   outlined
                   hide-details
@@ -79,14 +79,14 @@
               v-col(cols='6')
                 v-text-field(
                   type='password'
-                  label='密码 / 个人访问令牌'
+                  :label='$t("admin:ui.utilities.importv1.password")'
                   v-model='gitPassword'
                   outlined
                   hide-details
                 )
             v-col(cols='6')
               v-text-field(
-                label='默认作者邮箱'
+                :label='$t("admin:ui.utilities.importv1.authorEmail")'
                 placeholder='e.g. name@company.com'
                 v-model='gitUserEmail'
                 outlined
@@ -94,7 +94,7 @@
               )
             v-col(cols='6')
               v-text-field(
-                label='默认作者名称'
+                :label='$t("admin:ui.utilities.importv1.authorName")'
                 placeholder='e.g. John Smith'
                 v-model='gitUserName'
                 outlined
@@ -102,16 +102,16 @@
               )
             v-col(cols='12')
               v-text-field(
-                label='本地仓库路径'
+                :label='$t("admin:ui.utilities.importv1.localRepoPath")'
                 placeholder='e.g. ./data/repo'
                 v-model='gitRepoPath'
                 outlined
                 hide-details
               )
-              .caption.mt-2 此文件夹必须为空或尚不存在。#[strong.deep-orange--text.text--darken-2 请勿] 指向现有 Wiki.js 1.x 仓库目录。通常保持默认值即可。
+              .caption.mt-2 {{ $t('admin:ui.utilities.importv1.localRepoPathHint') }}
           v-alert(color='deep-orange', outlined, icon='mdi-alert', prominent)
-            .body-2 - 注意：如果已配置 Git 存储模块，其配置将被以上设置替换。
-            .body-2 - 虽然 v1 和 v2 可以共用同一个远程 Git 仓库，但不应该同时编辑相同页面。
+            .body-2 - {{ $t('admin:ui.utilities.importv1.gitWarning') }}
+            .body-2 - {{ $t('admin:ui.utilities.importv1.gitWarning2') }}
         v-radio-group(v-model='contentMode', hide-details)
           v-divider
           v-radio.mt-3(
@@ -120,31 +120,31 @@
             )
             template(v-slot:label)
               div
-                span 从本地文件夹导入
-                .caption: em 仅在 Wiki.js 1.x 未配置 Git 时选择此项。
+                span {{ $t('admin:ui.utilities.importv1.fromDisk') }}
+                .caption: em {{ $t('admin:ui.utilities.importv1.fromDiskHint') }}
         .pl-8.mt-5(v-if='needDisk')
           v-text-field(
             outlined
-            label='内容仓库路径'
-            hint='Wiki.js 1.x 内容在磁盘上的绝对路径。'
+            :label='$t("admin:ui.utilities.importv1.contentPath")'
+            :hint='$t("admin:ui.utilities.importv1.contentPathHint")'
             persistent-hint
             v-model='contentPath'
           )
 
       v-checkbox(
-        label='用户'
+        :label='$t("admin:ui.utilities.importv1.users")'
         value='users'
         color='deep-orange darken-2'
         v-model='importFilters'
         hide-details
         )
         template(v-slot:label)
-          strong.deep-orange--text.text--darken-2 用户
+          strong.deep-orange--text.text--darken-2 {{ $t('admin:ui.utilities.importv1.users') }}
       .pl-8.mt-5(v-if='wantUsers')
         v-text-field(
           outlined
-          label='MongoDB 连接字符串'
-          hint='用于连接 Wiki.js 1.x MongoDB 数据库的连接字符串。'
+          :label='$t("admin:ui.utilities.importv1.mongoConn")'
+          :hint='$t("admin:ui.utilities.importv1.mongoConnHint")'
           persistent-hint
           v-model='dbConnStr'
         )
@@ -155,8 +155,8 @@
             )
             template(v-slot:label)
               div
-                span 为每种不同的用户权限配置创建组
-                .caption: em #[strong.primary--text 推荐] | 权限相同的用户将分配到同一个组。可能会创建较多组。
+                span {{ $t('admin:ui.utilities.importv1.groupMulti') }}
+                .caption: em {{ $t('admin:ui.utilities.importv1.groupMultiHint') }}
           v-divider
           v-radio.mt-3(
             value='SINGLE'
@@ -164,8 +164,8 @@
             )
             template(v-slot:label)
               div
-                span 将所有已导入用户放入同一个组
-                .caption: em 新组默认启用读取权限。
+                span {{ $t('admin:ui.utilities.importv1.groupSingle') }}
+                .caption: em {{ $t('admin:ui.utilities.importv1.groupSingleHint') }}
           v-divider
           v-radio.mt-3(
             value='NONE'
@@ -173,17 +173,17 @@
             )
             template(v-slot:label)
               div
-                span 不创建任何组
-                .caption: em 在分配用户组之前，用户将无法访问 Wiki。
+                span {{ $t('admin:ui.utilities.importv1.groupNone') }}
+                .caption: em {{ $t('admin:ui.utilities.importv1.groupNoneHint') }}
 
         v-alert.mt-5(color='deep-orange', outlined, icon='mdi-alert', prominent)
-          .body-2 当前安装中已存在的用户不会被导入。完成后会显示被跳过的用户列表。
-          .caption.grey--text 如需迁移旧安装中的用户，必须先删除当前安装中的同名用户。
+          .body-2 {{ $t('admin:ui.utilities.importv1.existingUsersWarning') }}
+          .caption.grey--text {{ $t('admin:ui.utilities.importv1.existingUsersHint') }}
 
     v-card-chin
       v-btn.px-3(depressed, color='deep-orange darken-2', :disabled='!wantUsers && !wantContent', @click='startImport').ml-0
         v-icon(left, color='white') mdi-database-import
-        span.white--text 开始导入
+        span.white--text {{ $t('admin:ui.utilities.importv1.start') }}
     v-dialog(
       v-model='isLoading'
       persistent
@@ -197,8 +197,8 @@
             color='#FFF'
             style='margin: 0 auto;'
           )
-          .mt-5.body-1.white--text 正在从 Wiki.js 1.x 导入...
-          .caption 请稍候
+          .mt-5.body-1.white--text {{ $t('admin:ui.utilities.importv1.running') }}
+          .caption {{ $t('admin:ui.utilities.importv1.wait') }}
           v-progress-linear.mt-5(
             color='white'
             :value='progress'
@@ -214,10 +214,10 @@
       v-card(color='green darken-2', dark)
         v-card-text.pa-10.text-center
           v-icon(size='60') mdi-check-circle-outline
-          .my-5.body-1.white--text 导入完成
+          .my-5.body-1.white--text {{ $t('admin:ui.utilities.importv1.success') }}
           template(v-if='wantUsers')
             .body-2
-              span 已导入 #[strong {{successUsers}}] 个用户
+              span {{ $t('admin:ui.utilities.importv1.usersImported', { count: successUsers }) }}
               v-btn.text-none.ml-3(
                 v-if='failedUsers.length > 0'
                 text
@@ -226,15 +226,15 @@
                 @click='showFailedUsers = true'
                 )
                 v-icon(left) mdi-alert
-                span {{failedUsers.length}} 个失败
-            .body-2 已创建 #[strong {{successGroups}}] 个组
+                span {{ $t('admin:ui.utilities.importv1.failedCount', { count: failedUsers.length }) }}
+            .body-2 {{ $t('admin:ui.utilities.importv1.groupsCreated', { count: successGroups }) }}
         v-card-actions.green.darken-1
           v-spacer
           v-btn.px-5(
             color='white'
             outlined
             @click='isSuccess = false'
-          ) 关闭
+          ) {{ $t('common:actions.close') }}
           v-spacer
     v-dialog(
       v-model='showFailedUsers'
@@ -244,20 +244,20 @@
       v-card(color='red darken-2', dark)
         v-toolbar(color='red darken-2', dense)
           v-icon mdi-alert
-          .body-2.pl-3 用户导入失败记录
+          .body-2.pl-3 {{ $t('admin:ui.utilities.importv1.failedTitle') }}
           v-spacer
           v-btn.px-5(
             color='white'
             text
             @click='showFailedUsers = false'
-            ) 关闭
+            ) {{ $t('common:actions.close') }}
         v-simple-table(dense, fixed-header, height='300px')
           template(v-slot:default)
             thead
               tr
-                th 验证方式
-                th 邮箱
-                th 错误
+                th {{ $t('admin:ui.utilities.importv1.provider') }}
+                th {{ $t('admin:ui.users.email') }}
+                th {{ $t('admin:ui.utilities.importv1.error') }}
             tbody
               tr(v-for='(fusr, idx) in failedUsers', :key='`fusr-` + idx')
                 td {{fusr.provider}}
@@ -292,7 +292,7 @@ export default {
       gitAuthMode: 'ssh',
       gitAuthModes: [
         { text: 'SSH', value: 'ssh' },
-        { text: '用户名和密码', value: 'basic' }
+        { textKey: 'admin:ui.utilities.importv1.basicAuth', value: 'basic' }
       ],
       gitVerifySSL: true,
       gitRepoUrl: '',
@@ -323,6 +323,12 @@ export default {
     },
     needGit () {
       return this.contentMode === `git`
+    },
+    localizedGitAuthModes () {
+      return this.gitAuthModes.map(mode => ({
+        ...mode,
+        text: mode.text || this.$t(mode.textKey)
+      }))
     }
   },
   methods: {
@@ -345,7 +351,7 @@ export default {
             })
             const respObj = _.get(resp, 'data.system.importUsersFromV1', {})
             if (!_.get(respObj, 'responseResult.succeeded', false)) {
-              throw new Error(_.get(respObj, 'responseResult.message', '发生意外错误。'))
+              throw new Error(_.get(respObj, 'responseResult.message', this.$t('common:error.unexpected')))
             }
             this.successUsers = _.get(respObj, 'usersCount', 0)
             this.successGroups = _.get(respObj, 'groupsCount', 0)
@@ -429,7 +435,7 @@ export default {
               })
               const respObj = _.get(respSv, 'data.storage.updateTargets', {})
               if (!_.get(respObj, 'responseResult.succeeded', false)) {
-                throw new Error(_.get(respObj, 'responseResult.message', '发生意外错误。'))
+                throw new Error(_.get(respObj, 'responseResult.message', this.$t('common:error.unexpected')))
               }
 
               this.progress += 10
@@ -446,12 +452,12 @@ export default {
                 if (_.has(respStatus, 'data.storage.status[0]')) {
                   const st = _.find(respStatus.data.storage.status, ['key', this.contentMode])
                   if (!st) {
-                    throw new Error('无法配置存储目标。')
+                    throw new Error(this.$t('admin:ui.utilities.importv1.storageConfigError'))
                   }
                   switch (st.status) {
                     case 'pending':
                       if (statusAttempts >= 10) {
-                        throw new Error('存储目标一直处于等待状态，请重试。')
+                        throw new Error(this.$t('admin:ui.utilities.importv1.storagePendingError'))
                       } else {
                         continue
                       }
@@ -462,7 +468,7 @@ export default {
                       throw new Error(st.message)
                   }
                 } else {
-                  throw new Error('无法获取存储同步状态。')
+                  throw new Error(this.$t('admin:ui.utilities.importv1.storageStatusError'))
                 }
               }
 
@@ -480,12 +486,12 @@ export default {
 
               const respImportObj = _.get(respImport, 'data.storage.executeAction', {})
               if (!_.get(respImportObj, 'responseResult.succeeded', false)) {
-                throw new Error(_.get(respImportObj, 'responseResult.message', '发生意外错误。'))
+                throw new Error(_.get(respImportObj, 'responseResult.message', this.$t('common:error.unexpected')))
               }
 
               this.progress += 15
             } else {
-              throw new Error('无法获取存储目标。')
+              throw new Error(this.$t('admin:ui.utilities.importv1.storageTargetsError'))
             }
           } catch (err) {
             this.$store.commit('pushGraphError', err)

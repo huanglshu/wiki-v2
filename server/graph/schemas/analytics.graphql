@@ -58,6 +58,12 @@ type AnalyticsProvider {
   "Unique identifier for this provider"
   key: String!
 
+  "Translation key for the provider title"
+  titleKey: String
+
+  "Translation key for the provider description"
+  descriptionKey: String
+
   "List of configuration properties, formatted as stringified JSON objects"
   props: [String]
 

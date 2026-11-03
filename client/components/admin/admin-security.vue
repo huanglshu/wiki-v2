@@ -3,60 +3,60 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-private.svg', alt='安全', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-private.svg', :alt='$t("admin:ui.security.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 安全
-            .subtitle-1.grey--text.animated.fadeInLeft 管理站点安全与上传设置
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:ui.security.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft {{ $t('admin:ui.security.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
-            span 应用
+            span {{ $t('common:actions.apply') }}
         v-form.pt-3
           v-layout(row wrap)
             v-flex(lg6 xs12)
               v-card.animated.fadeInUp
                 v-toolbar(color='red darken-2', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 安全设置
+                  v-toolbar-title.subtitle-1 {{ $t('admin:ui.security.settings') }}
                 v-card-info(color='red')
-                  span 开启或关闭安全功能前，请确认已了解相关影响。
+                  span {{ $t('admin:ui.security.notice') }}
                 v-card-text
                   v-switch(
                     inset
-                    label='阻止开放重定向'
+                    :label='$t("admin:ui.security.openRedirect.label")'
                     color='red darken-2'
                     v-model='config.securityOpenRedirect'
                     persistent-hint
-                    hint='阻止用户控制的 URL 跳转到 Wiki 以外的网站，以防止开放重定向攻击。'
+                    :hint='$t("admin:ui.security.openRedirect.hint")'
                     )
 
                   v-divider.mt-3
                   v-switch.mt-3(
                     inset
-                    label='阻止 iframe 嵌入'
+                    :label='$t("admin:ui.security.iframe.label")'
                     color='red darken-2'
                     v-model='config.securityIframe'
                     persistent-hint
-                    hint='阻止其他网站通过 iframe 嵌入 Wiki，以防止点击劫持攻击。'
+                    :hint='$t("admin:ui.security.iframe.hint")'
                     )
 
                   v-divider.mt-3
                   v-switch(
                     inset
-                    label='同源 Referrer 策略'
+                    :label='$t("admin:ui.security.referrer.label")'
                     color='red darken-2'
                     v-model='config.securityReferrerPolicy'
                     persistent-hint
-                    hint='将 Referrer 请求头限制为同源。'
+                    :hint='$t("admin:ui.security.referrer.hint")'
                     )
 
                   v-divider.mt-3
                   v-switch(
                     inset
-                    label='信任 X-Forwarded-* 代理头'
+                    :label='$t("admin:ui.security.trustProxy.label")'
                     color='red darken-2'
                     v-model='config.securityTrustProxy'
                     persistent-hint
-                    hint='当 Wiki.js 前方使用 nginx、Apache 或 Cloudflare 等反向代理时启用，否则请关闭。'
+                    :hint='$t("admin:ui.security.trustProxy.hint")'
                     )
 
                   //- v-divider.mt-3
@@ -73,15 +73,15 @@
                   v-divider.mt-3
                   v-switch(
                     inset
-                    label='强制使用 HSTS'
+                    :label='$t("admin:ui.security.hsts.label")'
                     color='red darken-2'
                     v-model='config.securityHSTS'
                     persistent-hint
-                    hint='确保无法通过不安全的 HTTP 连接访问站点。'
+                    :hint='$t("admin:ui.security.hsts.hint")'
                     )
                   v-select.mt-5(
                     outlined
-                    label='HSTS 最长有效期'
+                    :label='$t("admin:ui.security.hsts.duration")'
                     :items='hstsDurations'
                     v-model='config.securityHSTSDuration'
                     prepend-icon='mdi-subdirectory-arrow-right'
@@ -90,8 +90,8 @@
                     style='max-width: 450px;'
                     )
                   .pl-11.mt-3
-                    .caption 设置服务器仅通过 HTTPS 提供内容的时间。
-                    .caption 建议先从小值开始，确认 Wiki 运行正常后再逐步延长。
+                    .caption {{ $t('admin:ui.security.hsts.durationHint') }}
+                    .caption {{ $t('admin:ui.security.hsts.durationHint2') }}
 
                   //- v-divider.mt-3
                   //- v-switch(
@@ -116,63 +116,63 @@
             v-flex(lg6 xs12)
               v-card.animated.fadeInUp.wait-p2s
                 v-toolbar(color='primary', dark, dense, flat)
-                  v-toolbar-title.subtitle-1 上传
+                  v-toolbar-title.subtitle-1 {{ $t('admin:ui.security.uploads.title') }}
                 v-card-info(color='blue')
-                  span 配置文件上传的大小、批量数量及安全检查。
+                  span {{ $t('admin:ui.security.uploads.info') }}
                 v-card-text
                   v-text-field.mt-3(
                     outlined
-                    label='最大上传文件大小'
+                    :label='$t("admin:ui.security.uploads.maxSize")'
                     required
                     v-model='config.uploadMaxFileSize'
                     prepend-icon='mdi-progress-upload'
-                    hint='单个文件允许上传的最大大小。'
+                    :hint='$t("admin:ui.security.uploads.maxSizeHint")'
                     persistent-hint
                     suffix='KB'
                     style='max-width: 450px;'
                     )
                   v-text-field.mt-3(
                     outlined
-                    label='单次最大上传数量'
+                    :label='$t("admin:ui.security.uploads.maxBatch")'
                     required
                     v-model='config.uploadMaxFiles'
                     prepend-icon='mdi-upload-lock'
-                    hint='单次允许同时上传的文件数量。'
+                    :hint='$t("admin:ui.security.uploads.maxBatchHint")'
                     persistent-hint
-                    suffix='个文件'
+                    :suffix='$t("admin:ui.security.uploads.fileSuffix")'
                     style='max-width: 450px;'
                     )
                   v-divider.mt-3
                   v-switch(
                     inset
-                    label='扫描并净化 SVG 上传文件'
+                    :label='$t("admin:ui.security.uploads.scanSvg")'
                     color='primary'
                     v-model='config.uploadScanSVG'
                     persistent-hint
-                    hint='扫描上传的 SVG 文件中的安全漏洞，并移除可能存在危险的内容。'
+                    :hint='$t("admin:ui.security.uploads.scanSvgHint")'
                     )
                   v-divider.mt-3
                   v-switch(
                     inset
-                    label='强制下载不安全扩展名的文件'
+                    :label='$t("admin:ui.security.uploads.forceDownload")'
                     color='primary'
                     v-model='config.uploadForceDownload'
                     persistent-hint
-                    hint='直接访问非图片文件时强制下载，防止通过不安全文件扩展名触发 XSS 攻击。'
+                    :hint='$t("admin:ui.security.uploads.forceDownloadHint")'
                     )
 
               v-card.mt-3.animated.fadeInUp.wait-p2s
                 v-toolbar(flat, color='primary', dark, dense)
-                  .subtitle-1 登录
+                  .subtitle-1 {{ $t('admin:ui.security.login.title') }}
                 //- v-card-info(color='blue')
                 //-   span {{$t('admin:security.loginInfo')}}
-                .overline.grey--text.pa-4 登录页面
+                .overline.grey--text.pa-4 {{ $t('admin:ui.security.login.page') }}
                 .px-4.pb-3
                   v-text-field(
                     outlined
-                    label='登录背景图片地址'
+                    :label='$t("admin:ui.security.login.background")'
                     v-model='config.authLoginBgUrl'
-                    hint='登录页背景图片的 URL 或资源路径。'
+                    :hint='$t("admin:ui.security.login.backgroundHint")'
                     persistent-hint
                     prepend-icon='mdi-image-area'
                     append-icon='mdi-folder-image'
@@ -180,32 +180,32 @@
                   )
                   v-switch(
                     inset
-                    label='跳过登录页面'
+                    :label='$t("admin:ui.security.login.bypass")'
                     color='primary'
                     v-model='config.authAutoLogin'
                     prepend-icon='mdi-fast-forward'
                     persistent-hint
-                    hint='用户已通过身份验证提供方登录时，可直接跳转。'
+                    :hint='$t("admin:ui.security.login.bypassHint")'
                     )
                   v-switch(
                     inset
-                    label='隐藏本地登录'
+                    :label='$t("admin:ui.security.login.hideLocal")'
                     color='primary'
                     v-model='config.authHideLocal'
                     prepend-icon='mdi-eye-off-outline'
                     persistent-hint
-                    hint='隐藏登录页中的本地账户登录选项。'
+                    :hint='$t("admin:ui.security.login.hideLocalHint")'
                     )
                 v-divider.mt-3
-                .overline.grey--text.pa-4 登录安全
+                .overline.grey--text.pa-4 {{ $t('admin:ui.security.login.security') }}
                 .px-4.pb-3
                   v-switch.mt-0(
                     inset
-                    label='强制使用双重验证'
+                    :label='$t("admin:ui.security.login.enforce2fa")'
                     color='primary'
                     v-model='config.authEnforce2FA'
                     prepend-icon='mdi-two-factor-authentication'
-                    hint='要求使用双重验证的用户才能登录。'
+                    :hint='$t("admin:ui.security.login.enforce2faHint")'
                     persistent-hint
                   )
                 v-divider.mt-3
@@ -215,24 +215,24 @@
                     v-model='config.authJwtAudience'
                     outlined
                     prepend-icon='mdi-account-group-outline'
-                    label='JWT 受众'
-                    hint='JWT 令牌中使用的受众标识。'
+                    :label='$t("admin:ui.security.jwt.audience")'
+                    :hint='$t("admin:ui.security.jwt.audienceHint")'
                     persistent-hint
                   )
                   v-text-field.mt-3(
                     v-model='config.authJwtExpiration'
                     outlined
                     prepend-icon='mdi-clock-outline'
-                    label='令牌有效期'
-                    hint='JWT 令牌的有效时长，例如 30m 或 24h。'
+                    :label='$t("admin:ui.security.jwt.expiration")'
+                    :hint='$t("admin:ui.security.jwt.expirationHint")'
                     persistent-hint
                   )
                   v-text-field.mt-3(
                     v-model='config.authJwtRenewablePeriod'
                     outlined
                     prepend-icon='mdi-update'
-                    label='令牌续期周期'
-                    hint='令牌到期前允许续期的时间窗口，例如 14d。'
+                    :label='$t("admin:ui.security.jwt.renewal")'
+                    :hint='$t("admin:ui.security.jwt.renewalHint")'
                     persistent-hint
                   )
 
@@ -279,12 +279,12 @@ export default {
         authJwtRenewablePeriod: '14d'
       },
       hstsDurations: [
-        { value: 300, text: '5 分钟' },
-        { value: 86400, text: '1 天' },
-        { value: 604800, text: '1 周' },
-        { value: 2592000, text: '1 个月' },
-        { value: 31536000, text: '1 年' },
-        { value: 63072000, text: '2 年' }
+        { value: 300, text: this.$t('admin:ui.security.hsts.durations.5m') },
+        { value: 86400, text: this.$t('admin:ui.security.hsts.durations.1d') },
+        { value: 604800, text: this.$t('admin:ui.security.hsts.durations.1w') },
+        { value: 2592000, text: this.$t('admin:ui.security.hsts.durations.1mo') },
+        { value: 31536000, text: this.$t('admin:ui.security.hsts.durations.1y') },
+        { value: 63072000, text: this.$t('admin:ui.security.hsts.durations.2y') }
       ]
     }
   },
@@ -379,7 +379,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '配置保存成功。',
+          message: this.$t('admin:ui.security.saveSuccess'),
           icon: 'check'
         })
       } catch (err) {

@@ -3,9 +3,9 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img(src='/_assets/svg/icon-social-group.svg', alt='编辑组', style='width: 80px;')
+          img(src='/_assets/svg/icon-social-group.svg', :alt='$t("admin:ui.groupsEdit.title")', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2 编辑组
+            .headline.blue--text.text--darken-2 {{ $t('admin:ui.groupsEdit.title') }}
             .subtitle-1.grey--text {{group.name}}
           v-spacer
           v-btn(color='grey', icon, outlined, to='/groups')
@@ -15,28 +15,28 @@
               v-btn.ml-3(color='red', icon, outlined, v-on='on')
                 v-icon(color='red') mdi-trash-can-outline
             v-card
-              .dialog-header.is-red 删除组？
-              v-card-text.pa-4 确定要删除组 #[strong {{ group.name }}] 吗？该组中的所有用户都将被取消分配。
+              .dialog-header.is-red {{ $t('admin:ui.groupsEdit.deleteTitle') }}
+              v-card-text.pa-4 {{ $t('admin:ui.groupsEdit.deletePrompt') }} #[strong {{ group.name }}]?
               v-card-actions
                 v-spacer
-                v-btn(text, @click='deleteGroupDialog = false') 取消
-                v-btn(color='red', dark, @click='deleteGroup') 删除
+                v-btn(text, @click='deleteGroupDialog = false') {{ $t('common:actions.cancel') }}
+                v-btn(color='red', dark, @click='deleteGroup') {{ $t('common:actions.delete') }}
           v-btn.ml-3(color='success', large, depressed, @click='updateGroup')
             v-icon(left) mdi-check
-            span 更新组
+            span {{ $t('admin:ui.groupsEdit.update') }}
         v-card.mt-3
           v-tabs.grad-tabs(v-model='tab', :color='$vuetify.theme.dark ? `blue` : `primary`', fixed-tabs, show-arrows, icons-and-text)
             v-tab(key='settings')
-              span 设置
+              span {{ $t('admin:ui.groupsEdit.tabs.settings') }}
               v-icon mdi-cog-box
             v-tab(key='permissions')
-              span 权限
+              span {{ $t('admin:ui.groupsEdit.tabs.permissions') }}
               v-icon mdi-lock-pattern
             v-tab(key='rules')
-              span 页面规则
+              span {{ $t('admin:ui.groupsEdit.tabs.rules') }}
               v-icon mdi-file-lock
             v-tab(key='users')
-              span 用户
+              span {{ $t('admin:ui.groupsEdit.tabs.users') }}
               v-icon mdi-account-group
 
             v-tab-item(key='settings', :transition='false', :reverse-transition='false')
@@ -49,13 +49,13 @@
                       outlined
                       :value='true'
                       icon='mdi-lock-outline'
-                      ) 这是系统组，不能修改其设置。
+                      ) {{ $t('admin:ui.groupsEdit.systemGroup') }}
                   v-divider
                 v-card-text
                   v-text-field(
                     outlined
                     v-model='group.name'
-                    label='组名称'
+                    :label='$t("admin:ui.groupsEdit.name")'
                     hide-details
                     prepend-icon='mdi-account-group'
                     style='max-width: 600px;'
@@ -67,9 +67,9 @@
                     v-text-field(
                       outlined
                       v-model='group.redirectOnLogin'
-                      label='登录后跳转地址'
+                      :label='$t("admin:ui.groupsEdit.redirect")'
                       persistent-hint
-                      hint='用户登录成功后跳转到的路径或 URL。'
+                      :hint='$t("admin:ui.groupsEdit.redirectHint")'
                       prepend-icon='mdi-arrow-top-left-thick'
                       append-icon='mdi-folder-search'
                       @click:append='selectPage'
@@ -88,7 +88,7 @@
 
           v-card-chin
             v-spacer
-            .caption.grey--text.pr-2 组编号 #[strong {{group.id}}]
+            .caption.grey--text.pr-2 {{ $t('admin:ui.groupsEdit.id') }} #[strong {{group.id}}]
 
     page-selector(mode='select', v-model='selectPageModal', :open-handler='selectPageHandle', path='home', :locale='currentLang')
 </template>
@@ -175,7 +175,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `组设置已保存。`,
+          message: this.$t('admin:ui.groupsEdit.saveSuccess'),
           icon: 'check'
         })
       } catch (err) {
@@ -209,7 +209,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: `组 ${this.group.name} 已删除。`,
+          message: this.$t('admin:ui.groupsEdit.deleteSuccess', { name: this.group.name }),
           icon: 'delete'
         })
         this.$router.replace('/groups')

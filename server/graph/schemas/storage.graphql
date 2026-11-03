@@ -42,6 +42,8 @@ type StorageTarget {
   isAvailable: Boolean!
   isEnabled: Boolean!
   key: String!
+  titleKey: String
+  descriptionKey: String
   title: String!
   description: String
   logo: String
@@ -65,6 +67,7 @@ input StorageTargetInput {
 
 type StorageStatus {
   key: String!
+  titleKey: String
   title: String!
   status: String!
   message: String!

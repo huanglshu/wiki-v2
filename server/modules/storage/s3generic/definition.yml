@@ -1,6 +1,8 @@
 key: s3generic
 title: S3 Generic
 description: Generic storage module for S3-compatible services.
+i18nTitleKey: admin:modules.storage.s3generic.title
+i18nDescriptionKey: admin:modules.storage.s3generic.description
 author: requarks.io
 logo: https://static.requarks.io/logo/aws-s3-alt.svg
 website: https://wiki.js.org
@@ -14,44 +16,68 @@ props:
     type: String
     title: Endpoint URI
     hint: The full S3-compliant endpoint URI.
+    i18nTitleKey: admin:modules.storage.s3generic.props.endpoint.title
+    i18nHintKey: admin:modules.storage.s3generic.props.endpoint.hint
     default: https://service.region.example.com
     order: 1
   bucket:
     type: String
     title: Unique bucket name
     hint: The unique bucket name to create (e.g. wiki-johndoe)
+    i18nTitleKey: admin:modules.storage.s3generic.props.bucket.title
+    i18nHintKey: admin:modules.storage.s3generic.props.bucket.hint
     order: 2
+  basePath:
+    type: String
+    title: Base Path
+    hint: Optional path prefix inside the bucket, such as wiki or wiki/content. Leave empty to store objects at the bucket root.
+    i18nTitleKey: admin:modules.storage.s3generic.props.basePath.title
+    i18nHintKey: admin:modules.storage.s3generic.props.basePath.hint
+    default: ''
+    order: 3
   accessKeyId:
     type: String
     title: Access Key ID
     hint: The Access Key ID.
-    order: 3
+    i18nTitleKey: admin:modules.storage.s3generic.props.accessKeyId.title
+    i18nHintKey: admin:modules.storage.s3generic.props.accessKeyId.hint
+    order: 4
   secretAccessKey:
     type: String
     title: Access Key Secret
     hint: The Access Key Secret for the Access Key ID above.
+    i18nTitleKey: admin:modules.storage.s3generic.props.secretAccessKey.title
+    i18nHintKey: admin:modules.storage.s3generic.props.secretAccessKey.hint
     sensitive: true
-    order: 4
+    order: 5
   sslEnabled:
     type: Boolean
     title: Use SSL
     hint: Whether to enable SSL for requests
+    i18nTitleKey: admin:modules.storage.s3generic.props.sslEnabled.title
+    i18nHintKey: admin:modules.storage.s3generic.props.sslEnabled.hint
     default: true
-    order: 5
+    order: 6
   s3ForcePathStyle:
     type: Boolean
     title: Force Path Style for S3 objects
     hint: Whether to force path style URLs for S3 objects.
+    i18nTitleKey: admin:modules.storage.s3generic.props.s3ForcePathStyle.title
+    i18nHintKey: admin:modules.storage.s3generic.props.s3ForcePathStyle.hint
     default: false
-    order: 6
+    order: 7
   s3BucketEndpoint:
     type: Boolean
     title: Single Bucket Endpoint
     hint: Whether the provided endpoint addresses an individual bucket.
+    i18nTitleKey: admin:modules.storage.s3generic.props.s3BucketEndpoint.title
+    i18nHintKey: admin:modules.storage.s3generic.props.s3BucketEndpoint.hint
     default: false
-    order: 7
+    order: 8
 actions:
   - handler: exportAll
     label: Export All
     hint: Output all content from the DB to the external service, overwriting any existing data. If you enabled this module after content was created or you temporarily disabled it, you'll want to execute this action to add the missing content.
+    i18nLabelKey: admin:modules.storage.s3generic.actions.exportAll.label
+    i18nHintKey: admin:modules.storage.s3generic.actions.exportAll.hint
 

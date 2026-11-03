@@ -3,63 +3,63 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-male-user.svg', alt='编辑用户', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-male-user.svg', :alt='$t("admin:ui.users.edit")', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft 编辑用户
+            .headline.blue--text.text--darken-2.animated.fadeInLeft {{ $t('admin:ui.users.edit') }}
             .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{user.name}}
           v-spacer
-          .pr-4.caption.grey--text.animated.fadeInDown 用户编号 #[strong {{user.id}}]
+          .pr-4.caption.grey--text.animated.fadeInDown {{ $t('admin:ui.users.userId') }} #[strong {{user.id}}]
           template(v-if='user.isActive')
             status-indicator.mr-3(positive, pulse)
-            .caption.green--text 已启用
+            .caption.green--text {{ $t('admin:ui.users.active') }}
           template(v-else)
             status-indicator.mr-3(negative, pulse)
-            .caption.red--text 已停用
+            .caption.red--text {{ $t('admin:ui.users.inactive') }}
           template(v-if='user.isVerified')
             status-indicator.mr-3.ml-4(active, pulse)
-            .caption.blue--text 已验证
+            .caption.blue--text {{ $t('admin:ui.users.verified') }}
           template(v-else)
             status-indicator.mr-3.ml-4(intermediary, pulse)
-            .caption.deep-orange--text 未验证
+            .caption.deep-orange--text {{ $t('admin:ui.users.unverified') }}
           v-spacer
           v-btn.ml-3.animated.fadeInDown.wait-p3s(color='grey', icon, outlined, to='/users')
             v-icon mdi-arrow-left
           v-menu(offset-y, origin='top right')
             template(v-slot:activator='{ on }')
               v-btn.ml-3.animated.fadeInDown.wait-p2s(color='black', v-on='on', depressed, dark)
-                span 操作
+                span {{ $t('admin:ui.users.actions') }}
                 v-icon(right) mdi-chevron-down
             v-list(dense, nav)
               v-list-item(v-if='!user.isActive', @click='activateUser')
                 v-list-item-icon
                   v-icon(color='purple') mdi-account-key
-                v-list-item-title 启用
+                v-list-item-title {{ $t('admin:ui.users.activate') }}
               v-list-item(v-else, @click='deactivateUser', :disabled='user.id == currentUserId || user.isSystem')
                 v-list-item-icon
                   v-icon(color='purple') mdi-account-cancel
-                v-list-item-title 停用
+                v-list-item-title {{ $t('admin:ui.users.deactivate') }}
               v-list-item(@click='verifyUser', :disabled='user.isVerified')
                 v-list-item-icon
                   v-icon(color='blue') mdi-account-check
-                v-list-item-title 标记为已验证
+                v-list-item-title {{ $t('admin:ui.users.markVerified') }}
               v-list-item(@click='deleteUserConfirm', :disabled='user.id == currentUserId || user.isSystem')
                 v-list-item-icon
                   v-icon(color='red') mdi-trash-can-outline
-                v-list-item-title 删除
+                v-list-item-title {{ $t('common:actions.delete') }}
           v-btn.ml-3.animated.fadeInDown(color='primary', large, depressed, @click='updateUser')
             v-icon(left) mdi-check
-            span 更新用户
+            span {{ $t('admin:ui.users.updateUser') }}
       v-flex(xs6)
         v-card.animated.fadeInUp
           v-toolbar(color='primary', dense, dark, flat)
             v-icon.mr-2 mdi-information-variant
-            span 基本信息
+            span {{ $t('admin:ui.users.basicInfo') }}
           v-list.py-0(two-line, dense)
             v-list-item
               v-list-item-avatar(size='32')
                 v-icon mdi-email-variant
               v-list-item-content
-                v-list-item-title 邮箱
+                v-list-item-title {{ $t('admin:ui.users.email') }}
                 v-list-item-subtitle {{ user.email }}
               v-list-item-action(v-if='!user.isSystem && user.providerKey === `local`')
                 v-menu(
@@ -75,7 +75,7 @@
                     v-text-field(
                       ref='iptEmail'
                       v-model='user.email'
-                      label='邮箱'
+                      :label='$t("admin:ui.users.email")'
                       solo
                       hide-details
                       append-icon='mdi-check'
@@ -89,7 +89,7 @@
               v-list-item-avatar(size='32')
                 v-icon mdi-account
               v-list-item-content
-                v-list-item-title 显示名称
+                v-list-item-title {{ $t('admin:ui.users.displayName') }}
                 v-list-item-subtitle {{ user.name }}
               v-list-item-action
                 v-menu(
@@ -105,7 +105,7 @@
                     v-text-field(
                       ref='iptDisplayName'
                       v-model='user.name'
-                      label='显示名称'
+                      :label='$t("admin:ui.users.displayName")'
                       solo
                       hide-details
                       append-icon='mdi-check'
@@ -117,13 +117,13 @@
         v-card.mt-3.animated.fadeInUp.wait-p2s(v-if='!user.isSystem')
           v-toolbar(color='primary', dense, dark, flat)
             v-icon.mr-2 mdi-lock-outline
-            span 身份验证
+            span {{ $t('admin:ui.users.authentication') }}
           v-list.py-0(two-line, dense)
             v-list-item
               v-list-item-avatar(size='32')
                 v-icon mdi-domain
               v-list-item-content
-                v-list-item-title 身份验证提供方
+                v-list-item-title {{ $t('admin:ui.users.authProvider') }}
                 v-list-item-subtitle {{ user.providerName }} #[em.caption ({{ user.providerKey }})]
             template(v-if='user.providerKey === `local`')
               v-divider
@@ -131,7 +131,7 @@
                 v-list-item-avatar(size='32')
                   v-icon mdi-form-textbox-password
                 v-list-item-content
-                  v-list-item-title 密码
+                  v-list-item-title {{ $t('admin:ui.users.password') }}
                   v-list-item-subtitle &bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;
                 v-list-item-action
                   v-menu(
@@ -145,12 +145,12 @@
                         template(v-slot:activator='{ on: tooltip }')
                           v-btn(icon, color='grey', x-small, v-on='{ ...menu, ...tooltip }', @click='focusField(`iptNewPassword`)')
                             v-icon mdi-pencil
-                        span 修改密码
+                        span {{ $t('admin:ui.users.changePassword') }}
                     v-card
                       v-text-field(
                         ref='iptNewPassword'
                         v-model='newPassword'
-                        label='新密码'
+                        :label='$t("admin:ui.users.newPassword")'
                         solo
                         hide-details
                         append-icon='mdi-check'
@@ -164,34 +164,34 @@
                     template(v-slot:activator='{ on }')
                       v-btn(icon, color='grey', x-small, v-on='on', disabled)
                         v-icon mdi-email
-                    span 发送密码重置邮件
+                    span {{ $t('admin:ui.users.sendPasswordReset') }}
             template(v-if='user.providerIs2FACapable')
               v-divider
               v-list-item
                 v-list-item-avatar(size='32')
                   v-icon mdi-two-factor-authentication
                 v-list-item-content
-                  v-list-item-title 双重验证
-                  v-list-item-subtitle.green--text(v-if='user.tfaIsActive') 已启用
-                  v-list-item-subtitle.red--text(v-else) 未启用
+                  v-list-item-title {{ $t('admin:ui.users.tfa') }}
+                  v-list-item-subtitle.green--text(v-if='user.tfaIsActive') {{ $t('admin:ui.users.enabled') }}
+                  v-list-item-subtitle.red--text(v-else) {{ $t('admin:ui.users.disabled') }}
                 v-list-item-action
                   v-tooltip(top)
                     template(v-slot:activator='{ on }')
                       v-btn(icon, color='grey', x-small, v-on='on', @click='toggle2FA')
                         v-icon mdi-power
-                    span 切换双重验证状态
+                    span {{ $t('admin:ui.users.toggle2FAState') }}
             template(v-if='user.providerId')
               v-divider
               v-list-item
                 v-list-item-avatar(size='32')
                   v-icon mdi-music-accidental-sharp
                 v-list-item-content
-                  v-list-item-title 身份验证提供方 ID
+                  v-list-item-title {{ $t('admin:ui.users.authProviderId') }}
                   v-list-item-subtitle {{ user.providerId }}
         v-card.mt-3.animated.fadeInUp.wait-p4s
           v-toolbar(color='primary', dense, dark, flat)
             v-icon.mr-2 mdi-account-group
-            span 用户组
+            span {{ $t('admin:ui.users.groups') }}
           v-list(dense)
             template(v-for='(group, idx) in user.groups')
               v-list-item(:key='`group-` + group.id')
@@ -204,14 +204,14 @@
                     v-icon mdi-close
               v-divider(v-if='idx < user.groups.length - 1')
           v-alert.mx-3(v-if='user.groups.length < 1', outlined, color='grey darken-1', icon='mdi-alert')
-            .caption 尚未分配用户组。
+            .caption {{ $t('admin:ui.users.noGroupAssigned') }}
           v-card-chin(v-if='!user.isSystem')
             v-spacer
             v-select(
               ref='iptAssignGroup'
               :items='groups'
               v-model='newGroup'
-              label='选择用户组'
+              :label='$t("admin:ui.users.selectGroup")'
               item-value='id'
               item-text='name'
               item-disabled='isSystem'
@@ -224,22 +224,22 @@
             )
             v-btn.ml-2.px-4(depressed, color='primary', @click='assignGroup', :disabled='newGroup === 0')
               v-icon(left) mdi-clipboard-account-outline
-              span 分配用户组
+              span {{ $t('admin:ui.users.assignGroup') }}
           v-system-bar(window, :color='$vuetify.theme.dark ? `grey darken-4-l3` : `grey lighten-3`')
             v-spacer
-            .caption 系统组不能直接分配，请通过权限设置管理访问范围。
+            .caption {{ $t('admin:ui.users.systemGroupNotice') }}
 
       v-flex(xs6)
         v-card.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, dark, flat)
             v-icon.mr-2 mdi-account-badge-outline
-            span 扩展信息
+            span {{ $t('admin:ui.users.extendedMetadata') }}
           v-list.py-0(two-line, dense)
             v-list-item
               v-list-item-avatar(size='32')
                 v-icon mdi-map-marker
               v-list-item-content
-                v-list-item-title 位置
+                v-list-item-title {{ $t('admin:ui.users.location') }}
                 v-list-item-subtitle {{ user.location }}
               v-list-item-action
                 v-menu(
@@ -255,7 +255,7 @@
                     v-text-field(
                       ref='iptLocation'
                       v-model='user.location'
-                      label='位置'
+                      :label='$t("admin:ui.users.location")'
                       solo
                       hide-details
                       append-icon='mdi-check'
@@ -268,7 +268,7 @@
               v-list-item-avatar(size='32')
                 v-icon mdi-briefcase
               v-list-item-content
-                v-list-item-title 职位
+                v-list-item-title {{ $t('admin:ui.users.jobTitle') }}
                 v-list-item-subtitle {{ user.jobTitle }}
               v-list-item-action
                 v-menu(
@@ -284,7 +284,7 @@
                     v-text-field(
                       ref='iptJobTitle'
                       v-model='user.jobTitle'
-                      label='职位'
+                      :label='$t("admin:ui.users.jobTitle")'
                       solo
                       hide-details
                       append-icon='mdi-check'
@@ -297,7 +297,7 @@
               v-list-item-avatar(size='32')
                 v-icon mdi-map-clock-outline
               v-list-item-content
-                v-list-item-title 时区
+                v-list-item-title {{ $t('admin:ui.users.timezone') }}
                 v-list-item-subtitle {{ user.timezone }}
               v-list-item-action
                 v-menu(
@@ -314,7 +314,7 @@
                       ref='iptTimezone'
                       :items='timezones'
                       v-model='user.timezone'
-                      label='时区'
+                      :label='$t("admin:ui.users.timezone")'
                       solo
                       dense
                       hide-details
@@ -327,13 +327,13 @@
         v-card.mt-3.animated.fadeInUp.wait-p4s
           v-toolbar(color='teal', dark, dense, flat)
             v-toolbar-title
-              .subtitle-1 活动记录
+              .subtitle-1 {{ $t('admin:ui.users.activity') }}
           v-card-text.grey--text.text--darken-2
-            .caption.grey--text 加入时间
+            .caption.grey--text {{ $t('admin:ui.users.joinedAt') }}
             .body-2: strong {{ user.createdAt | moment('LLLL') }}
-            .caption.grey--text.mt-3 最后更新时间
+            .caption.grey--text.mt-3 {{ $t('admin:ui.users.updatedAt') }}
             .body-2: strong {{ user.updatedAt | moment('LLLL') }}
-            .caption.grey--text.mt-3 最后登录时间
+            .caption.grey--text.mt-3 {{ $t('admin:ui.users.lastLoginAt') }}
             .body-2: strong {{ user.lastLoginAt | moment('LLLL') }}
 
         //- v-card.mt-3.animated.fadeInUp.wait-p6s
@@ -345,23 +345,23 @@
 
     v-dialog(v-model='deleteUserDialog', max-width='500')
       v-card
-        .dialog-header.is-red 删除用户
+        .dialog-header.is-red {{ $t('admin:ui.users.deleteUser') }}
         v-card-text.pt-5
-          span 确定要删除用户 #[strong {{ user.email }}] 吗？
-          .mt-3 该用户创建的内容将转移给下方选择的用户。
+          span {{ $t('admin:ui.users.deleteConfirm', { email: user.email }) }}
+          .mt-3 {{ $t('admin:ui.users.deleteTransfer') }}
           v-divider.my-3
           .d-flex.align-center.mt-3
             v-btn.text-none(color='primary', depressed, @click='deleteSearchUserDialog = true')
               v-icon(left) mdi-clipboard-account
-              | 选择用户...
+              | {{ $t('admin:ui.users.selectUser') }}
             .caption.pl-3
-              strong 编号 {{deleteReplaceUser.id}}
+              strong {{ $t('admin:ui.users.userId') }} {{deleteReplaceUser.id}}
               .caption {{deleteReplaceUser.name}}
               em {{deleteReplaceUser.email}}
         v-card-chin
           v-spacer
-          v-btn(text, @click='deleteUserDialog = false') 取消
-          v-btn(color='red', dark, @click='deleteUser') 删除
+          v-btn(text, @click='deleteUserDialog = false') {{ $t('common:actions.cancel') }}
+          v-btn(color='red', dark, @click='deleteUser') {{ $t('common:actions.delete') }}
 
         user-search(v-model='deleteSearchUserDialog', @select='assignDeleteUser')
 
@@ -700,7 +700,7 @@ export default {
       if (_.get(resp, 'data.users.activate.responseResult.succeeded', false)) {
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '用户已启用。',
+          message: this.$t('admin:ui.users.activateSuccess'),
           icon: 'check'
         })
         this.user.isActive = true
@@ -740,7 +740,7 @@ export default {
       if (_.get(resp, 'data.users.deactivate.responseResult.succeeded', false)) {
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '用户已停用。',
+          message: this.$t('admin:ui.users.deactivateSuccess'),
           icon: 'check'
         })
         this.user.isActive = false
@@ -789,7 +789,7 @@ export default {
       if (_.get(resp, 'data.users.delete.responseResult.succeeded', false)) {
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '用户已删除。',
+          message: this.$t('admin:ui.users.deleteSuccess'),
           icon: 'check'
         })
         this.$router.push('/users')
@@ -807,13 +807,13 @@ export default {
       if (selUsr.id === this.user.id) {
         this.$store.commit('showNotification', {
           style: 'red',
-          message: '不能选择即将删除的账户作为内容接收者！',
+          message: this.$t('admin:ui.users.deleteSelfError'),
           icon: 'warning'
         })
       } else if (selUsr.id === 2) {
         this.$store.commit('showNotification', {
           style: 'red',
-          message: '不能使用访客账户作为内容接收者。',
+          message: this.$t('admin:ui.users.deleteGuestError'),
           icon: 'warning'
         })
       } else {
@@ -855,7 +855,7 @@ export default {
       if (_.get(resp, 'data.users.update.responseResult.succeeded', false)) {
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '用户信息已更新。',
+          message: this.$t('admin:ui.users.updateSuccess'),
           icon: 'check'
         })
         this.$router.push('/users')
@@ -884,7 +884,7 @@ export default {
     assignGroup() {
       if (_.some(this.user.groups, ['id', this.newGroup])) {
         this.$store.commit('showNotification', {
-          message: '用户已分配到此组。',
+          message: this.$t('admin:ui.users.groupAssignedError'),
           style: 'error',
           icon: 'alert'
         })
@@ -926,7 +926,7 @@ export default {
       if (_.get(resp, 'data.users.verify.responseResult.succeeded', false)) {
         this.$store.commit('showNotification', {
           style: 'success',
-          message: '用户已标记为已验证。',
+          message: this.$t('admin:ui.users.verifySuccess'),
           icon: 'check'
         })
         this.user.isVerified = true
@@ -967,7 +967,7 @@ export default {
         if (_.get(resp, 'data.users.disableTFA.responseResult.succeeded', false)) {
           this.$store.commit('showNotification', {
             style: 'success',
-            message: '已关闭用户的双重验证。',
+            message: this.$t('admin:ui.users.tfaDisabledSuccess'),
             icon: 'check'
           })
           this.user.tfaIsActive = false
@@ -1001,7 +1001,7 @@ export default {
         if (_.get(resp, 'data.users.enableTFA.responseResult.succeeded', false)) {
           this.$store.commit('showNotification', {
             style: 'success',
-            message: '已开启用户的双重验证。',
+            message: this.$t('admin:ui.users.tfaEnabledSuccess'),
             icon: 'check'
           })
           this.user.tfaIsActive = true

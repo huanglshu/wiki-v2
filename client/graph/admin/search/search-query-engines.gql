@@ -3,6 +3,8 @@ query {
     searchEngines(orderBy: "title") {
       isEnabled
       key
+      titleKey
+      descriptionKey
       title
       description
       logo

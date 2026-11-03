@@ -2,6 +2,7 @@
 
 const _ = require('lodash')
 const { DateTime } = require('luxon')
+const { getModuleI18nKey } = require('./module-i18n')
 
 module.exports = {
   /**
@@ -32,7 +33,9 @@ module.exports = {
         default: defaultValue,
         type: (value.type || value).toLowerCase(),
         title: value.title || _.startCase(key),
+        titleKey: getModuleI18nKey(value, 'title', null),
         hint: value.hint || false,
+        hintKey: getModuleI18nKey(value, 'hint', null),
         enum: value.enum || false,
         multiline: value.multiline || false,
         sensitive: value.sensitive || false,

@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', alt='搜索引擎', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-search.svg', :alt='$t("admin:search.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 搜索引擎
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 管理网站页面搜索服务
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:search.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{ $t('admin:search.subtitle') }}
           v-spacer
           v-btn.mr-3.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/search', target='_blank')
             v-icon mdi-help-circle
@@ -31,8 +31,8 @@
                   v-icon(color='primary', v-else-if='eng.key === selectedEngine') mdi-checkbox-marked-circle-outline
                   v-icon(color='grey', v-else) mdi-checkbox-blank-circle-outline
                 v-list-item-content
-                  v-list-item-title.body-2(:class='!eng.isAvailable ? `grey--text` : (selectedEngine === eng.key ? `primary--text` : ``)') {{ eng.title }}
-                  v-list-item-subtitle: .caption(:class='!eng.isAvailable ? `grey--text text--lighten-1` : (selectedEngine === eng.key ? `blue--text ` : ``)') {{ eng.description }}
+                  v-list-item-title.body-2(:class='!eng.isAvailable ? `grey--text` : (selectedEngine === eng.key ? `primary--text` : ``)') {{ eng.titleKey ? $t(eng.titleKey) : eng.title }}
+                  v-list-item-subtitle: .caption(:class='!eng.isAvailable ? `grey--text text--lighten-1` : (selectedEngine === eng.key ? `blue--text ` : ``)') {{ eng.descriptionKey ? $t(eng.descriptionKey) : eng.description }}
                 v-list-item-avatar(v-if='selectedEngine === eng.key', size='24')
                   v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
               v-divider(v-if='idx < engines.length - 1')
@@ -40,14 +40,14 @@
       v-flex(lg9, xs12)
         v-card.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{engine.title}}
+            .subtitle-1 {{ engine.titleKey ? $t(engine.titleKey) : engine.title }}
           v-card-info(color='blue')
             div
-              div {{engine.description}}
+              div {{ engine.descriptionKey ? $t(engine.descriptionKey) : engine.description }}
               span.caption: a(:href='engine.website') {{engine.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='engine.logo', :alt='engine.title')
+              img(:src='engine.logo', :alt='engine.titleKey ? $t(engine.titleKey) : engine.title')
           v-card-text
             .overline.mb-5 {{$t('admin:search.engineConfig')}}
             .body-2.ml-3(v-if='!engine.config || engine.config.length < 1'): em {{$t('admin:search.engineNoConfig')}}
@@ -105,7 +105,7 @@ import _ from 'lodash'
 import enginesQuery from 'gql/admin/search/search-query-engines.gql'
 import enginesSaveMutation from 'gql/admin/search/search-mutation-save-engines.gql'
 import enginesRebuildMutation from 'gql/admin/search/search-mutation-rebuild-index.gql'
-import { translateAdminModules } from '../../helpers/admin-module-zh'
+import { translateAdminModules } from '../../helpers/admin-module'
 
 export default {
   data() {
@@ -190,7 +190,7 @@ export default {
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      }))),
+      })), this.$t),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-search-refresh')
       }

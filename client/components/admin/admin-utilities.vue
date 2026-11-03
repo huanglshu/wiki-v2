@@ -3,23 +3,23 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img(src='/_assets/svg/icon-maintenance.svg', alt='其他', style='width: 80px;')
+          img(src='/_assets/svg/icon-maintenance.svg', :alt='$t("admin:ui.utilities.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text 其他
-            .subtitle-1.grey--text 维护、迁移及站点工具
+            .headline.primary--text {{ $t('admin:ui.utilities.title') }}
+            .subtitle-1.grey--text {{ $t('admin:ui.utilities.subtitle') }}
 
       v-flex(lg3, xs12)
         v-card.animated.fadeInUp
           v-toolbar(flat, color='primary', dark, dense)
-            .subtitle-1 工具
+            .subtitle-1 {{ $t('admin:ui.utilities.tools') }}
           v-list(two-line, dense).py-0
             template(v-for='(tool, idx) in tools')
               v-list-item(:key='tool.key', @click='selectedTool = tool.key', :disabled='!tool.isAvailable')
                 v-list-item-avatar
                   v-icon(:color='!tool.isAvailable ? `grey lighten-1` : (selectedTool === tool.key ? `blue ` : `grey darken-1`)') {{ tool.icon }}
                 v-list-item-content
-                  v-list-item-title.body-2(:class='!tool.isAvailable ? `grey--text` : (selectedTool === tool.key ? `primary--text` : ``)') {{ tool.title }}
-                  v-list-item-subtitle: .caption(:class='!tool.isAvailable ? `grey--text text--lighten-1` : (selectedTool === tool.key ? `blue--text ` : ``)') {{ tool.subtitle }}
+                  v-list-item-title.body-2(:class='!tool.isAvailable ? `grey--text` : (selectedTool === tool.key ? `primary--text` : ``)') {{ $t(tool.titleKey) }}
+                  v-list-item-subtitle: .caption(:class='!tool.isAvailable ? `grey--text text--lighten-1` : (selectedTool === tool.key ? `blue--text ` : ``)') {{ $t(tool.subtitleKey) }}
                 v-list-item-avatar(v-if='selectedTool === tool.key')
                   v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
               v-divider(v-if='idx < tools.length - 1')
@@ -49,41 +49,36 @@ export default {
         {
           key: 'UtilityAuth',
           icon: 'mdi-lock-open-outline',
-          i18nKey: 'auth',
-          title: '身份验证',
-          subtitle: '重新生成证书或重置访客用户',
+          titleKey: 'admin:ui.utilities.auth.title',
+          subtitleKey: 'admin:ui.utilities.auth.subtitle',
           isAvailable: true
         },
         {
           key: 'UtilityContent',
           icon: 'mdi-content-duplicate',
-          i18nKey: 'content',
-          title: '内容',
-          subtitle: '重建页面树、重新渲染页面及迁移内容',
+          titleKey: 'admin:ui.utilities.content.title',
+          subtitleKey: 'admin:ui.utilities.content.subtitle',
           isAvailable: true
         },
         {
           key: 'UtilityExport',
           icon: 'mdi-database-export',
-          i18nKey: 'export',
-          title: '导出',
-          subtitle: '将站点数据导出到文件系统',
+          titleKey: 'admin:ui.utilities.export.title',
+          subtitleKey: 'admin:ui.utilities.export.subtitle',
           isAvailable: true
         },
         {
           key: 'UtilityBackup',
           icon: 'mdi-package-variant-closed',
-          // Wiki.js 3.x backup utility has its own labels.
-          title: '导出为 Wiki.js 3.x',
-          subtitle: '创建 .wkbackup 迁移包',
+          titleKey: 'admin:ui.utilities.backup.title',
+          subtitleKey: 'admin:ui.utilities.backup.subtitle',
           isAvailable: true
         },
         {
           key: 'UtilityCache',
           icon: 'mdi-database-refresh',
-          i18nKey: 'cache',
-          title: '缓存',
-          subtitle: '清空页面、资源及客户端语言缓存',
+          titleKey: 'admin:ui.utilities.cache.title',
+          subtitleKey: 'admin:ui.utilities.cache.subtitle',
           isAvailable: true
         },
         // {
@@ -95,17 +90,15 @@ export default {
         {
           key: 'UtilityImportv1',
           icon: 'mdi-database-import',
-          i18nKey: 'importv1',
-          title: '从 Wiki.js 1.x 导入',
-          subtitle: '导入旧版 Wiki.js 的内容及用户',
+          titleKey: 'admin:ui.utilities.importv1.title',
+          subtitleKey: 'admin:ui.utilities.importv1.subtitle',
           isAvailable: true
         },
         {
           key: 'UtilityTelemetry',
           icon: 'mdi-math-compass',
-          i18nKey: 'telemetry',
-          title: '遥测',
-          subtitle: '查看并管理匿名使用数据',
+          titleKey: 'admin:ui.utilities.telemetry.title',
+          subtitleKey: 'admin:ui.utilities.telemetry.subtitle',
           isAvailable: true
         }
       ]

@@ -3,10 +3,10 @@
     v-layout(row, wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-line-chart.svg', alt='网站分析', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-line-chart.svg', :alt='$t("admin:analytics.title")', style='width: 80px;')
           .admin-header-title
-            .headline.primary--text.animated.fadeInLeft 网站分析
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s 管理网站分析服务及跟踪设置
+            .headline.primary--text.animated.fadeInLeft {{ $t('admin:analytics.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:analytics.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p2s.mr-3(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
@@ -26,8 +26,8 @@
                   v-icon(color='primary', v-else-if='str.isEnabled', v-ripple, @click='str.isEnabled = false') mdi-checkbox-marked-outline
                   v-icon(color='grey', v-else, v-ripple, @click='str.isEnabled = true') mdi-checkbox-blank-outline
                 v-list-item-content
-                  v-list-item-title.body-2(:class='!str.isAvailable ? `grey--text` : (selectedProvider === str.key ? `primary--text` : ``)') {{ str.title }}
-                  v-list-item-subtitle: .caption(:class='!str.isAvailable ? `grey--text text--lighten-1` : (selectedProvider === str.key ? `blue--text ` : ``)') {{ str.description }}
+                  v-list-item-title.body-2(:class='!str.isAvailable ? `grey--text` : (selectedProvider === str.key ? `primary--text` : ``)') {{ str.titleKey ? $t(str.titleKey) : str.title }}
+                  v-list-item-subtitle: .caption(:class='!str.isAvailable ? `grey--text text--lighten-1` : (selectedProvider === str.key ? `blue--text ` : ``)') {{ str.descriptionKey ? $t(str.descriptionKey) : str.description }}
                 v-list-item-avatar(v-if='selectedProvider === str.key', size='24')
                   v-icon.animated.fadeInLeft(color='primary', large) mdi-chevron-right
               v-divider(v-if='idx < providers.length - 1')
@@ -36,23 +36,23 @@
 
         v-card.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{provider.title}}
+            .subtitle-1 {{ provider.titleKey ? $t(provider.titleKey) : provider.title }}
             v-spacer
             v-switch(
               dark
               color='blue lighten-5'
-              label='启用'
+              :label='$t("common:actions.enable")'
               v-model='provider.isEnabled'
               hide-details
               inset
               )
           v-card-info(color='blue')
             div
-              div {{provider.description}}
+              div {{ provider.descriptionKey ? $t(provider.descriptionKey) : provider.description }}
               span.caption: a(:href='provider.website') {{provider.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='provider.logo', :alt='provider.title')
+              img(:src='provider.logo', :alt='provider.titleKey ? $t(provider.titleKey) : provider.title')
           v-card-text
             v-form
               .overline.pb-5 {{$t('admin:analytics.providerConfiguration')}}
@@ -111,7 +111,7 @@ import _ from 'lodash'
 
 import providersQuery from 'gql/admin/analytics/analytics-query-providers.gql'
 import providersSaveMutation from 'gql/admin/analytics/analytics-mutation-save-providers.gql'
-import { translateAdminModules } from '../../helpers/admin-module-zh'
+import { translateAdminModules } from '../../helpers/admin-module'
 
 export default {
   data() {
@@ -172,7 +172,7 @@ export default {
           ...cfg,
           value: JSON.parse(cfg.value)
         })), [t => t.value.order])
-      }))),
+      })), this.$t),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-analytics-refresh')
       }

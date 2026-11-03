@@ -194,12 +194,29 @@ let bootstrap = () => {
   // Bootstrap Vue
   // ====================================
 
-  const i18n = localization.init()
-
   let darkModeEnabled = siteConfig.darkMode
   if ((store.get('user/appearance') || '').length > 0) {
     darkModeEnabled = (store.get('user/appearance') === 'dark')
   }
+
+  const i18n = localization.init()
+  const vuetify = new Vuetify({
+    rtl: siteConfig.rtl,
+    theme: {
+      dark: darkModeEnabled
+    },
+    lang: {
+      current: siteConfig.lang,
+      t: (key, ...params) => {
+        const translationKeys = {
+          'dataIterator.loadingText': 'common:dataIterator.loadingText',
+          'dataIterator.noResultsText': 'common:dataIterator.noResultsText',
+          'noDataText': 'common:dataIterator.noDataText'
+        }
+        return i18n.t(translationKeys[key] || key, ...params)
+      }
+    }
+  })
 
   window.WIKI = new Vue({
     el: '#root',
@@ -208,12 +225,7 @@ let bootstrap = () => {
     apolloProvider,
     store,
     i18n,
-    vuetify: new Vuetify({
-      rtl: siteConfig.rtl,
-      theme: {
-        dark: darkModeEnabled
-      }
-    }),
+    vuetify,
     mounted () {
       this.$moment.locale(siteConfig.lang)
       if ((store.get('user/dateFormat') || '').length > 0) {

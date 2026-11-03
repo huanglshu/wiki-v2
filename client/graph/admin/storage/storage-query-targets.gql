@@ -4,6 +4,8 @@ query {
       isAvailable
       isEnabled
       key
+      titleKey
+      descriptionKey
       title
       description
       logo

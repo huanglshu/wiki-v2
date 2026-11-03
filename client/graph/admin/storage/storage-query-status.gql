@@ -2,6 +2,7 @@ query {
   storage {
     status {
       key
+      titleKey
       title
       status
       message

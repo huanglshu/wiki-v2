@@ -3,10 +3,10 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-file.svg', alt='页面', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-file.svg', :alt='$t("admin:ui.pages.title")', style='width: 80px;')
           .admin-header-title
-            .headline.blue--text.text--darken-2.animated.fadeInLeft 页面
-            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s 浏览、筛选和管理页面
+            .headline.blue--text.text--darken-2.animated.fadeInLeft {{ $t('admin:ui.pages.title') }}
+            .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{ $t('admin:ui.pages.subtitle') }}
           v-spacer
           v-btn.animated.fadeInDown.wait-p1s(icon, color='grey', outlined, @click='refresh')
             v-icon.grey--text mdi-refresh
@@ -15,7 +15,7 @@
           //-   span Recycle Bin
           v-btn.animated.fadeInDown(color='primary', depressed, large, to='pages/visualize')
             v-icon(left) mdi-graph
-            span 可视化
+            span {{ $t('admin:ui.pages.visualize') }}
         v-card.mt-3.animated.fadeInUp
           .pa-2.d-flex.align-center(:class='$vuetify.theme.dark ? `grey darken-3-d5` : `grey lighten-3`')
             v-text-field(
@@ -23,7 +23,7 @@
               flat
               v-model='search'
               prepend-inner-icon='mdi-file-search-outline'
-              label='搜索页面...'
+              :label='$t("admin:ui.pages.search")'
               hide-details
               dense
               style='max-width: 400px;'
@@ -34,7 +34,7 @@
               flat
               hide-details
               dense
-              label='语言'
+              :label='$t("admin:ui.pages.locale")'
               :items='langs'
               v-model='selectedLang'
               style='max-width: 250px;'
@@ -44,7 +44,7 @@
               flat
               hide-details
               dense
-              label='发布状态'
+              :label='$t("admin:ui.pages.state")'
               :items='states'
               v-model='selectedState'
               style='max-width: 250px;'
@@ -75,7 +75,7 @@
                 td {{ props.item.createdAt | moment('calendar') }}
                 td {{ props.item.updatedAt | moment('calendar') }}
             template(slot='no-data')
-              v-alert.ma-3(icon='mdi-alert', :value='true', outlined) 暂无可显示的页面。
+              v-alert.ma-3(icon='mdi-alert', :value='true', outlined) {{ $t('admin:ui.pages.empty') }}
           .text-center.py-2.animated.fadeInDown(v-if='this.pageTotal > 1')
             v-pagination(v-model='pagination', :length='pageTotal')
 </template>
@@ -94,19 +94,19 @@ export default {
       pages: [],
       pageTotal: 0,
       headers: [
-        { text: '编号', value: 'id', width: 80, sortable: true },
-        { text: '标题', value: 'title' },
-        { text: '路径', value: 'path' },
-        { text: '创建时间', value: 'createdAt', width: 250 },
-        { text: '最后更新', value: 'updatedAt', width: 250 }
+        { text: this.$t('admin:ui.pages.columns.id'), value: 'id', width: 80, sortable: true },
+        { text: this.$t('admin:ui.pages.columns.title'), value: 'title' },
+        { text: this.$t('admin:ui.pages.columns.path'), value: 'path' },
+        { text: this.$t('admin:ui.pages.columns.created'), value: 'createdAt', width: 250 },
+        { text: this.$t('admin:ui.pages.columns.updated'), value: 'updatedAt', width: 250 }
       ],
       search: '',
       selectedLang: null,
       selectedState: null,
       states: [
-        { text: '全部发布状态', value: null },
-        { text: '已发布', value: true },
-        { text: '未发布', value: false }
+        { text: this.$t('admin:ui.pages.states.all'), value: null },
+        { text: this.$t('admin:ui.pages.states.published'), value: true },
+        { text: this.$t('admin:ui.pages.states.unpublished'), value: false }
       ],
       loading: false
     }
@@ -131,7 +131,7 @@ export default {
           value: pg.locale
         }
       })
-      return _.concat({ text: '全部语言', value: null }, pageLocales)
+      return _.concat({ text: this.$t('admin:ui.pages.allLocales'), value: null }, pageLocales)
     }
   },
   methods: {
@@ -141,7 +141,7 @@ export default {
     async refresh() {
       await this.$apollo.queries.pages.refetch()
       this.$store.commit('showNotification', {
-        message: '页面列表已刷新。',
+        message: this.$t('admin:ui.pages.refreshSuccess'),
         style: 'success',
         icon: 'cached'
       })

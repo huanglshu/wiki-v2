@@ -3,6 +3,8 @@
     renderers {
       isEnabled
       key
+      titleKey
+      descriptionKey
       title
       description
       icon

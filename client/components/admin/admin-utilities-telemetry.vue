@@ -1,72 +1,72 @@
 <template lang='pug'>
   v-card
     v-toolbar(flat, color='primary', dark, dense)
-      .subtitle-1 遥测
+      .subtitle-1 {{ $t('admin:ui.utilities.telemetry.title') }}
     v-form
       v-card-text
-        .subtitle-2 什么是遥测？
-        .body-2.mt-3 遥测允许 Wiki.js 开发者收集使用情况及主机环境的基本匿名数据，从而改进软件。#[br] 此功能完全可选，且 #[strong 绝不会] 收集内容或个人数据等隐私信息。
-        .body-2.mt-3 为最大程度保护隐私，安装时会生成随机客户端 ID。该 ID 仅用于对请求进行匿名分组，可随时在下方重置。
+        .subtitle-2 {{ $t('admin:ui.utilities.telemetry.whatTitle') }}
+        .body-2.mt-3 {{ $t('admin:ui.utilities.telemetry.whatHint') }}
+        .body-2.mt-3 {{ $t('admin:ui.utilities.telemetry.clientIdHint') }}
         v-divider.my-4
-        .subtitle-2 会收集哪些数据？
-        .body-2.mt-3 启用遥测后，仅传输以下数据：
+        .subtitle-2 {{ $t('admin:ui.utilities.telemetry.dataTitle') }}
+        .body-2.mt-3 {{ $t('admin:ui.utilities.telemetry.dataHint') }}
         v-list
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 已安装的 Wiki.js 版本
-              v-list-item-subtitle.caption: em 例如 v2.0.123
+              v-list-item-title.body-2 {{ $t('admin:ui.utilities.telemetry.items.version') }}
+              v-list-item-subtitle.caption: em {{ $t('admin:ui.utilities.telemetry.items.versionHint') }}
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 操作系统基本信息
-              v-list-item-subtitle.caption: em 平台（Linux、macOS 或 Windows）、CPU 核心总数及数据库类型（PostgreSQL、MySQL、MariaDB、SQLite 或 SQL Server）
+              v-list-item-title.body-2 {{ $t('admin:ui.utilities.telemetry.items.system') }}
+              v-list-item-subtitle.caption: em {{ $t('admin:ui.utilities.telemetry.items.systemHint') }}
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 崩溃调试数据
-              v-list-item-subtitle.caption: em 错误堆栈信息
+              v-list-item-title.body-2 {{ $t('admin:ui.utilities.telemetry.items.crash') }}
+              v-list-item-subtitle.caption: em {{ $t('admin:ui.utilities.telemetry.items.crashHint') }}
           v-list-item
             v-list-item-avatar: v-icon mdi-information-outline
             v-list-item-content
-              v-list-item-title.body-2 安装统计
-              v-list-item-subtitle.caption: em 已到达的安装阶段
-        .body-2 崩溃调试数据最长保存 30 天，统计数据最长保存 16 个月，之后将被永久删除。
+              v-list-item-title.body-2 {{ $t('admin:ui.utilities.telemetry.items.install') }}
+              v-list-item-subtitle.caption: em {{ $t('admin:ui.utilities.telemetry.items.installHint') }}
+        .body-2 {{ $t('admin:ui.utilities.telemetry.retention') }}
         v-divider.my-4
-        .subtitle-2 数据有什么用途？
-        .body-2.mt-3 开发者使用遥测数据改进 Wiki.js，主要用于以下目的：
+        .subtitle-2 {{ $t('admin:ui.utilities.telemetry.purposeTitle') }}
+        .body-2.mt-3 {{ $t('admin:ui.utilities.telemetry.purposeHint') }}
         v-list(dense)
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2 更容易识别关键缺陷并及时修复。
+            v-list-item-content: v-list-item-title: .body-2 {{ $t('admin:ui.utilities.telemetry.items.defects') }}
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2 了解当前安装的升级情况。
+            v-list-item-content: v-list-item-title: .body-2 {{ $t('admin:ui.utilities.telemetry.items.upgrades') }}
           v-list-item
             v-list-item-avatar: v-icon mdi-chevron-right
-            v-list-item-content: v-list-item-title: .body-2 根据常见运行环境优化性能和测试场景。
-        .body-2 仅授权开发者可访问这些数据，不会与任何第三方共享，也不会用于改进 Wiki.js 之外的其他用途。
+            v-list-item-content: v-list-item-title: .body-2 {{ $t('admin:ui.utilities.telemetry.items.performance') }}
+        .body-2 {{ $t('admin:ui.utilities.telemetry.sharing') }}
         v-divider.my-4
-        .subtitle-2 设置
+        .subtitle-2 {{ $t('admin:ui.utilities.telemetry.settings') }}
         .mt-3
           v-switch.mt-0(
             v-model='telemetry',
-            label='启用遥测',
+            :label='$t("admin:ui.utilities.telemetry.enable")',
             color='primary',
-            hint='允许 Wiki.js 传输遥测数据。',
+            :hint='$t("admin:ui.utilities.telemetry.enableHint")',
             persistent-hint
           )
         v-divider.my-4
-        .subtitle-2.mt-3.grey--text.text--darken-1 客户端 ID
+        .subtitle-2.mt-3.grey--text.text--darken-1 {{ $t('admin:ui.utilities.telemetry.clientId') }}
         .body-2.mt-2 {{clientId}}
       v-card-chin
         v-btn.px-3(depressed, color='success', @click='updateTelemetry')
           v-icon(left) mdi-chevron-right
-          | 保存更改
+          | {{ $t('common:actions.saveChanges') }}
         v-spacer
         v-btn.px-3(outlined, color='grey', @click='resetClientId')
           v-icon(left) mdi-autorenew
-          span 重置客户端 ID
+          span {{ $t('admin:ui.utilities.telemetry.resetClientId') }}
 
 </template>
 
@@ -81,7 +81,7 @@ export default {
   data() {
     return {
       telemetry: false,
-      clientId: '不适用'
+      clientId: ''
     }
   },
   methods: {
@@ -99,7 +99,7 @@ export default {
         const resp = _.get(respRaw, 'data.system.setTelemetry.responseResult', {})
         if (resp.succeeded) {
           this.$store.commit('showNotification', {
-            message: '遥测设置更新成功。',
+            message: this.$t('admin:ui.utilities.telemetry.saveSuccess'),
             style: 'success',
             icon: 'check'
           })
@@ -125,7 +125,7 @@ export default {
         if (resp.succeeded) {
           this.$apollo.queries.telemetry.refetch()
           this.$store.commit('showNotification', {
-            message: '遥测客户端 ID 重置成功。',
+            message: this.$t('admin:ui.utilities.telemetry.resetSuccess'),
             style: 'success',
             icon: 'check'
           })
@@ -147,7 +147,7 @@ export default {
       manual: true,
       result ({ data }) {
         this.telemetry = _.get(data, 'system.info.telemetry', false)
-        this.clientId = _.get(data, 'system.info.telemetryClientId', '不适用')
+        this.clientId = _.get(data, 'system.info.telemetryClientId', this.$t('common:notApplicable'))
       },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-utilities-telemetry-refresh')

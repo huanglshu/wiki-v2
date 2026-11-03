@@ -44,6 +44,8 @@ module.exports = class Renderer extends Model {
     }
     WIKI.data.renderers = diskRenderers.map(renderer => ({
       ...renderer,
+      titleKey: renderer.i18nTitleKey || `admin:modules.rendering.${renderer.key.toLowerCase()}.title`,
+      descriptionKey: renderer.i18nDescriptionKey || `admin:modules.rendering.${renderer.key.toLowerCase()}.description`,
       props: commonHelper.parseModuleProps(renderer.props)
     }))
   }

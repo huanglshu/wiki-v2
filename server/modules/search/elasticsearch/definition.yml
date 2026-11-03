@@ -1,6 +1,8 @@
 key: elasticsearch
 title: Elasticsearch
 description: Elasticsearch is a distributed, RESTful search and analytics engine capable of solving a growing number of use cases.
+i18nTitleKey: admin:modules.search.elasticsearch.title
+i18nDescriptionKey: admin:modules.search.elasticsearch.description
 author: requarks.io
 logo: https://static.requarks.io/logo/elasticsearch.svg
 website: https://www.elastic.co/products/elasticsearch
@@ -10,6 +12,8 @@ props:
     type: String
     title: Elasticsearch Version
     hint: Should match the version of the Elasticsearch nodes you are connecting to
+    i18nTitleKey: admin:modules.search.elasticsearch.props.apiVersion.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.apiVersion.hint
     order: 1
     enum:
       - '8.x'
@@ -20,38 +24,51 @@ props:
     type: String
     title: Host(s)
     hint: Comma-separated list of Elasticsearch hosts to connect to, including the port, username and password if necessary. (e.g. http://localhost:9200, https://user:pass@es1.example.com:9200)
+    i18nTitleKey: admin:modules.search.elasticsearch.props.hosts.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.hosts.hint
     order: 2
   verifyTLSCertificate:
     title: Verify TLS Certificate
     type: Boolean
+    i18nTitleKey: admin:modules.search.elasticsearch.props.verifyTLSCertificate.title
     default: true
     order: 3
   tlsCertPath:
     title: TLS Certificate Path
     type: String
     hint: Absolute path to the TLS certificate on the server.
+    i18nTitleKey: admin:modules.search.elasticsearch.props.tlsCertPath.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.tlsCertPath.hint
     order: 4
   indexName:
     type: String
     title: Index Name
     hint: The index name to use during creation
+    i18nTitleKey: admin:modules.search.elasticsearch.props.indexName.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.indexName.hint
     default: wiki
     order: 5
   analyzer:
     type: String
     title: Analyzer
-    hint: 'The token analyzer in elasticsearch'
+    hint: 'Use simple, ik_smart, ik_smart+pinyin or ik_smart+pinyin_first_letter. The last three options require the IK and Pinyin plugins.'
+    i18nTitleKey: admin:modules.search.elasticsearch.props.analyzer.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.analyzer.hint
     default: simple
     order: 6
   sniffOnStart:
     type: Boolean
     title: Sniff on start
     hint: 'Should Wiki.js attempt to detect the rest of the cluster on first connect? (Default: off)'
+    i18nTitleKey: admin:modules.search.elasticsearch.props.sniffOnStart.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.sniffOnStart.hint
     default: false
     order: 7
   sniffInterval:
     type: Number
     title: Sniff Interval
     hint: '0 = disabled, Interval in seconds to check for updated list of nodes in cluster. (Default: 0)'
+    i18nTitleKey: admin:modules.search.elasticsearch.props.sniffInterval.title
+    i18nHintKey: admin:modules.search.elasticsearch.props.sniffInterval.hint
     default: 0
     order: 8

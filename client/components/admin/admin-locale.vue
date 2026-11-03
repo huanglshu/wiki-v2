@@ -214,6 +214,7 @@ export default {
       })
       const resp = _.get(respRaw, 'data.localization.downloadLocale.responseResult', {})
       if (resp.succeeded) {
+        this.clearClientLocaleCache()
         lc.isDownloading = false
         lc.isInstalled = true
         lc.updatedAt = new Date().toISOString()
@@ -231,6 +232,14 @@ export default {
         })
       }
       this.isDownloading = false
+    },
+    clearClientLocaleCache () {
+      for (let i = window.localStorage.length - 1; i >= 0; i--) {
+        const key = window.localStorage.key(i)
+        if (key && _.startsWith(key, 'i18next_res_')) {
+          window.localStorage.removeItem(key)
+        }
+      }
     },
     async save() {
       this.loading = true

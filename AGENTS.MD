@@ -57,7 +57,7 @@ Webpack invocation also needs the option when it is not launched through
 - `client/components/admin.vue`: administrator shell, navigation, and router.
 - `client/components/admin/`: administrator pages and editor components.
 - `client/components/common/`: shared client UI components.
-- `client/helpers/admin-module-zh.js`: Chinese display translations for dynamic
+- `client/helpers/admin-module.js`: i18n display adapter for dynamic
   analytics, comment, rendering, search, and storage module definitions.
 - `client/modules/`: client boot and i18next/localization setup.
 - `client/graph/`: GraphQL documents used by the client.
@@ -77,7 +77,17 @@ When module metadata arrives from the server, apply display translations at the
 client boundary rather than editing module definitions or relying on missing
 translation keys.
 
-Use `client/helpers/admin-module-zh.js` through its exported translation
+`data/sideload/zh.json` is the single source of truth for all Chinese UI copy.
+Every new or changed Chinese label, title, subtitle, hint, placeholder, button,
+notification, confirmation, empty state, or other user-visible string must be
+defined in that file and referenced by a translation key. Use `$t(...)` or the
+`i18next` component in Vue files. Module definitions should expose i18n keys,
+and the client should resolve them through the active i18n instance. Do not add
+new hard-coded Chinese UI text to Vue templates, JavaScript mappings, server
+definitions, or GraphQL responses. Keep the existing English YAML values as
+fallbacks and identifiers; they are not user-visible Chinese copy.
+
+Use `client/helpers/admin-module.js` through its exported translation
 functions for dynamic module titles, descriptions, property labels, hints,
 enums, and actions. Preserve internal keys, GraphQL values, routes, permission
 strings, and saved enum values. When displaying translated enum labels, use an
@@ -187,8 +197,8 @@ Webpack 配置。如果开发 Webpack 不是通过 `yarn dev` 启动，同样需
 - `client/components/admin.vue`：管理后台外壳、导航和路由。
 - `client/components/admin/`：管理页面和编辑器组件。
 - `client/components/common/`：共享客户端界面组件。
-- `client/helpers/admin-module-zh.js`：网站分析、评论、渲染、搜索引擎和
-  存储等动态模块定义的中文显示翻译。
+- `client/helpers/admin-module.js`：网站分析、评论、渲染、搜索引擎和
+  存储等动态模块定义的 i18n 显示适配器。
 - `client/modules/`：客户端启动及 i18next/本地化初始化。
 - `client/graph/`：客户端使用的 GraphQL 文档。
 - `client/store/`：Vuex 状态。
@@ -205,7 +215,14 @@ Webpack 配置。如果开发 Webpack 不是通过 `yarn dev` 启动，同样需
 对应的 `.vue` 模板中修改。模块元数据由服务端返回时，应在客户端展示层应用
 翻译，而不是修改模块定义，也不要依赖缺失的翻译键。
 
-使用 `client/helpers/admin-module-zh.js` 导出的翻译函数处理动态模块的标题、
+`data/sideload/zh.json` 是所有中文界面文案的唯一来源。新增或修改中文标签、
+标题、副标题、提示、占位符、按钮、通知、确认信息、空状态或其他用户可见文本，
+都必须在 `zh.json` 中定义并通过翻译键引用。Vue 文件使用 `$t(...)` 或
+`i18next` 组件。模块定义应声明 i18n 键名，客户端通过当前 i18n 实例解析。
+不得在 Vue 模板、JavaScript 映射、服务端定义或 GraphQL 返回值中新增硬编码
+中文界面文案。现有英文 YAML 值仅作为回退和标识符，不是中文展示文案。
+
+使用 `client/helpers/admin-module.js` 导出的翻译函数处理动态模块的标题、
 说明、属性名、提示、枚举和操作。必须保留内部键、GraphQL 值、路由、权限
 字符串和保存所需的枚举值。翻译枚举显示文本时，如果底层 API 需要原值，
 应使用 `{ text, value }` 对象。
