@@ -183,9 +183,9 @@
                 v-btn(icon, tile, height='64', v-on='on', href='/a', :aria-label='$t(`common:header.admin`)')
                   v-icon(color='grey') mdi-cog
               span {{$t('common:header.admin')}}
-            v-btn(v-else, text, tile, height='64', href='/', :aria-label='$t(`common:actions.exit`)')
+            v-btn(v-else, text, tile, height='64', :href='loginRedirect', :aria-label='$t(`common:header.backToSite`)')
               v-icon(left, color='grey') mdi-exit-to-app
-              span {{$t('common:actions.exit')}}
+              span {{$t('common:header.backToSite')}}
             v-divider(vertical)
 
           //- ACCOUNT
@@ -307,6 +307,7 @@ export default {
     pictureUrl: get('user/pictureUrl'),
     isAuthenticated: get('user/authenticated'),
     permissions: get('user/permissions'),
+    loginRedirect: get('user/redirectOnLogin'),
     picture () {
       if (this.pictureUrl && this.pictureUrl.length > 1) {
         return {

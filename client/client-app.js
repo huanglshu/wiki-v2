@@ -104,6 +104,7 @@ const graphQLLink = ApolloLink.from([
       const newJWT = resp.headers.get('new-jwt')
       if (newJWT) {
         Cookies.set('jwt', newJWT, { expires: 365, secure: window.location.protocol === 'https:' })
+        store.commit('user/REFRESH_AUTH')
       }
       return resp
     }
@@ -177,7 +178,7 @@ Vue.component('Welcome', () => import(/* webpackChunkName: "welcome" */ './compo
 Vue.component('NavFooter', () => import(/* webpackChunkName: "theme" */ './themes/' + siteConfig.theme + '/components/nav-footer.vue'))
 Vue.component('Page', () => import(/* webpackChunkName: "theme" */ './themes/' + siteConfig.theme + '/components/page.vue'))
 
-let bootstrap = () => {
+let bootstrap = async () => {
   // ====================================
   // Notifications
   // ====================================
@@ -199,7 +200,7 @@ let bootstrap = () => {
     darkModeEnabled = (store.get('user/appearance') === 'dark')
   }
 
-  const i18n = localization.init()
+  const i18n = await localization.init()
   const vuetify = new Vuetify({
     rtl: siteConfig.rtl,
     theme: {

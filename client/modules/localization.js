@@ -11,8 +11,8 @@ import localeQuery from 'gql/common/common-localization-query-translations.gql'
 
 export default {
   VueI18Next,
-  init() {
-    i18next
+  async init() {
+    await i18next
       .use(Backend)
       .init({
         backend: {
@@ -23,7 +23,7 @@ export default {
           backendOptions: [
             {
               expirationTime: 1000 * 60 * 60 * 24, // 24h
-              defaultVersion: '2026-11-04-9'
+              defaultVersion: '2026-11-05-1'
             },
             {
               loadPath: '{{lng}}/{{ns}}',
@@ -57,8 +57,21 @@ export default {
         load: 'currentOnly',
         lowerCaseLng: true,
         fallbackLng: 'en',
-        ns: ['common', 'auth', 'admin']
+        ns: ['common', 'auth', 'admin', 'editor']
       })
+    await i18next.loadNamespaces(['common', 'auth', 'admin', 'editor'])
+    const editorTranslations = await graphQL.query({
+      query: localeQuery,
+      variables: {
+        locale: siteConfig.lang,
+        namespace: 'editor'
+      }
+    })
+    const editorBundle = {}
+    _.get(editorTranslations, 'data.localization.translations', []).forEach(entry => {
+      _.set(editorBundle, entry.key, entry.value)
+    })
+    i18next.addResourceBundle(siteConfig.lang, 'editor', editorBundle, true, true)
     return new VueI18Next(i18next)
   }
 }

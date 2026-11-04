@@ -7,7 +7,7 @@
       .caption.px-3 /{{path}}
       template(v-if='$vuetify.breakpoint.mdAndUp')
         v-spacer
-        .caption Visual Editor
+        .caption {{$t('editor:editors.ckeditor.title')}}
         v-spacer
         .caption {{$t('editor:ckeditor.stats', { chars: stats.characters, words: stats.words })}}
     editor-conflict(v-model='isConflict', v-if='isConflict')
@@ -22,7 +22,7 @@ import DecoupledEditor from '@requarks/ckeditor5'
 import EditorConflict from './ckeditor/conflict.vue'
 import { html as beautify } from 'js-beautify/js/lib/beautifier.min.js'
 
-/* global siteLangs */
+/* global siteConfig, siteLangs */
 
 export default {
   components: {
@@ -65,9 +65,39 @@ export default {
   async mounted () {
     this.$store.set('editor/editorKey', 'ckeditor')
 
+    const i18next = this.$i18n.i18next
+    if (siteConfig.lang.toLowerCase() === 'zh' && !i18next.getResource('zh', 'editor', 'ckeditor.placeholder')) {
+      const translations = await import('../../../data/sideload/zh.json')
+      i18next.addResource('zh', 'editor', 'ckeditor.placeholder', translations.default['editor:ckeditor.placeholder'])
+    }
+
+    let uiLanguage = siteConfig.lang.toLowerCase().replace(/_/g, '-')
+    if (uiLanguage === 'zh' || uiLanguage === 'zh-sg' || uiLanguage === 'zh-hans') {
+      uiLanguage = 'zh-cn'
+    } else if (['zh-tw', 'zh-hk', 'zh-hant'].includes(uiLanguage)) {
+      uiLanguage = 'zh'
+    }
+    if (uiLanguage !== 'en') {
+      try {
+        await import('@requarks/ckeditor5/build/translations/' + uiLanguage + '.js')
+      } catch (err) {
+        const baseLanguage = uiLanguage.split('-')[0]
+        if (baseLanguage !== uiLanguage && baseLanguage !== 'en') {
+          try {
+            await import('@requarks/ckeditor5/build/translations/' + baseLanguage + '.js')
+            uiLanguage = baseLanguage
+          } catch (fallbackError) {
+            uiLanguage = 'en'
+          }
+        } else {
+          uiLanguage = 'en'
+        }
+      }
+    }
+
     this.editor = await DecoupledEditor.create(this.$refs.editor, {
-      language: this.locale,
-      placeholder: 'Type the page content here',
+      language: { ui: uiLanguage, content: this.locale },
+      placeholder: this.$t('editor:ckeditor.placeholder', { defaultValue: 'Type the page content here' }),
       disableNativeSpellChecker: false,
       // TODO: Mention autocomplete
       //
@@ -89,6 +119,13 @@ export default {
         }
       }
     })
+    for (const item of this.editor.ui.view.toolbar.items) {
+      if (item.label === 'Insert Link to Page') {
+        item.label = this.$t('editor:markup.insertLink')
+      } else if (item.label === 'Insert Assets') {
+        item.label = this.$t('editor:markup.insertAssets')
+      }
+    }
     this.$refs.toolbarContainer.appendChild(this.editor.ui.view.toolbar.element)
 
     if (this.mode !== 'create') {

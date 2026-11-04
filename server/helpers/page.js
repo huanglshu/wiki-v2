@@ -7,6 +7,7 @@ const localeSegmentRegex = /^[A-Z]{2}(-[A-Z]{2})?$/i
 const localeFolderRegex = /^([a-z]{2}(?:-[a-z]{2})?\/)?(.*)/i
 // eslint-disable-next-line no-control-regex
 const unsafeCharsRegex = /[\x00-\x1f\x80-\x9f\\"|<>:*?]/
+const homeEntryRegex = /^\/(?:[a-z]{2}(?:-[a-z]{2})?\/)?home\/?$/i
 
 const contentToExt = {
   markdown: 'md',
@@ -114,6 +115,36 @@ module.exports = {
       return true
     } else {
       return false
+    }
+  },
+  getHomeRedirect(rawPath, user, groups) {
+    if ((rawPath !== '/' && !homeEntryRegex.test(rawPath)) || !user || !Number.isSafeInteger(user.id) || user.id < 1 || user.id === 2 || !Array.isArray(user.groups)) {
+      return null
+    }
+
+    const group = user.groups
+      .map(entry => groups[_.isObject(entry) ? entry.id : entry])
+      .find(entry => entry && !_.isEmpty(entry.redirectOnLogin) && entry.redirectOnLogin !== '/')
+    const target = _.get(group, 'redirectOnLogin')
+    if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//') || target.includes('\\') || /[\r\n\t]/.test(target)) {
+      return null
+    }
+
+    try {
+      const url = new URL(target, 'http://localhost')
+      if (url.origin !== 'http://localhost' || url.pathname === '/') {
+        return null
+      }
+      if (rawPath !== '/' && homeEntryRegex.test(url.pathname)) {
+        const currentPage = this.parsePath(rawPath)
+        const targetPage = this.parsePath(url.pathname)
+        if (currentPage.locale === targetPage.locale && currentPage.path === targetPage.path) {
+          return null
+        }
+      }
+      return target
+    } catch (err) {
+      return null
     }
   },
   /**

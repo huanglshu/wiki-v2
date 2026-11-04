@@ -158,6 +158,11 @@ module.exports = class User extends Model {
     return _.uniq(_.map(this.groups, 'id'))
   }
 
+  getLoginRedirect() {
+    const group = _.find(this.groups, grp => !_.isEmpty(grp.redirectOnLogin) && grp.redirectOnLogin !== '/')
+    return _.get(group, 'redirectOnLogin', '/')
+  }
+
   // ------------------------------------------------
   // Model Methods
   // ------------------------------------------------
@@ -337,15 +342,7 @@ module.exports = class User extends Model {
   static async afterLoginChecks (user, context, { skipTFA, skipChangePwd } = { skipTFA: false, skipChangePwd: false }) {
     // Get redirect target
     user.groups = await user.$relatedQuery('groups').select('groups.id', 'permissions', 'redirectOnLogin')
-    let redirect = '/'
-    if (user.groups && user.groups.length > 0) {
-      for (const grp of user.groups) {
-        if (!_.isEmpty(grp.redirectOnLogin) && grp.redirectOnLogin !== '/') {
-          redirect = grp.redirectOnLogin
-          break
-        }
-      }
-    }
+    const redirect = user.getLoginRedirect()
 
     // Is 2FA required?
     if (!skipTFA) {
@@ -418,7 +415,7 @@ module.exports = class User extends Model {
   static async refreshToken(user) {
     if (_.isSafeInteger(user)) {
       user = await WIKI.models.users.query().findById(user).withGraphFetched('groups').modifyGraph('groups', builder => {
-        builder.select('groups.id', 'permissions')
+        builder.select('groups.id', 'permissions', 'redirectOnLogin')
       })
       if (!user) {
         WIKI.logger.warn(`Failed to refresh token for user ${user}: Not found.`)
@@ -429,7 +426,7 @@ module.exports = class User extends Model {
         throw new WIKI.Error.AuthAccountBanned()
       }
     } else if (_.isNil(user.groups)) {
-      user.groups = await user.$relatedQuery('groups').select('groups.id', 'permissions')
+      user.groups = await user.$relatedQuery('groups').select('groups.id', 'permissions', 'redirectOnLogin')
     }
 
     // Update Last Login Date
@@ -448,7 +445,8 @@ module.exports = class User extends Model {
         ap: user.appearance,
         // defaultEditor: user.defaultEditor,
         permissions: user.getGlobalPermissions(),
-        groups: user.getGroups()
+        groups: user.getGroups(),
+        redirectOnLogin: user.getLoginRedirect()
       }, {
         key: WIKI.config.certs.private,
         passphrase: WIKI.config.sessionSecret

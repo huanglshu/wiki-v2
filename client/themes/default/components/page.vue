@@ -13,7 +13,7 @@
       :right='$vuetify.rtl'
       )
       vue-scroll(:ops='scrollStyle')
-        nav-sidebar(:color='$vuetify.theme.dark ? `grey darken-4-d4` : `primary`', :items='sidebarDecoded', :nav-mode='navMode')
+        nav-sidebar(ref='navSidebar', :color='$vuetify.theme.dark ? `grey darken-4-d4` : `primary`', :items='sidebarDecoded', :nav-mode='navMode')
 
     v-fab-transition(v-if='navMode !== `NONE`')
       v-btn(
@@ -42,7 +42,7 @@
             )
             template(slot='item', slot-scope='props')
               v-icon(v-if='props.item.path === "/"', small, @click='goHome') mdi-home
-              v-btn.ma-0(v-else, :href='props.item.path', small, text) {{props.item.name}}
+              v-btn.ma-0(v-else, :href='props.item.path', small, text, @click='navigateBreadcrumb($event, props.item)') {{props.item.name}}
           template(v-if='!isPublished')
             v-spacer
             .caption.red--text {{$t('common:page.unpublished')}}
@@ -180,7 +180,7 @@
                         v-icon(color='indigo', dense) mdi-history
                     span {{$t('common:header.history')}}
                 .page-author-card-name.body-2.grey--text(:class='$vuetify.theme.dark ? `` : `text--darken-3`') {{ authorName }}
-                .page-author-card-date.caption.grey--text.text--darken-1 {{ updatedAt | moment('calendar') }}
+                .page-author-card-date.caption.grey--text.text--darken-1 {{ updatedAt | moment('YYYY-MM-DD HH:mm:ss') }}
 
             //- v-card.mb-5
             //-   .pa-5
@@ -540,10 +540,14 @@ export default {
       }
     },
     breadcrumbs() {
+      const localePath = this.locales.length > 0 ? `/${this.locale}` : ''
+      let pagePath = ''
       return [{ path: '/', name: 'Home' }].concat(
         _.reduce(this.path.split('/'), (result, value) => {
+          pagePath = pagePath ? `${pagePath}/${value}` : value
           result.push({
-            path: _.get(_.last(result), 'path', this.locales.length > 0 ? `/${this.locale}` : '') + `/${value}`,
+            path: `${localePath}/${pagePath}`,
+            pagePath,
             name: value
           })
           return result
@@ -657,6 +661,21 @@ export default {
         window.location.assign(`/${this.locale}/home`)
       } else {
         window.location.assign('/')
+      }
+    },
+    async navigateBreadcrumb (event, item) {
+      if (event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
+        return
+      }
+      event.preventDefault()
+
+      const isDirectory = this.$refs.navSidebar && await this.$refs.navSidebar.navigateToDirectory(item.pagePath)
+      if (isDirectory) {
+        if (this.$vuetify.breakpoint.smAndDown) {
+          this.navShown = true
+        }
+      } else {
+        window.location.assign(item.path)
       }
     },
     toggleNavigation () {

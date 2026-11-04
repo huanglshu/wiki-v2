@@ -48,7 +48,7 @@
       template(v-if='currentParent.id > 0')
         v-menu(v-for='(item, idx) of parents', :key='`parent-` + item.id', open-on-hover, offset-x, :nudge-right='10', :close-on-content-click='false', :close-delay='350', min-width='0', max-width='min(360px, calc(100vw - 32px))', content-class='nav-sidebar-name-popover', role='tooltip')
           template(v-slot:activator='{ on }')
-            v-list-item(@click='fetchBrowseItems(item)', v-on='on', style='min-height: 30px;')
+            v-list-item(@click='fetchBrowseItems(item)', :input-value='item.id === currentParent.id', v-on='on', style='min-height: 30px;')
               v-list-item-avatar(size='18', :style='`padding-left: ` + (idx * 8) + `px; width: auto; margin: 0 5px 0 0;`')
                 v-icon(small) mdi-folder-open
               v-list-item-title {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
@@ -132,6 +132,53 @@ export default {
       if (mode === `browse` && this.loadedCache.length < 1) {
         this.loadFromCurrentPath()
       }
+    },
+    async navigateToDirectory (path) {
+      const resp = await this.$apollo.query({
+        query: gql`
+          query ($path: String, $locale: String!) {
+            pages {
+              tree(path: $path, mode: ALL, locale: $locale, includeAncestors: true) {
+                id
+                path
+                title
+                isFolder
+                pageId
+                parent
+                locale
+              }
+            }
+          }
+        `,
+        fetchPolicy: 'cache-first',
+        variables: {
+          path,
+          locale: this.locale
+        }
+      })
+      const items = _.get(resp, 'data.pages.tree', [])
+      const directory = _.find(items, ['path', path])
+      if (!directory || !directory.isFolder || directory.pageId) {
+        return false
+      }
+
+      const ancestors = []
+      let parentId = directory.parent
+      while (parentId) {
+        const parent = _.find(items, ['id', parentId])
+        if (!parent) {
+          break
+        }
+        ancestors.push(parent)
+        parentId = parent.parent
+      }
+
+      this.parents = [{ id: 0, title: '/ (root)' }, ...ancestors.reverse()]
+      this.currentParent = _.last(this.parents)
+      this.currentMode = 'browse'
+      window.localStorage.setItem('navPref', 'browse')
+      await this.fetchBrowseItems(directory)
+      return true
     },
     async fetchBrowseItems (item) {
       this.$store.commit(`loadingStart`, 'browse-load')

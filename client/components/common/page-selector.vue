@@ -115,7 +115,7 @@ export default {
     },
     path: {
       type: String,
-      default: 'new-page'
+      default: ''
     },
     locale: {
       type: String,
@@ -140,7 +140,7 @@ export default {
       searchLoading: false,
       currentLocale: siteConfig.lang,
       currentFolderPath: '',
-      currentPath: 'new-page',
+      currentPath: '',
       currentPage: null,
       currentNode: [0],
       openNodes: [0],
@@ -205,13 +205,31 @@ export default {
     }
   },
   watch: {
-    isShown (newValue, oldValue) {
+    async isShown (newValue, oldValue) {
       if (newValue && !oldValue) {
-        this.currentPath = this.path
+        const useDefaultPath = this.mode === 'create' && !this.path
+        this.currentPath = useDefaultPath ?
+          this.$t('common:pageSelector.newPagePath', { defaultValue: 'new-page' }) :
+          this.path
         this.currentLocale = this.locale
         _.delay(() => {
           this.$refs.pathIpt.focus()
         })
+        const i18next = this.$i18n.i18next
+        if (useDefaultPath && siteConfig.lang.toLowerCase() === 'zh' && !i18next.getResource('zh', 'common', 'pageSelector.newPagePath')) {
+          const initialPath = this.currentPath
+          try {
+            const translations = await import('../../../data/sideload/zh.json')
+            if (!i18next.getResource('zh', 'common', 'pageSelector.newPagePath')) {
+              i18next.addResource('zh', 'common', 'pageSelector.newPagePath', translations.default['common:pageSelector.newPagePath'])
+            }
+            if (this.isShown && !this.path && this.currentPath === initialPath) {
+              this.currentPath = this.$t('common:pageSelector.newPagePath')
+            }
+          } catch (err) {
+            console.warn('Unable to load new page path translation.', err)
+          }
+        }
       }
     },
     currentNode (newValue, oldValue) {

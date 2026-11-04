@@ -724,11 +724,32 @@ export default {
       this.cm.markText(from, to, { replacedWith: markerElm, __kind: kind })
     }
   },
-  mounted() {
+  async mounted() {
     this.$store.set('editor/editorKey', 'markdown')
 
     if (this.mode === 'create' && !this.$store.get('editor/content')) {
-      this.$store.set('editor/content', '# Header\nYour content here')
+      const i18next = this.$i18n.i18next
+      const keys = ['defaultHeading', 'defaultContent']
+      if (siteConfig.lang.toLowerCase() === 'zh' && keys.some(key => !i18next.getResource('zh', 'editor', `markdown.${key}`))) {
+        try {
+          const translations = await import('../../../data/sideload/zh.json')
+          for (const key of keys) {
+            if (!i18next.getResource('zh', 'editor', `markdown.${key}`)) {
+              i18next.addResource('zh', 'editor', `markdown.${key}`, translations.default[`editor:markdown.${key}`])
+            }
+          }
+        } catch (err) {
+          console.warn('Unable to load Markdown translations.', err)
+        }
+      }
+      if (this._isBeingDestroyed || this._isDestroyed) {
+        return
+      }
+      if (this.mode === 'create' && !this.$store.get('editor/content')) {
+        const heading = this.$t('editor:markdown.defaultHeading', { defaultValue: 'Header' })
+        const content = this.$t('editor:markdown.defaultContent', { defaultValue: 'Your content here' })
+        this.$store.set('editor/content', `# ${heading}\n${content}`)
+      }
     }
 
     // Initialize Mermaid API

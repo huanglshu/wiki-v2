@@ -73,3 +73,24 @@ describe('admin list date columns', () => {
     }
   })
 })
+
+describe('admin dashboard date formatting', () => {
+  const previousTimezone = moment.defaultZone && moment.defaultZone.name
+
+  beforeEach(() => {
+    moment.tz.setDefault('Asia/Shanghai')
+  })
+
+  afterEach(() => {
+    moment.tz.setDefault(previousTimezone)
+  })
+
+  it('formats dates as year-month-day and hour-minute', () => {
+    const component = loadComponent('admin-dashboard.vue')
+    const formatDate = component.methods.formatDashboardDate.bind({ $moment: moment })
+
+    expect(formatDate('2026-01-01T20:05:07.000Z')).toBe('2026-01-02 04:05')
+    expect(formatDate(null)).toBeNull()
+    expect(formatDate('2026-02-30T00:00:00Z')).toBe('2026-02-30T00:00:00Z')
+  })
+})

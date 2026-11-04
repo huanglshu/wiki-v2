@@ -124,6 +124,7 @@
               hide-details
               height='48px'
               dense
+              :no-data-text='$t("admin:ui.groupRules.noLocales", { defaultValue: "No locales available" })'
               :menu-props='{ "minWidth": 250 }'
               style='flex: 0 1 150px;'
               )
@@ -198,10 +199,16 @@
 <script>
 import _ from 'lodash'
 import { customAlphabet } from 'nanoid/non-secure'
-
-/* global siteLangs */
+import gql from 'graphql-tag'
 
 const nanoid = customAlphabet('1234567890abcdef', 10)
+
+export function translateRuleLabel(i18n, key, fallback) {
+  if (!key || !i18n || !i18n.i18next.exists(key)) {
+    return fallback
+  }
+  return i18n.i18next.t(key)
+}
 
 export default {
   props: {
@@ -234,7 +241,8 @@ export default {
         { textKey: 'admin:ui.groupRules.matches.end', value: 'END', icon: '.../' },
         { textKey: 'admin:ui.groupRules.matches.regex', value: 'REGEX', icon: '$.*' },
         { textKey: 'admin:ui.groupRules.matches.tag', value: 'TAG', icon: 'T' }
-      ]
+      ],
+      installedLocales: null
     }
   },
   computed: {
@@ -242,14 +250,14 @@ export default {
       get() { return this.value },
       set(val) { this.$set('input', val) }
     },
-    locales() { return siteLangs }
+    locales() { return this.installedLocales || [] }
   },
   methods: {
     roleText (role) {
-      return this.$te(role.labelKey) ? this.$t(role.labelKey) : role.value
+      return translateRuleLabel(this.$i18n, role.labelKey, role.value)
     },
     matchText (match) {
-      return this.$te(match.textKey) ? this.$t(match.textKey) : match.value
+      return translateRuleLabel(this.$i18n, match.textKey, match.value)
     },
     addRule(group) {
       this.group.pageRules.push({
@@ -273,6 +281,27 @@ export default {
     },
     dude (stuff) {
       console.info(stuff)
+    }
+  },
+  apollo: {
+    installedLocales: {
+      query: gql`
+        {
+          localization {
+            locales {
+              code
+              name
+              nativeName
+              isInstalled
+            }
+          }
+        }
+      `,
+      fetchPolicy: 'network-only',
+      update: (data) => _.filter(_.get(data, 'localization.locales', []), ['isInstalled', true]),
+      watchLoading (isLoading) {
+        this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-groups-rules-locales')
+      }
     }
   }
 }

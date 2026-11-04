@@ -65,7 +65,7 @@ function translateDefinition (type, value, t) {
 
   if (value.actions) {
     translated.actions = value.actions.map(action => {
-      const actionKey = `${moduleKey}.actions.${String(action.handler).toLowerCase()}`
+      const actionKey = `${moduleKey}.actions.${String(action.handler)}`
       return {
         ...action,
         label: translateKey(t, action.i18nLabelKey || `${actionKey}.label`, action.label),

@@ -220,13 +220,13 @@ export default {
         lc.updatedAt = new Date().toISOString()
         lc.installDate = lc.updatedAt
         this.$store.commit('showNotification', {
-          message: `Locale ${lc.name} has been installed successfully.`,
+          message: this.$t('admin:locale.downloadSuccess', { name: lc.name }),
           style: 'success',
           icon: 'get_app'
         })
       } else {
         this.$store.commit('showNotification', {
-          message: `Error: ${resp.message}`,
+          message: this.$t('admin:locale.downloadError', { message: resp.message }),
           style: 'error',
           icon: 'warning'
         })
@@ -255,7 +255,8 @@ export default {
       const resp = _.get(respRaw, 'data.localization.updateLocale.responseResult', {})
       if (resp.succeeded) {
         // Change UI language
-        WIKI.$i18n.i18next.changeLanguage(this.selectedLocale)
+        await WIKI.$i18n.i18next.changeLanguage(this.selectedLocale)
+        const t = WIKI.$i18n.i18next.getFixedT(this.selectedLocale, 'admin')
         WIKI.$moment.locale(this.selectedLocale)
 
         // Check for RTL
@@ -263,7 +264,7 @@ export default {
         this.$vuetify.rtl = curLocale && curLocale.isRTL
 
         this.$store.commit('showNotification', {
-          message: 'Locale settings updated successfully.',
+          message: t('locale.saveSuccess'),
           style: 'success',
           icon: 'check'
         })
@@ -273,7 +274,7 @@ export default {
         }, 1000)
       } else {
         this.$store.commit('showNotification', {
-          message: `Error: ${resp.message}`,
+          message: this.$t('admin:locale.saveError', { message: resp.message }),
           style: 'error',
           icon: 'warning'
         })

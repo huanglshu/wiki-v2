@@ -112,10 +112,6 @@
               //-   v-list-item-title {{ $t('admin:dev.graphiql.title') }}
               //- v-list-item(to='/dev-voyager')
               //-   v-list-item-title {{ $t('admin:dev.voyager.title') }}
-            v-divider.my-2
-          v-list-item(to='/contribute', color='primary')
-            v-list-item-avatar(size='24', tile): v-icon mdi-heart-outline
-            v-list-item-title {{ $t('admin:contribute.title') }}
 
     v-main(:class='$vuetify.theme.dark ? "grey darken-5" : "grey lighten-5"')
       transition(name='admin-router')
@@ -173,8 +169,7 @@ const router = new VueRouter({
     { path: '/system', component: () => import(/* webpackChunkName: "admin" */ './admin/admin-system.vue') },
     { path: '/utilities', component: () => import(/* webpackChunkName: "admin" */ './admin/admin-utilities.vue') },
     { path: '/webhooks', component: () => import(/* webpackChunkName: "admin" */ './admin/admin-webhooks.vue') },
-    { path: '/dev-flags', component: () => import(/* webpackChunkName: "admin-dev" */ './admin/admin-dev-flags.vue') },
-    { path: '/contribute', component: () => import(/* webpackChunkName: "admin" */ './admin/admin-contribute.vue') }
+    { path: '/dev-flags', component: () => import(/* webpackChunkName: "admin-dev" */ './admin/admin-dev-flags.vue') }
   ]
 })
 

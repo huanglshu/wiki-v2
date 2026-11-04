@@ -72,7 +72,7 @@
                 td.admin-pages-path
                   v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ props.item.locale }}
                   span.ml-2.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`') / {{ props.item.path }}
-                td.text-right.caption(width='250') {{ props.item.updatedAt | moment('calendar') }}
+                td.text-right.caption(width='250') {{ formatDashboardDate(props.item.updatedAt) }}
       v-flex(xs12, xl6)
         v-card.radius-7.animated.fadeInUp.wait-p4s
           v-toolbar(:color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`', dense, flat)
@@ -90,18 +90,7 @@
               tr.is-clickable(:active='props.selected', @click='$router.push(`/users/` + props.item.id)')
                 td
                   .body-2: strong {{ props.item.name }}
-                td.text-right.caption(width='250') {{ props.item.lastLoginAt | moment('calendar') }}
-
-      v-flex(xs12)
-        v-card.dashboard-contribute.animated.fadeInUp.wait-p4s
-          v-card-text
-            img(src='/_assets/svg/icon-heart-health.svg', alt='Contribute', style='height: 80px;')
-            .pl-5
-              .subtitle-1 {{$t('admin:contribute.title')}}
-              .body-2.mt-3: strong {{$t('admin:dashboard.contributeSubtitle')}}
-              .body-2 {{$t('admin:dashboard.contributeHelp')}}
-              v-btn.mx-0.mt-4(:color='$vuetify.theme.dark ? `indigo lighten-3` : `indigo`', outlined, small, to='/contribute')
-                .caption: strong {{$t('admin:dashboard.contributeLearnMore')}}
+                td.text-right.caption(width='250') {{ formatDashboardDate(props.item.lastLoginAt) }}
 
 </template>
 
@@ -146,6 +135,16 @@ export default {
   },
   methods: {
     round(val) { return Math.round(val) },
+    formatDashboardDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.format('YYYY-MM-DD HH:mm')
+    },
     hasPermission(prm) {
       if (_.isArray(prm)) {
         return _.some(prm, p => {
@@ -216,27 +215,6 @@ export default {
   .v-card__text {
     overflow: hidden;
     position: relative;
-  }
-}
-
-.dashboard-contribute {
-  background-color: #FFF;
-  background-image: linear-gradient(to bottom, #FFF 0%, lighten(mc('indigo', '50'), 3%) 100%);
-  border-radius: 7px;
-
-  @at-root .theme--dark & {
-    background-color: mc('grey', '800');
-    background-image: linear-gradient(to bottom, mc('grey', '800') 0%, darken(mc('grey', '800'), 6%) 100%);
-  }
-
-  .v-card__text {
-    display: flex;
-    align-items: center;
-    color: mc('indigo', '500') !important;
-
-    @at-root .theme--dark & {
-      color: mc('grey', '300') !important;
-    }
   }
 }
 

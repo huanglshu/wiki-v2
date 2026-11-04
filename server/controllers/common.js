@@ -435,6 +435,11 @@ router.get('/_userav/:uid', async (req, res, next) => {
  * View document / asset
  */
 router.get('/*', async (req, res, next) => {
+  const homeRedirect = pageHelper.getHomeRedirect(req.path, req.user, WIKI.auth.groups)
+  if (homeRedirect) {
+    return res.redirect(homeRedirect)
+  }
+
   const stripExt = _.some(WIKI.config.pageExtensions, ext => _.endsWith(req.path, `.${ext}`))
   const pageArgs = pageHelper.parsePath(req.path, { stripExt })
   const isPage = (stripExt || pageArgs.path.indexOf('.') === -1)

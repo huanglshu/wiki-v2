@@ -7,6 +7,7 @@
           solo
           flat
           v-model='currentPageTitle'
+          :placeholder='pageTitlePlaceholder'
           hide-details
           background-color='black'
           dense
@@ -70,7 +71,7 @@ import editorStore from '../store/editor'
 WIKI.$store.registerModule('editor', editorStore)
 
 export default {
-  i18nOptions: { namespaces: 'editor' },
+  i18nOptions: { namespaces: ['editor', 'common'] },
   components: {
     AtomSpinner,
     StatusIndicator,
@@ -99,7 +100,7 @@ export default {
     },
     title: {
       type: String,
-      default: 'Untitled Page'
+      default: ''
     },
     description: {
       type: String,
@@ -181,7 +182,17 @@ export default {
     activeModal: sync('editor/activeModal'),
     mode: get('editor/mode'),
     welcomeMode() { return this.mode === `create` && this.path === `home` },
-    currentPageTitle: sync('page/title'),
+    currentPageTitle: {
+      get() {
+        return this.$store.get('page/title')
+      },
+      set(val) {
+        this.$store.set('page/title', val)
+      }
+    },
+    pageTitlePlaceholder() {
+      return this.$t('editor:newPageTitle')
+    },
     checkoutDateActive: sync('editor/checkoutDateActive'),
     currentStyling: get('page/scriptCss'),
     isDirty () {

@@ -13,9 +13,9 @@
                 ripple
                 )
                 v-card-text.text-center(@click='selectEditor("markdown")')
-                  img(src='/_assets/svg/editor-icon-markdown.svg', alt='Markdown', style='width: 36px;')
-                  .body-2.primary--text.mt-2 Markdown
-                  .caption.grey--text Plain Text Formatting
+                  img(src='/_assets/svg/editor-icon-markdown.svg', :alt='$t("editor:editors.markdown.title")', style='width: 36px;')
+                  .body-2.primary--text.mt-2 {{ $t('editor:editors.markdown.title') }}
+                  .caption.grey--text {{ $t('editor:editors.markdown.description') }}
             v-flex(xs6)
               v-card.radius-7.animated.fadeInUp.wait-p2s(
                 hover
@@ -23,9 +23,9 @@
                 ripple
                 )
                 v-card-text.text-center(@click='selectEditor("ckeditor")')
-                  img(src='/_assets/svg/editor-icon-ckeditor.svg', alt='Visual Editor', style='width: 36px;')
-                  .body-2.mt-2.primary--text Visual Editor
-                  .caption.grey--text Rich-text WYSIWYG
+                  img(src='/_assets/svg/editor-icon-ckeditor.svg', :alt='$t("editor:editors.ckeditor.title")', style='width: 36px;')
+                  .body-2.mt-2.primary--text {{ $t('editor:editors.ckeditor.title') }}
+                  .caption.grey--text {{ $t('editor:editors.ckeditor.description') }}
             v-flex(xs4)
               v-card.radius-7.animated.fadeInUp.wait-p3s(
                 hover
@@ -33,9 +33,9 @@
                 ripple
                 )
                 v-card-text.text-center(@click='selectEditor("asciidoc")')
-                  img(src='/_assets/svg/editor-icon-asciidoc.svg', alt='AsciiDoc', style='width: 36px;')
-                  .body-2.primary--text.mt-2 AsciiDoc
-                  .caption.grey--text Plain Text Formatting
+                  img(src='/_assets/svg/editor-icon-asciidoc.svg', :alt='$t("editor:editors.asciidoc.title")', style='width: 36px;')
+                  .body-2.primary--text.mt-2 {{ $t('editor:editors.asciidoc.title') }}
+                  .caption.grey--text {{ $t('editor:editors.asciidoc.description') }}
             v-flex(xs4)
               v-card.radius-7.animated.fadeInUp.wait-p4s(
                 hover
@@ -43,9 +43,9 @@
                 ripple
                 )
                 v-card-text.text-center(@click='selectEditor("code")')
-                  img(src='/_assets/svg/editor-icon-code.svg', alt='Code', style='width: 36px;')
-                  .body-2.primary--text.mt-2 Code
-                  .caption.grey--text Raw HTML
+                  img(src='/_assets/svg/editor-icon-code.svg', :alt='$t("editor:editors.code.title")', style='width: 36px;')
+                  .body-2.primary--text.mt-2 {{ $t('editor:editors.code.title') }}
+                  .caption.grey--text {{ $t('editor:editors.code.description') }}
             v-flex(xs4)
               v-card.radius-7.animated.fadeInUp.wait-p5s(
                 hover
@@ -53,9 +53,9 @@
                 ripple
                 )
                 v-card-text.text-center(@click='fromTemplate')
-                  img(src='/_assets/svg/icon-cube.svg', alt='From Template', style='width: 42px; opacity: .5;')
-                  .body-2.mt-1.teal--text From Template
-                  .caption.grey--text Use an existing page...
+                  img(src='/_assets/svg/icon-cube.svg', :alt='$t("editor:editors.template.title")', style='width: 42px; opacity: .5;')
+                  .body-2.mt-1.teal--text {{ $t('editor:editors.template.title') }}
+                  .caption.grey--text {{ $t('editor:editors.template.description') }}
 
     page-selector(mode='select', v-model='templateDialogIsShown', :open-handler='fromTemplateHandle', :path='path', :locale='locale', must-exist)
 </template>
