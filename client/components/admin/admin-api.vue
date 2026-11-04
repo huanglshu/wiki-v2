@@ -30,25 +30,67 @@
               thead
                 tr.grey(:class='$vuetify.theme.dark ? `darken-4-d5` : `lighten-5`')
                   th {{$t('admin:api.headerName')}}
-                  th {{$t('admin:api.headerKeyEnding')}}
                   th {{$t('admin:api.headerExpiration')}}
                   th {{$t('admin:api.headerCreated')}}
                   th {{$t('admin:api.headerLastUpdated')}}
+                  th(width='120') {{$t('admin:ui.api.viewKey', { defaultValue: 'View Key' })}}
                   th(width='100') {{$t('admin:api.headerRevoke')}}
               tbody
                 tr(v-for='key of keys', :key='`key-` + key.id')
                   td
                     strong(:class='key.isRevoked ? `red--text` : ``') {{ key.name }}
-                    em.caption.ml-1.red--text(v-if='key.isRevoked') (revoked)
-                  td.caption {{ key.keyShort }}
-                  td(:style='key.isRevoked ? `text-decoration: line-through;` : ``') {{ key.expiration | moment('LL') }}
-                  td {{ key.createdAt | moment('calendar') }}
-                  td {{ key.updatedAt | moment('calendar') }}
+                    em.caption.ml-1.red--text(v-if='key.isRevoked') ({{ $t('admin:ui.api.revoked', { defaultValue: 'revoked' }) }})
+                  td(:style='key.isRevoked ? `text-decoration: line-through;` : ``') {{ formatApiDate(key.expiration) }}
+                  td {{ formatApiDate(key.createdAt) }}
+                  td {{ formatApiDate(key.updatedAt) }}
+                  td
+                    v-tooltip(bottom)
+                      template(v-slot:activator='{ on }')
+                        v-btn(
+                          icon
+                          v-on='on'
+                          @click='viewKey(key)'
+                          :loading='viewKeyLoadingId === key.id'
+                          :disabled='viewKeyLoadingId !== null'
+                          :aria-label='$t("admin:ui.api.viewKey", { defaultValue: "View Key" })'
+                        )
+                          v-icon mdi-eye
+                      span {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
                   td: v-btn(icon, @click='revoke(key)', :disabled='key.isRevoked'): v-icon(color='error') mdi-cancel
           v-card-text(v-else)
             v-alert.mb-0(icon='mdi-information', :value='true', outlined, color='info') {{$t('admin:api.noKeyInfo')}}
 
     create-api-key(v-model='isCreateDialogShown', @refresh='refresh(false)')
+
+    v-dialog(v-model='isViewKeyDialogShown', max-width='750')
+      v-card
+        .dialog-header.is-short {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
+        v-card-text.pt-5
+          .body-2 {{ viewedKeyName }}
+          v-textarea.mt-3(
+            :value='revealedKey'
+            filled
+            no-resize
+            readonly
+            :rows='6'
+            hide-details
+          )
+        v-card-actions
+          v-spacer
+          v-tooltip(top)
+            template(v-slot:activator='{ on }')
+              v-btn(
+                icon
+                v-on='on'
+                v-clipboard='revealedKey'
+                @success='onKeyCopied'
+                @error='onKeyCopyError'
+                :disabled='!revealedKey'
+                :aria-label='$t("admin:ui.api.copyKey", { defaultValue: "Copy Key" })'
+              )
+                v-icon mdi-content-copy
+            span {{ $t('admin:ui.api.copyKey', { defaultValue: 'Copy Key' }) }}
+          v-btn(text, @click='isViewKeyDialogShown = false') {{$t('common:actions.close')}}
 
     v-dialog(v-model='isRevokeConfirmDialogShown', max-width='500', persistent)
       v-card
@@ -80,12 +122,93 @@ export default {
       isToggleLoading: false,
       keys: [],
       isCreateDialogShown: false,
+      isViewKeyDialogShown: false,
+      viewKeyLoadingId: null,
+      viewedKeyName: '',
+      revealedKey: '',
       isRevokeConfirmDialogShown: false,
       revokeLoading: false,
       current: {}
     }
   },
+  watch: {
+    isViewKeyDialogShown (isShown) {
+      if (!isShown) {
+        this.viewedKeyName = ''
+        this.revealedKey = ''
+      }
+    }
+  },
+  beforeDestroy() {
+    this.viewedKeyName = ''
+    this.revealedKey = ''
+  },
   methods: {
+    formatApiDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH-mm-ss')
+    },
+    async viewKey(key) {
+      if (this.viewKeyLoadingId !== null) {
+        return
+      }
+      this.viewKeyLoadingId = key.id
+      try {
+        const resp = await this.$apollo.query({
+          query: gql`
+            query ($id: Int!) {
+              authentication {
+                apiKey(id: $id)
+              }
+            }
+          `,
+          variables: { id: key.id },
+          fetchPolicy: 'no-cache'
+        })
+        const secret = _.get(resp, 'data.authentication.apiKey')
+        if (!secret || typeof secret !== 'string') {
+          throw new Error('API key unavailable')
+        }
+        if (!this._isBeingDestroyed && !this._isDestroyed) {
+          this.viewedKeyName = key.name
+          this.revealedKey = secret
+          this.isViewKeyDialogShown = true
+        }
+      } catch (err) {
+        if (!this._isBeingDestroyed && !this._isDestroyed) {
+          this.$store.commit('showNotification', {
+            style: 'red',
+            message: this.$t('admin:ui.api.viewKeyError', { defaultValue: 'Unable to view the API key.' }),
+            icon: 'alert'
+          })
+        }
+      } finally {
+        this.viewKeyLoadingId = null
+      }
+    },
+    onKeyCopied(event) {
+      if (event && event.clearSelection) {
+        event.clearSelection()
+      }
+      this.$store.commit('showNotification', {
+        style: 'success',
+        message: this.$t('admin:ui.api.copyKeySuccess', { defaultValue: 'API key copied.' }),
+        icon: 'check'
+      })
+    },
+    onKeyCopyError() {
+      this.$store.commit('showNotification', {
+        style: 'red',
+        message: this.$t('admin:ui.api.copyKeyError', { defaultValue: 'Copy failed. Please copy the key manually.' }),
+        icon: 'alert'
+      })
+    },
     async refresh (notify = true) {
       this.$apollo.queries.keys.refetch()
       if (notify) {
@@ -215,7 +338,6 @@ export default {
             apiKeys {
               id
               name
-              keyShort
               expiration
               isRevoked
               createdAt

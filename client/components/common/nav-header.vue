@@ -245,8 +245,8 @@
     .nav-header-dev(v-if='isDevMode')
       v-icon mdi-alert
       div
-        .overline DEVELOPMENT VERSION
-        .overline This code base is NOT for production use!
+        .overline {{$t('common:header.developmentVersion', { defaultValue: 'DEVELOPMENT VERSION' })}}
+        .overline {{$t('common:header.developmentWarning', { defaultValue: 'This code base is NOT for production use!' })}}
 </template>
 
 <script>

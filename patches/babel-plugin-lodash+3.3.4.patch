@@ -1,0 +1,12 @@
+diff --git a/node_modules/babel-plugin-lodash/lib/index.js b/node_modules/babel-plugin-lodash/lib/index.js
+--- a/node_modules/babel-plugin-lodash/lib/index.js
++++ b/node_modules/babel-plugin-lodash/lib/index.js
+@@ -99,7 +99,7 @@ function lodashPlugin() {
+ 
+         var node = _ref3;
+ 
+-        if ((0, _types.isModuleDeclaration)(node)) {
++        if ((0, _types.isImportOrExportDeclaration)(node)) {
+           isModule = true;
+           break;
+         }

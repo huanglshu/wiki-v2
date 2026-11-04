@@ -49,3 +49,6 @@ test-results/
 
 # Localization Resources
 /server/locales/**/*.yml
+
+
+.playwright-cli

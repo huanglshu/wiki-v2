@@ -75,9 +75,7 @@
       v-card
         v-toolbar(dense, flat, color='primary', dark) {{$t('admin:api.newKeyTitle')}}
         v-card-text.pt-5
-          .body-2.text-center
-            i18next(tag='span', path='admin:api.newKeyCopyWarn')
-              strong(place='bold') {{$t('admin:api.newKeyCopyWarnBold')}}
+          .body-2.text-center {{ $t('admin:ui.api.keySafetyWarning', { defaultValue: 'Store this API key securely and do not share it with unauthorized users.' }) }}
           v-textarea.mt-3(
             ref='keyContentsIpt'
             filled

@@ -8,11 +8,12 @@
     )
     .text-left
       v-icon.mr-3(dark) mdi-{{ notification.icon }}
-      span {{ notification.message }}
+      span {{ message }}
 </template>
 
 <script>
 import { get, sync } from 'vuex-pathify'
+import { getNotificationMessage } from '../../helpers/notification-message'
 
 export default {
   data() {
@@ -20,7 +21,10 @@ export default {
   },
   computed: {
     notification: get('notification'),
-    notificationState: sync('notification@isActive')
+    notificationState: sync('notification@isActive'),
+    message() {
+      return getNotificationMessage(this.notification.message, key => this.$t(key))
+    }
   }
 }
 </script>

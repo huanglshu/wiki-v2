@@ -3,12 +3,15 @@
     nav-header
     v-content
       v-toolbar(color='primary', dark)
-        .subheading Viewing history of #[strong /{{path}}]
+        i18next.subheading.history-title.text-truncate(path='history:ui.viewing', tag='div', :options='{ defaultValue: `Viewing history of {{path}}` }')
+          strong(place='path') /{{path}}
         template(v-if='$vuetify.breakpoint.mdAndUp')
           v-spacer
-          .caption.blue--text.text--lighten-3.mr-4 Trail Length: {{total}}
-          .caption.blue--text.text--lighten-3 ID: {{pageId}}
-          v-btn.ml-4(depressed, color='blue darken-1', @click='goLive') Return to Live Version
+          i18next.caption.blue--text.text--lighten-3.mr-4(path='history:ui.trailLength', tag='div', :options='{ defaultValue: `Trail Length: {{total}}` }')
+            span(place='total') {{ total }}
+          i18next.caption.blue--text.text--lighten-3(path='history:ui.pageId', tag='div', :options='{ defaultValue: `ID: {{id}}` }')
+            span(place='id') {{ pageId }}
+          v-btn.ml-4(depressed, color='blue darken-1', @click='goLive') {{ $t('history:ui.returnLive', { defaultValue: 'Return to Live Version' }) }}
       v-container(fluid, grid-list-xl)
         v-layout(row, wrap)
           v-flex(xs12, md4)
@@ -18,7 +21,7 @@
               :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
               :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
               )
-              span Live
+              span {{ $t('history:ui.live', { defaultValue: 'Live' }) }}
             v-timeline(
               dense
               )
@@ -31,13 +34,20 @@
                 )
                 v-card.radius-7(flat, :class='trailBgColor(ph.actionType)')
                   v-toolbar(flat, :color='trailBgColor(ph.actionType)', height='40')
-                    .caption(:title='$options.filters.moment(ph.versionDate, `LLL`)') {{ ph.versionDate | moment('ll') }}
+                    .caption(:title='formatHistoryDate(ph.versionDate, `LLL`)') {{ formatHistoryDate(ph.versionDate, 'll') }}
                     v-divider.mx-3(vertical)
-                    .caption(v-if='ph.actionType === `edit`') Edited by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `move`') Moved from #[strong {{ph.valueBefore}}] to #[strong {{ph.valueAfter}}] by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `initial`') Created by #[strong {{ ph.authorName }}]
-                    .caption(v-else-if='ph.actionType === `live`') Last Edited by #[strong {{ ph.authorName }}]
-                    .caption(v-else) Unknown Action by #[strong {{ ph.authorName }}]
+                    i18next.caption.history-action.text-truncate(v-if='ph.actionType === `edit`', path='history:ui.editedBy', tag='div', :options='{ defaultValue: `Edited by {{author}}` }')
+                      strong(place='author') {{ ph.authorName }}
+                    i18next.caption.history-action.text-truncate(v-else-if='ph.actionType === `move`', path='history:ui.movedBy', tag='div', :options='{ defaultValue: `Moved from {{before}} to {{after}} by {{author}}` }')
+                      strong(place='before') {{ ph.valueBefore }}
+                      strong(place='after') {{ ph.valueAfter }}
+                      strong(place='author') {{ ph.authorName }}
+                    i18next.caption.history-action.text-truncate(v-else-if='ph.actionType === `initial`', path='history:ui.createdBy', tag='div', :options='{ defaultValue: `Created by {{author}}` }')
+                      strong(place='author') {{ ph.authorName }}
+                    i18next.caption.history-action.text-truncate(v-else-if='ph.actionType === `live`', path='history:ui.lastEditedBy', tag='div', :options='{ defaultValue: `Last Edited by {{author}}` }')
+                      strong(place='author') {{ ph.authorName }}
+                    i18next.caption.history-action.text-truncate(v-else, path='history:ui.unknownBy', tag='div', :options='{ defaultValue: `Unknown Action by {{author}}` }')
+                      strong(place='author') {{ ph.authorName }}
                     v-spacer
                     v-menu(offset-x, left)
                       template(v-slot:activator='{ on }')
@@ -45,22 +55,22 @@
                       v-list(dense, nav).history-promptmenu
                         v-list-item(@click='setDiffSource(ph.versionId)', :disabled='(ph.versionId >= diffTarget && diffTarget !== 0) || ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-avatar A
-                          v-list-item-title Set as Differencing Source
+                          v-list-item-title {{ $t('history:ui.setSource', { defaultValue: 'Set as Differencing Source' }) }}
                         v-list-item(@click='setDiffTarget(ph.versionId)', :disabled='ph.versionId <= diffSource && ph.versionId !== 0')
                           v-list-item-avatar(size='24'): v-avatar B
-                          v-list-item-title Set as Differencing Target
+                          v-list-item-title {{ $t('history:ui.setTarget', { defaultValue: 'Set as Differencing Target' }) }}
                         v-list-item(@click='viewSource(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-code-tags
-                          v-list-item-title View Source
+                          v-list-item-title {{ $t('history:ui.viewSource', { defaultValue: 'View Source' }) }}
                         v-list-item(@click='download(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-cloud-download-outline
-                          v-list-item-title Download Version
+                          v-list-item-title {{ $t('history:ui.download', { defaultValue: 'Download Version' }) }}
                         v-list-item(@click='restore(ph.versionId, ph.versionDate)', :disabled='ph.versionId === 0')
                           v-list-item-avatar(size='24'): v-icon(:disabled='ph.versionId === 0') mdi-history
-                          v-list-item-title Restore
+                          v-list-item-title {{ $t('history:restore.confirmButton', { defaultValue: 'Restore' }) }}
                         v-list-item(@click='branchOff(ph.versionId)')
                           v-list-item-avatar(size='24'): v-icon mdi-source-branch
-                          v-list-item-title Branch off from here
+                          v-list-item-title {{ $t('history:ui.branch', { defaultValue: 'Branch off from here' }) }}
                     v-btn.mr-2.radius-4(
                       @click='setDiffSource(ph.versionId)'
                       icon
@@ -86,7 +96,7 @@
               color='primary'
               @click='loadMore'
               )
-              .caption.white--text Load More...
+              .caption.white--text {{ $t('history:ui.loadMore', { defaultValue: 'Load More...' }) }}
 
             v-chip.ma-0(
               v-else
@@ -94,7 +104,7 @@
               small
               :color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-2`'
               :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
-              ) End of history trail
+              ) {{ $t('history:ui.endOfTrail', { defaultValue: 'End of history trail' }) }}
 
           v-flex(xs12, md8)
             v-card.radius-7(:class='$vuetify.breakpoint.mdAndUp ? `mt-8` : ``')
@@ -108,7 +118,7 @@
                     v-col.text-right.py-3(cols='2', v-if='$vuetify.breakpoint.mdAndUp')
                       v-btn.mr-3(:color='$vuetify.theme.dark ? `white` : `grey darken-3`', small, dark, outlined, @click='toggleViewMode')
                         v-icon(left) mdi-eye
-                        .overline View Mode
+                        .overline {{ $t('history:ui.viewMode', { defaultValue: 'View Mode' }) }}
                 v-card.mt-3(light, v-html='diffHTML', flat)
 
     v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
@@ -116,7 +126,7 @@
         .dialog-header.is-orange {{$t('history:restore.confirmTitle')}}
         v-card-text.pa-4
           i18next(tag='span', path='history:restore.confirmText')
-            strong(place='date') {{ restoreTarget.versionDate | moment('LLL') }}
+            strong(place='date') {{ formatHistoryDate(restoreTarget.versionDate, 'LLL') }}
         v-card-actions
           v-spacer
           v-btn(text, @click='isRestoreConfirmDialogShown = false', :disabled='restoreLoading') {{$t('common:actions.cancel')}}
@@ -258,7 +268,15 @@ export default {
         inputFormat: 'diff',
         drawFileList: false,
         matching: 'lines',
-        outputFormat: this.viewMode
+        outputFormat: this.viewMode,
+        compiledTemplates: {
+          'generic-empty-diff': {
+            render: ({ contentClass, CSSLineClass }) => {
+              const text = _.escape(this.$t('history:ui.noChanges', { defaultValue: 'File without changes' }))
+              return `<tr><td class="${CSSLineClass.INFO}"><div class="${contentClass} ${CSSLineClass.INFO}">${text}</div></td></tr>`
+            }
+          }
+        }
       })
     }
   },
@@ -326,6 +344,10 @@ export default {
     }
   },
   methods: {
+    formatHistoryDate (date, format) {
+      const language = this.$i18n.i18next.language || this.$moment.locale()
+      return this.$moment(date).locale(language === 'zh' ? 'zh-cn' : language).format(format)
+    },
     async loadVersion (versionId) {
       this.$store.commit(`loadingStart`, 'history-version-' + versionId)
       const resp = await this.$apollo.query({
@@ -418,7 +440,7 @@ export default {
             window.location.assign(`/${this.locale}/${this.path}`)
           }, 1000)
         } else {
-          throw new Error(_.get(resp, 'data.pages.restore.responseResult.message', 'An unexpected error occurred'))
+          throw new Error(_.get(resp, 'data.pages.restore.responseResult.message', this.$t('common:error.unexpected')))
         }
       } catch (err) {
         this.$store.commit('showNotification', {
@@ -560,6 +582,11 @@ export default {
 <style lang='scss'>
 
 .history {
+  &-title,
+  &-action {
+    min-width: 0;
+  }
+
   &-promptmenu {
     border-top: 5px solid mc('blue', '700');
   }

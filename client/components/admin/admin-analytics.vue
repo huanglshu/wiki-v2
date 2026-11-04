@@ -166,13 +166,15 @@ export default {
     providers: {
       query: providersQuery,
       fetchPolicy: 'network-only',
-      update: (data) => translateAdminModules('analytics', _.cloneDeep(data.analytics.providers).map(str => ({
-        ...str,
-        config: _.sortBy(str.config.map(cfg => ({
-          ...cfg,
-          value: JSON.parse(cfg.value)
-        })), [t => t.value.order])
-      })), this.$t),
+      update(data) {
+        return translateAdminModules('analytics', _.cloneDeep(data.analytics.providers).map(str => ({
+          ...str,
+          config: _.sortBy(str.config.map(cfg => ({
+            ...cfg,
+            value: JSON.parse(cfg.value)
+          })), [t => t.value.order])
+        })), key => this.$t(key))
+      },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-analytics-refresh')
       }

@@ -28,6 +28,13 @@ module.exports = {
         updatedAt: k.updatedAt
       }))
     },
+    async apiKey (obj, args, context) {
+      if (context.res) {
+        context.res.setHeader('Cache-Control', 'no-store')
+      }
+      const key = await WIKI.models.apiKeys.query().select('key').findById(args.id)
+      return key && key.key !== 'pending' ? key.key : null
+    },
     /**
      * Current API State
      */

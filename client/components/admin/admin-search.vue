@@ -184,13 +184,15 @@ export default {
     engines: {
       query: enginesQuery,
       fetchPolicy: 'network-only',
-      update: (data) => translateAdminModules('search', _.cloneDeep(data.search.searchEngines).map(str => ({
-        ...str,
-        config: _.sortBy(str.config.map(cfg => ({
-          ...cfg,
-          value: JSON.parse(cfg.value)
-        })), [t => t.value.order])
-      })), this.$t),
+      update(data) {
+        return translateAdminModules('search', _.cloneDeep(data.search.searchEngines).map(str => ({
+          ...str,
+          config: _.sortBy(str.config.map(cfg => ({
+            ...cfg,
+            value: JSON.parse(cfg.value)
+          })), [t => t.value.order])
+        })), key => this.$t(key))
+      },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-search-refresh')
       }

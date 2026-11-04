@@ -5,7 +5,8 @@ function translateKey (t, key, fallback) {
     return fallback
   }
   const translated = t(key)
-  return translated && translated !== key ? translated : fallback
+  const keyWithoutNamespace = key.includes(':') ? key.slice(key.indexOf(':') + 1) : key
+  return translated && translated !== key && translated !== keyWithoutNamespace ? translated : fallback
 }
 
 function getModuleKey (type, key) {

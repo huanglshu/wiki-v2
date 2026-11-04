@@ -72,8 +72,8 @@
                 td.admin-pages-path
                   v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ getLocaleName(props.item.locale) }}
                   span.ml-2.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`') / {{ props.item.path }}
-                td {{ props.item.createdAt | moment('calendar') }}
-                td {{ props.item.updatedAt | moment('calendar') }}
+                td {{ formatPageListDate(props.item.createdAt) }}
+                td {{ formatPageListDate(props.item.updatedAt) }}
             template(slot='no-data')
               v-alert.ma-3(icon='mdi-alert', :value='true', outlined) {{ $t('admin:ui.pages.empty') }}
           .text-center.py-2.animated.fadeInDown(v-if='this.pageTotal > 1')
@@ -135,6 +135,16 @@ export default {
     }
   },
   methods: {
+    formatPageListDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm:ss')
+    },
     getLocaleName (code) {
       return _.get(_.find(siteLangs, ['code', code]), 'name', code)
     },

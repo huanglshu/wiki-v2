@@ -31,7 +31,7 @@
               flat
               hide-details
               :label='$t("admin:ui.users.provider")'
-              :items='strategies'
+              :items='strategyOptions'
               v-model='filterStrategy'
               item-text='displayName'
               item-value='key'
@@ -58,9 +58,9 @@
                 td: strong {{ props.item.name }}
                 td {{ props.item.email }}
                 td {{ getStrategyName(props.item.providerKey) }}
-                td {{ props.item.createdAt | moment('from') }}
+                td {{ formatRelativeTime(props.item.createdAt) }}
                 td
-                  span(v-if='props.item.lastLoginAt') {{ props.item.lastLoginAt | moment('from') }}
+                  span(v-if='props.item.lastLoginAt') {{ formatRelativeTime(props.item.lastLoginAt) }}
                   em.grey--text(v-else) {{ $t('admin:ui.users.never') }}
                 td.text-right
                   v-icon.mr-3(v-if='props.item.isSystem') mdi-lock-outline
@@ -86,7 +86,7 @@ import { StatusIndicator } from 'vue-status-indicator'
 import UserCreate from './admin-users-create.vue'
 
 const providerTranslations = {
-  local: 'admin:ui.users.providers.local',
+  local: 'Local',
   ldap: 'LDAP / Active Directory',
   saml: 'SAML',
   oidc: 'OpenID Connect',
@@ -133,12 +133,29 @@ export default {
     }
   },
   computed: {
+    strategyOptions () {
+      return _.concat({
+        key: 'all',
+        displayName: this.$t('admin:ui.users.allProviders')
+      }, this.strategies)
+    },
     usersFiltered () {
       const all = this.filterStrategy === 'all' || this.filterStrategy === ''
       return _.filter(this.users, u => all || u.providerKey === this.filterStrategy)
     }
   },
   methods: {
+    formatRelativeTime(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      const language = this.$i18n.i18next.language || this.$moment.locale()
+      return value.locale(language === 'zh' ? 'zh-cn' : language).fromNow()
+    },
     createUser() {
       this.isCreateDialogShown = true
     },
@@ -154,7 +171,7 @@ export default {
     },
     getStrategyName(key) {
       const displayName = (_.find(this.strategies, ['key', key]) || {}).displayName || providerTranslations[key] || key
-      return this.$te(`admin:ui.users.providers.${key}`) ? this.$t(`admin:ui.users.providers.${key}`) : displayName
+      return this.$t(`admin:ui.users.providers.${key}`, { defaultValue: displayName })
     }
   },
   apollo: {
@@ -194,12 +211,7 @@ export default {
         }
       `,
       fetchPolicy: 'network-only',
-      update: (data) => {
-        return _.concat({
-          key: 'all',
-          displayName: this.$t('admin:ui.users.allProviders')
-        }, data.authentication.activeStrategies)
-      },
+      update: (data) => _.get(data, 'authentication.activeStrategies', []),
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-users-strategies-refresh')
       }

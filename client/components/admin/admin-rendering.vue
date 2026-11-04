@@ -204,7 +204,7 @@ export default {
     renderers: {
       query: renderersQuery,
       fetchPolicy: 'network-only',
-      update: (data) => {
+      update(data) {
         let renderers = _.cloneDeep(data.rendering.renderers).map(str => ({
           ...str,
           config: _.sortBy(str.config.map(cfg => ({
@@ -234,7 +234,7 @@ export default {
         _.reverse(graph.overallOrder()).map(coreKey => {
           orderedCores.push(_.find(rawCores, ['key', coreKey]))
         })
-        return orderedCores.map(core => translateRenderingCore(core, this.$t))
+        return orderedCores.map(core => translateRenderingCore(core, key => this.$t(key)))
       },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-rendering-refresh')

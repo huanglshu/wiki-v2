@@ -304,13 +304,7 @@ export default {
         editMenuExternalName: '',
         editMenuExternalIcon: '',
         editMenuExternalUrl: ''
-      },
-      metaRobots: [
-        { textKey: 'admin:ui.general.robots.index', value: 'index' },
-        { textKey: 'admin:ui.general.robots.follow', value: 'follow' },
-        { textKey: 'admin:ui.general.robots.noindex', value: 'noindex' },
-        { textKey: 'admin:ui.general.robots.nofollow', value: 'nofollow' }
-      ]
+      }
     }
   },
   computed: {
@@ -320,6 +314,17 @@ export default {
     contentLicense: sync('site/contentLicense'),
     footerOverride: sync('site/footerOverride'),
     activeModal: sync('editor/activeModal'),
+    metaRobots () {
+      return [
+        { textKey: 'admin:ui.general.robots.index', value: 'index' },
+        { textKey: 'admin:ui.general.robots.follow', value: 'follow' },
+        { textKey: 'admin:ui.general.robots.noindex', value: 'noindex' },
+        { textKey: 'admin:ui.general.robots.nofollow', value: 'nofollow' }
+      ].map(item => ({
+        ...item,
+        text: this.$t(item.textKey)
+      }))
+    },
     contentLicenses () {
       return [
         { value: '', textKey: 'admin:ui.general.licenses.none' },

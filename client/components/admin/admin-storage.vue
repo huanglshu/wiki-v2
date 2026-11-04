@@ -51,7 +51,7 @@
                     v-icon(color='white') mdi-clock-outline
                   v-list-item-content
                     v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
-                    v-list-item-subtitle.purple--text.caption {{tgt.status}}
+                    v-list-item-subtitle.purple--text.caption {{$t('admin:ui.storage.pending', { defaultValue: 'Pending' })}}
                   v-list-item-action
                     v-progress-circular(indeterminate, :size='20', :width='2', color='purple')
                 template(v-else-if='tgt.status === `operational`')
@@ -59,21 +59,21 @@
                     v-icon(color='white') mdi-check-circle
                   v-list-item-content
                     v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
-                    v-list-item-subtitle.green--text.caption {{$t('admin:storage.lastSync', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
+                    v-list-item-subtitle.green--text.caption {{$t('admin:storage.lastSync', { time: formatStorageTime(tgt.lastAttempt) })}}
                 template(v-else)
                   v-list-item-avatar(color='red')
                     v-icon(color='white') mdi-close-circle-outline
                   v-list-item-content
                     v-list-item-title.body-2 {{$t(tgt.titleKey || `admin:storage.title`)}}
-                    v-list-item-subtitle.red--text.caption {{$t('admin:storage.lastSyncAttempt', { time: $options.filters.moment(tgt.lastAttempt, 'from') })}}
+                    v-list-item-subtitle.red--text.caption {{$t('admin:storage.lastSyncAttempt', { time: formatStorageTime(tgt.lastAttempt) })}}
                   v-list-item-action
                     v-menu
                       template(v-slot:activator='{ on }')
                         v-btn(icon, v-on='on')
                           v-icon(color='red') mdi-information
-                      v-card(width='450')
+                      v-card(width='450', max-width='calc(100vw - 32px)')
                         v-toolbar(flat, color='red', dark, dense) {{$t('admin:storage.errorMsg')}}
-                        v-card-text {{tgt.message}}
+                        v-card-text.storage-error-message {{formatStorageMessage(tgt.message)}}
 
               v-divider(v-if='n < status.length - 1')
             v-list-item(v-if='status.length < 1')
@@ -234,6 +234,12 @@ import { translateAdminModules } from '../../helpers/admin-module'
 
 momentDurationFormatSetup(moment)
 
+const storageMessageKeys = new Map([
+  ['Initializing...', 'admin:ui.storage.initializing'],
+  ['Storage initialization failed.', 'admin:ui.storage.initializationFailed'],
+  ['Invalid storage target. Unable to perform sync.', 'admin:ui.storage.invalidTarget']
+])
+
 export default {
   components: {
     DurationPicker,
@@ -268,6 +274,25 @@ export default {
     }
   },
   methods: {
+    formatStorageTime(date) {
+      if (!date) {
+        return this.$t('common:notApplicable')
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return this.$t('common:notApplicable')
+      }
+      const language = this.$i18n.i18next.language || this.$moment.locale()
+      return value.locale(language === 'zh' ? 'zh-cn' : language).fromNow()
+    },
+    formatStorageMessage(message) {
+      if (/^Storage initialization failed\./i.test(message || '')) {
+        const prefix = 'Storage initialization failed.'
+        return this.$t('admin:ui.storage.initializationFailed', { defaultValue: prefix }) + message.slice(prefix.length)
+      }
+      const key = storageMessageKeys.get(message)
+      return key ? this.$t(key, { defaultValue: message }) : message
+    },
     async refresh() {
       await this.$apollo.queries.targets.refetch()
       this.$store.commit('showNotification', {
@@ -337,18 +362,20 @@ export default {
     targets: {
       query: targetsQuery,
       fetchPolicy: 'network-only',
-      update: (data) => translateAdminModules('storage', _.cloneDeep(data.storage.targets).map(str => ({
-        ...str,
-        config: _.sortBy(str.config.map(cfg => {
-          let value = {}
-          try {
-            value = JSON.parse(cfg.value)
-          } catch (err) {
-            console.warn(`Invalid storage config for ${cfg.key}`, err)
-          }
-          return { ...cfg, value }
-        }), [t => t.value.order])
-      })), this.$t),
+      update(data) {
+        return translateAdminModules('storage', _.cloneDeep(data.storage.targets).map(str => ({
+          ...str,
+          config: _.sortBy(str.config.map(cfg => {
+            let value = {}
+            try {
+              value = JSON.parse(cfg.value)
+            } catch (err) {
+              console.warn(`Invalid storage config for ${cfg.key}`, err)
+            }
+            return { ...cfg, value }
+          }), [t => t.value.order])
+        })), key => this.$t(key))
+      },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-storage-targets-refresh')
       }
@@ -367,6 +394,11 @@ export default {
 </script>
 
 <style lang='scss' scoped>
+
+.storage-error-message {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 .targetlogo {
   width: 250px;

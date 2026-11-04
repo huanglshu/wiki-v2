@@ -19,7 +19,7 @@ module.exports = async () => {
 
   WIKI.auth = require('./core/auth').init()
   WIKI.backup = require('./core/backup')
-  WIKI.lang = require('./core/localization').init()
+  WIKI.lang = await require('./core/localization').init()
   WIKI.mail = require('./core/mail').init()
   WIKI.system = require('./core/system').init()
 
@@ -63,7 +63,7 @@ module.exports = async () => {
   })
   app.use('/_assets', express.static(path.join(WIKI.ROOTPATH, 'assets'), {
     index: false,
-    maxAge: '7d'
+    maxAge: global.DEV ? 0 : '7d'
   }))
 
   // ----------------------------------------

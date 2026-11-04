@@ -330,11 +330,11 @@
               .subtitle-1 {{ $t('admin:ui.users.activity') }}
           v-card-text.grey--text.text--darken-2
             .caption.grey--text {{ $t('admin:ui.users.joinedAt') }}
-            .body-2: strong {{ user.createdAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.createdAt) }}
             .caption.grey--text.mt-3 {{ $t('admin:ui.users.updatedAt') }}
-            .body-2: strong {{ user.updatedAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.updatedAt) }}
             .caption.grey--text.mt-3 {{ $t('admin:ui.users.lastLoginAt') }}
-            .body-2: strong {{ user.lastLoginAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.lastLoginAt) }}
 
         //- v-card.mt-3.animated.fadeInUp.wait-p6s
         //-   v-toolbar(color='teal', dense, dark, flat)
@@ -673,6 +673,16 @@ export default {
     currentUserId: get('user/id')
   },
   methods: {
+    formatActivityTime(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm:ss')
+    },
     /**
      * Activate a user (if previously deactivated)
      */

@@ -51,8 +51,8 @@
                 td {{ props.item.id }}
                 td: strong {{ props.item.name }}
                 td {{ props.item.userCount }}
-                td {{ props.item.createdAt | moment('calendar') }}
-                td {{ props.item.updatedAt | moment('calendar') }}
+                td {{ formatGroupDate(props.item.createdAt) }}
+                td {{ formatGroupDate(props.item.updatedAt) }}
                 td
                   v-tooltip(left, v-if='props.item.isSystem')
                     template(v-slot:activator='{ on }')
@@ -101,6 +101,16 @@ export default {
     }
   },
   methods: {
+    formatGroupDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm:ss')
+    },
     async refresh() {
       await this.$apollo.queries.groups.refetch()
       this.$store.commit('showNotification', {

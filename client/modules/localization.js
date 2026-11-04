@@ -23,7 +23,7 @@ export default {
           backendOptions: [
             {
               expirationTime: 1000 * 60 * 60 * 24, // 24h
-              defaultVersion: '2026-11-04'
+              defaultVersion: '2026-11-04-9'
             },
             {
               loadPath: '{{lng}}/{{ns}}',

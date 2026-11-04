@@ -3,7 +3,7 @@
     v-layout(row wrap)
       v-flex(xs12)
         .admin-header
-          img.animated.fadeInUp(src='/_assets/svg/icon-paint-palette.svg', alt='Theme', style='width: 80px;')
+          img.animated.fadeInUp(src='/_assets/svg/icon-paint-palette.svg', :alt='$t("admin:theme.title")', style='width: 80px;')
           .admin-header-title
             .headline.primary--text.animated.fadeInLeft {{$t('admin:theme.title')}}
             .subtitle-1.grey--text.animated.fadeInLeft.wait-p2s {{$t('admin:theme.subtitle')}}
@@ -31,8 +31,8 @@
                       v-list-item-avatar
                         v-icon.blue--text(dark) mdi-image-filter-frames
                       v-list-item-content
-                        v-list-item-title(v-html='data.item.text')
-                        v-list-item-sub-title(v-html='data.item.author')
+                        v-list-item-title {{ data.item.text }}
+                        v-list-item-sub-title {{ data.item.author }}
                   v-select.mt-3(
                     :items='iconsets'
                     outlined
@@ -61,9 +61,9 @@
                     outlined
                     prepend-icon='mdi-border-vertical'
                     v-model='config.tocPosition'
-                    label='Table of Contents Position'
+                    :label='$t("admin:ui.theme.tocPosition", { defaultValue: "Table of Contents Position" })'
                     persistent-hint
-                    hint='Select whether the table of contents is shown on the left, right or not at all.'
+                    :hint='$t("admin:ui.theme.tocPositionHint", { defaultValue: "Select whether the table of contents is shown on the left, right or not at all." })'
                     )
             v-flex(lg6 xs12)
               //- v-card.animated.fadeInUp.wait-p2s
@@ -139,14 +139,6 @@ export default {
   data() {
     return {
       loading: false,
-      themes: [
-        { text: 'Default', author: 'requarks.io', value: 'default', isInstalled: true, installDate: '', updatedAt: '' }
-      ],
-      iconsets: [
-        { text: 'Material Design Icons (default)', value: 'mdi' },
-        { text: 'Font Awesome 5', value: 'fa' },
-        { text: 'Font Awesome 4', value: 'fa4' }
-      ],
       config: {
         theme: 'default',
         darkMode: false,
@@ -161,6 +153,18 @@ export default {
   },
   computed: {
     darkMode: sync('site/dark'),
+    themes() {
+      return [
+        { text: this.$t('admin:ui.theme.defaultTheme', { defaultValue: 'Default' }), author: 'requarks.io', value: 'default', isInstalled: true, installDate: '', updatedAt: '' }
+      ]
+    },
+    iconsets() {
+      return [
+        { text: this.$t('admin:ui.theme.defaultIconset', { defaultValue: 'Material Design Icons (default)' }), value: 'mdi' },
+        { text: 'Font Awesome 5', value: 'fa' },
+        { text: 'Font Awesome 4', value: 'fa4' }
+      ]
+    },
     headers() {
       return [
         {
@@ -184,9 +188,9 @@ export default {
     },
     tocPositions () {
       return [
-        { text: 'Left (default)', value: 'left' },
-        { text: 'Right', value: 'right' },
-        { text: 'Hidden', value: 'off' }
+        { text: this.$t('admin:ui.theme.tocLeft', { defaultValue: 'Left (default)' }), value: 'left' },
+        { text: this.$t('admin:ui.theme.tocRight', { defaultValue: 'Right' }), value: 'right' },
+        { text: this.$t('admin:ui.theme.tocHidden', { defaultValue: 'Hidden' }), value: 'off' }
       ]
     }
   },
@@ -223,7 +227,7 @@ export default {
         if (resp.succeeded) {
           this.darkModeInitial = this.darkMode
           this.$store.commit('showNotification', {
-            message: 'Theme settings updated successfully.',
+            message: this.$t('admin:ui.theme.saveSuccess', { defaultValue: 'Theme settings updated successfully.' }),
             style: 'success',
             icon: 'check'
           })

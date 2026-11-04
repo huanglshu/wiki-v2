@@ -17,6 +17,8 @@ extend type Mutation {
 type AuthenticationQuery {
   apiKeys: [AuthenticationApiKey] @auth(requires: ["manage:system", "manage:api"])
 
+  apiKey(id: Int!): String @auth(requires: ["manage:system", "manage:api"])
+
   apiState: Boolean! @auth(requires: ["manage:system", "manage:api"])
 
   strategies: [AuthenticationStrategy] @auth(requires: ["manage:system"])

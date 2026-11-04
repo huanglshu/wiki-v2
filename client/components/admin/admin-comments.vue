@@ -194,13 +194,15 @@ export default {
         }
       `,
       fetchPolicy: 'network-only',
-      update: (data) => translateAdminModules('comments', _.cloneDeep(data.comments.providers).map(str => ({
-        ...str,
-        config: _.sortBy(str.config.map(cfg => ({
-          ...cfg,
-          value: JSON.parse(cfg.value)
-        })), [t => t.value.order])
-      })), this.$t),
+      update(data) {
+        return translateAdminModules('comments', _.cloneDeep(data.comments.providers).map(str => ({
+          ...str,
+          config: _.sortBy(str.config.map(cfg => ({
+            ...cfg,
+            value: JSON.parse(cfg.value)
+          })), [t => t.value.order])
+        })), key => this.$t(key))
+      },
       watchLoading (isLoading) {
         this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-comments-refresh')
       }

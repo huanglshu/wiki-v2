@@ -12,7 +12,7 @@ const yaml = require('js-yaml')
 module.exports = {
   engine: null,
   namespaces: [],
-  init() {
+  async init() {
     this.namespaces = WIKI.data.localeNamespaces
     this.engine = i18next
     this.engine.init({
@@ -25,7 +25,7 @@ module.exports = {
     })
 
     // Load current language + namespaces
-    this.refreshNamespaces(true)
+    await this.refreshNamespaces(true)
 
     return this
   },
@@ -46,12 +46,10 @@ module.exports = {
   async getByNamespace(locale, namespace) {
     if (this.engine.hasResourceBundle(locale, namespace)) {
       let data = this.engine.getResourceBundle(locale, namespace)
-      return _.map(dotize.convert(data), (value, key) => {
-        return {
-          key,
-          value
-        }
-      })
+      return _.chain(dotize.convert(data))
+        .pickBy(value => typeof value === 'string' || typeof value === 'boolean' || (typeof value === 'number' && Number.isFinite(value)))
+        .map((value, key) => ({ key, value }))
+        .value()
     } else {
       throw new Error('Invalid locale or namespace')
     }
@@ -99,9 +97,14 @@ module.exports = {
    */
   async refreshNamespaces (silent = false) {
     await this.loadLocale(WIKI.config.lang.code, { silent })
+    if (WIKI.config.lang.code !== 'en') {
+      await this.loadLocale('en', { silent: true })
+    }
     if (WIKI.config.lang.namespacing) {
       for (let ns of WIKI.config.lang.namespaces) {
-        await this.loadLocale(ns, { silent })
+        if (ns !== WIKI.config.lang.code && ns !== 'en') {
+          await this.loadLocale(ns, { silent })
+        }
       }
     }
   },

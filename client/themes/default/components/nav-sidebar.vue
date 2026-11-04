@@ -46,35 +46,51 @@
     //-> Browse
     v-list.py-2(v-else-if='currentMode === `browse`', dense, :class='color', :dark='dark')
       template(v-if='currentParent.id > 0')
-        v-list-item(v-for='(item, idx) of parents', :key='`parent-` + item.id', @click='fetchBrowseItems(item)', style='min-height: 30px;')
-          v-list-item-avatar(size='18', :style='`padding-left: ` + (idx * 8) + `px; width: auto; margin: 0 5px 0 0;`')
-            v-icon(small) mdi-folder-open
-          v-list-item-title {{ item.title }}
+        v-menu(v-for='(item, idx) of parents', :key='`parent-` + item.id', open-on-hover, offset-x, :nudge-right='10', :close-on-content-click='false', :close-delay='350', min-width='0', max-width='min(360px, calc(100vw - 32px))', content-class='nav-sidebar-name-popover', role='tooltip')
+          template(v-slot:activator='{ on }')
+            v-list-item(@click='fetchBrowseItems(item)', v-on='on', style='min-height: 30px;')
+              v-list-item-avatar(size='18', :style='`padding-left: ` + (idx * 8) + `px; width: auto; margin: 0 5px 0 0;`')
+                v-icon(small) mdi-folder-open
+              v-list-item-title {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
+          .nav-sidebar-name-popover__text {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
         v-divider.mt-2
-        v-list-item.mt-2(v-if='currentParent.pageId > 0', :href='`/` + currentParent.locale + `/` + currentParent.path', :key='`directorypage-` + currentParent.id', :input-value='path === currentParent.path')
-          v-list-item-avatar(size='24')
-            v-icon mdi-text-box
-          v-list-item-title {{ currentParent.title }}
+        v-menu(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', open-on-hover, offset-x, :nudge-right='10', :close-on-content-click='false', :close-delay='350', min-width='0', max-width='min(360px, calc(100vw - 32px))', content-class='nav-sidebar-name-popover', role='tooltip')
+          template(v-slot:activator='{ on }')
+            v-list-item.mt-2(:href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', v-on='on')
+              v-list-item-avatar(size='24')
+                v-icon mdi-text-box
+              v-list-item-title {{ currentParent.title }}
+          .nav-sidebar-name-popover__text {{ currentParent.title }}
         v-subheader.pl-4 {{$t('common:sidebar.currentDirectory')}}
       template(v-for='item of currentItems')
-        v-list-item(v-if='item.isFolder', :key='`childfolder-` + item.id', @click='fetchBrowseItems(item)')
-          v-list-item-avatar(size='24')
-            v-icon mdi-folder
-          v-list-item-title {{ item.title }}
-        v-list-item(v-else, :href='`/` + item.locale + `/` + item.path', :key='`childpage-` + item.id', :input-value='path === item.path')
-          v-list-item-avatar(size='24')
-            v-icon mdi-text-box
-          v-list-item-title {{ item.title }}
+        v-menu(v-if='item.isFolder', :key='`childfolder-` + item.id', open-on-hover, offset-x, :nudge-right='10', :close-on-content-click='false', :close-delay='350', min-width='0', max-width='min(360px, calc(100vw - 32px))', content-class='nav-sidebar-name-popover', role='tooltip')
+          template(v-slot:activator='{ on }')
+            v-list-item(@click='fetchBrowseItems(item)', v-on='on')
+              v-list-item-avatar(size='24')
+                v-icon mdi-folder
+              v-list-item-title {{ item.title }}
+          .nav-sidebar-name-popover__text {{ item.title }}
+        v-menu(v-else, :key='`childpage-` + item.id', open-on-hover, offset-x, :nudge-right='10', :close-on-content-click='false', :close-delay='350', min-width='0', max-width='min(360px, calc(100vw - 32px))', content-class='nav-sidebar-name-popover', role='tooltip')
+          template(v-slot:activator='{ on }')
+            v-list-item(:href='`/` + item.locale + `/` + item.path', :input-value='path === item.path', v-on='on')
+              v-list-item-avatar(size='24')
+                v-icon mdi-text-box
+              v-list-item-title {{ item.title }}
+          .nav-sidebar-name-popover__text {{ item.title }}
 </template>
 
 <script>
 import _ from 'lodash'
 import gql from 'graphql-tag'
 import { get } from 'vuex-pathify'
+import { VMenu } from 'vuetify/lib/components/VMenu'
 
 /* global siteLangs */
 
 export default {
+  components: {
+    VMenu
+  },
   props: {
     color: {
       type: String,
@@ -222,7 +238,6 @@ export default {
     }
   },
   mounted () {
-    this.currentParent.title = `/ ${this.$t('common:sidebar.root')}`
     if (this.navMode === 'TREE') {
       this.currentMode = 'browse'
     } else if (this.navMode === 'STATIC') {
@@ -236,3 +251,23 @@ export default {
   }
 }
 </script>
+
+<style lang='scss'>
+.v-menu__content.nav-sidebar-name-popover {
+  box-shadow: none;
+}
+
+.nav-sidebar-name-popover__text {
+  background: rgba(97, 97, 97, .9);
+  border-radius: 4px;
+  color: #fff;
+  cursor: text;
+  font-size: 14px;
+  line-height: 22px;
+  overflow-wrap: anywhere;
+  padding: 5px 16px;
+  user-select: text;
+  word-break: break-word;
+  white-space: normal;
+}
+</style>
