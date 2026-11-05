@@ -6,7 +6,8 @@ const Promise = require('bluebird')
 const fs = require('fs-extra')
 const path = require('path')
 const yaml = require('js-yaml')
-const chineseUi = require('../../data/sideload/zh.json')
+const { loadBundledLocale } = require('../helpers/bundled-locales')
+const chineseUi = loadBundledLocale('zh.json')
 
 /* global WIKI */
 
@@ -95,6 +96,7 @@ module.exports = {
       const overrides = {}
       for (const [key, value] of Object.entries(chineseUi)) {
         if (key.startsWith('common:serverError.') || key.startsWith('common:notification.') ||
+          key.startsWith('admin:modules.authentication.cas.') ||
           ['auth:errors.invalidLoginMsg', 'auth:errors.mailNotConfigured', 'auth:errors.securityCodeRequired'].includes(key)) {
           _.set(overrides, key.replace(':', '.'), value)
         }

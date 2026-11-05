@@ -37,7 +37,7 @@
                     v-icon(:color='selectedStrategy === str.key ? `teal` : `grey`') mdi-drag-horizontal
                   v-list-item-content
                     v-list-item-title.body-2(:class='selectedStrategy === str.key ? `teal--text` : ``') {{ str.displayName }}
-                    v-list-item-subtitle: .caption(:class='selectedStrategy === str.key ? `teal--text ` : ``') {{ str.strategy.title }}
+                    v-list-item-subtitle: .caption(:class='selectedStrategy === str.key ? `teal--text ` : ``') {{ displayStrategy(str.strategy).title }}
                   v-list-item-avatar(v-if='selectedStrategy === str.key', size='24')
                     v-icon.animated.fadeInLeft(color='teal', large) mdi-chevron-right
           v-card-chin
@@ -56,25 +56,25 @@
                     v-list-item-avatar(height='24', width='48', tile)
                       v-img(:src='str.logo', width='48px', height='24px', contain, :style='str.isDisabled ? `opacity: .25;` : ``')
                     v-list-item-content
-                      v-list-item-title {{str.title}}
-                      v-list-item-subtitle: .caption(:style='str.isDisabled ? `opacity: .4;` : ``') {{str.description}}
+                      v-list-item-title {{displayStrategy(str).title}}
+                      v-list-item-subtitle: .caption(:style='str.isDisabled ? `opacity: .4;` : ``') {{displayStrategy(str).description}}
                   v-divider(v-if='idx < strategies.length - 1')
 
       v-flex(xs12, lg9)
         v-card.animated.fadeInUp.wait-p2s
           v-toolbar(color='primary', dense, flat, dark)
-            .subtitle-1 {{strategy.displayName}} #[em ({{strategy.strategy.title}})]
+            .subtitle-1 {{strategy.displayName}} #[em ({{displayStrategy(strategy.strategy).title}})]
             v-spacer
             v-btn(small, outlined, dark, color='white', :disabled='strategy.key === `local`', @click='deleteStrategy()')
               v-icon(left) mdi-close
               span {{$t('common:actions.delete')}}
           v-card-info(color='blue')
             div
-              span {{strategy.strategy.description}}
+              span {{displayStrategy(strategy.strategy).description}}
               .caption: a(:href='strategy.strategy.website') {{strategy.strategy.website}}
             v-spacer
             .admin-providerlogo
-              img(:src='strategy.strategy.logo', :alt='strategy.strategy.title')
+              img(:src='strategy.strategy.logo', :alt='displayStrategy(strategy.strategy).title')
           v-card-text
             .row
               .col-8
@@ -105,12 +105,12 @@
                   v-select.mb-3(
                     v-if='cfg.value.type === "string" && cfg.value.enum'
                     outlined
-                    :items='cfg.value.enum'
+                    :items='displayConfig(cfg).enum'
                     :key='cfg.key'
-                    :label='cfg.value.title'
+                    :label='displayConfig(cfg).title'
                     v-model='cfg.value.value'
                     prepend-icon='mdi-cog-box'
-                    :hint='cfg.value.hint ? cfg.value.hint : ""'
+                    :hint='displayConfig(cfg).hint || ""'
                     persistent-hint
                     :class='cfg.value.hint ? "mb-2" : ""'
                     :style='cfg.value.maxWidth > 0 ? `max-width:` + cfg.value.maxWidth + `px;` : ``'
@@ -118,11 +118,11 @@
                   v-switch.mb-6(
                     v-else-if='cfg.value.type === "boolean"'
                     :key='cfg.key'
-                    :label='cfg.value.title'
+                    :label='displayConfig(cfg).title'
                     v-model='cfg.value.value'
                     color='primary'
                     prepend-icon='mdi-cog-box'
-                    :hint='cfg.value.hint ? cfg.value.hint : ""'
+                    :hint='displayConfig(cfg).hint || ""'
                     persistent-hint
                     inset
                     )
@@ -130,10 +130,10 @@
                     v-else-if='cfg.value.type === "string" && cfg.value.multiline'
                     outlined
                     :key='cfg.key'
-                    :label='cfg.value.title'
+                    :label='displayConfig(cfg).title'
                     v-model='cfg.value.value'
                     prepend-icon='mdi-cog-box'
-                    :hint='cfg.value.hint ? cfg.value.hint : ""'
+                    :hint='displayConfig(cfg).hint || ""'
                     persistent-hint
                     :class='cfg.value.hint ? "mb-2" : ""'
                     )
@@ -141,10 +141,10 @@
                     v-else
                     outlined
                     :key='cfg.key'
-                    :label='cfg.value.title'
+                    :label='displayConfig(cfg).title'
                     v-model='cfg.value.value'
                     prepend-icon='mdi-cog-box'
-                    :hint='cfg.value.hint ? cfg.value.hint : ""'
+                    :hint='displayConfig(cfg).hint || ""'
                     persistent-hint
                     :class='cfg.value.hint ? "mb-2" : ""'
                     :style='cfg.value.maxWidth > 0 ? `max-width:` + cfg.value.maxWidth + `px;` : ``'
@@ -222,6 +222,7 @@
 import _ from 'lodash'
 import gql from 'graphql-tag'
 import { v4 as uuid } from 'uuid'
+import { translateAdminModule } from '../../helpers/admin-module'
 
 import groupsQuery from 'gql/admin/auth/auth-query-groups.gql'
 import hostQuery from 'gql/admin/auth/auth-query-host.gql'
@@ -256,6 +257,20 @@ export default {
     }
   },
   methods: {
+    displayStrategy (strategy) {
+      return strategy && strategy.key === 'cas' ?
+        translateAdminModule('authentication', strategy, this.$t.bind(this)) :
+        strategy || {}
+    },
+    displayConfig (cfg) {
+      if (!this.strategy.strategy || this.strategy.strategy.key !== 'cas') {
+        return cfg.value
+      }
+      return translateAdminModule('authentication', {
+        key: 'cas',
+        config: [cfg]
+      }, this.$t.bind(this)).config[0].value
+    },
     async refresh() {
       await this.$apollo.queries.strategies.refetch()
       await this.$apollo.queries.activeStrategies.refetch()

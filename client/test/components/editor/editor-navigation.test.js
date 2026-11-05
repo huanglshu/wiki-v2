@@ -5,6 +5,7 @@ const path = require('path')
 const { runInThisContext } = require('vm')
 const babel = require('@babel/core')
 const compiler = require('vue-template-compiler')
+const postcss = require('postcss')
 
 function loadComponent (filename, stubs = {}, browserWindow = global.window) {
   const source = fs.readFileSync(path.join(__dirname, '../../../components/editor', filename), 'utf8')
@@ -81,6 +82,19 @@ describe('editor navigation', () => {
     expect(template).toContain('@click=\'exitToHome\'')
     expect(template).not.toContain('mdi-undo-variant')
     expect(template).not.toContain('@click=\'goBack\'')
+  })
+
+  it('gives the exit button position precedence over Vuetify button styles', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../components/editor/editor-modal-editorselect.vue'), 'utf8')
+    const style = compiler.parseComponent(source).styles[0].content
+    const rule = postcss.parse(style).nodes.find(node => node.selector === '.v-btn.editor-select-exit')
+
+    expect(rule).toBeDefined()
+    expect(rule.nodes.map(({ prop, value }) => [prop, value])).toEqual(expect.arrayContaining([
+      ['position', 'absolute'],
+      ['right', '8px'],
+      ['top', '8px']
+    ]))
   })
 
   it('keeps the editor selector modal while showing the light background', () => {

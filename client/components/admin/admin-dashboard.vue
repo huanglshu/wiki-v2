@@ -42,13 +42,14 @@
               )
       v-flex(xs12 md6 lg12 xl3 d-flex)
         v-card.dashboard-card.animated.fadeInUp.wait-p6s(
-          :class='isLatestVersion ? "green" : "red lighten-2"'
+          :class='isLatestVersion === null ? "grey" : (isLatestVersion ? "green" : "red lighten-2")'
           dark
           )
           v-card-text
             v-icon.dashboard-icon mdi-blur
             .subtitle-1 Wiki.js {{info.currentVersion}}
-            .body-2(v-if='isLatestVersion') {{$t('admin:dashboard.versionLatest')}}
+            .body-2(v-if='isLatestVersion === null') {{$t('admin:dashboard.versionUnknown')}}
+            .body-2(v-else-if='isLatestVersion') {{$t('admin:dashboard.versionLatest')}}
             .body-2(v-else) {{$t('admin:dashboard.versionNew', { version: info.latestVersion })}}
       v-flex(xs12, xl6)
         v-card.radius-7.animated.fadeInUp.wait-p2s
@@ -97,7 +98,7 @@ import _ from 'lodash'
 import AnimatedNumber from 'animated-number-vue'
 import { get } from 'vuex-pathify'
 import gql from 'graphql-tag'
-import semverLte from 'semver/functions/lte'
+import { isLatestVersion } from '../../helpers/version'
 
 export default {
   components: {
@@ -122,11 +123,7 @@ export default {
   },
   computed: {
     isLatestVersion() {
-      if (this.info.latestVersion === 'n/a' || this.info.currentVersion === 'n/a') {
-        return true
-      } else {
-        return semverLte(this.info.latestVersion, this.info.currentVersion)
-      }
+      return isLatestVersion(this.info.currentVersion, this.info.latestVersion)
     },
     info: get('admin/info'),
     permissions: get('user/permissions')

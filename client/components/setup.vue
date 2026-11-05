@@ -6,25 +6,27 @@
           v-flex(xs12, lg6, offset-lg3)
             v-card.elevation-20.radius-7.animated.fadeInUp
               v-alert(v-if='isDevMode', tile, dark, color='red darken-3', icon='mdi-alert', prominent)
-                .body-2 You are running an unstable, unreleased development version. This code base is #[strong NOT] for production use!
-                .body-2.mt-3 Cloning the dev branch directly from GitHub is #[strong NOT] the proper way to install Wiki.js!
-                .body-2 Read the #[a(href='https://docs.requarks.io/install', style='color: #FFF;') documentation] on correctly installing the latest stable version.
+                .body-2 {{ $t('setup:devWarning') }}
+                .body-2.mt-3 {{ $t('setup:devInstallWarning') }}
+                .body-2
+                  span {{ $t('setup:devDocsPrefix') }}
+                  a(href='https://docs.requarks.io/install', style='color: #FFF;') {{ $t('setup:devDocsLink') }}
               .text-center
                 img.setup-logo.animated.fadeInUp.wait-p2s(src='/_assets/svg/logo-wikijs-full.svg', alt='Wiki.js Logo')
               v-alert(v-model='error', type='error', icon='mdi-alert', tile, dismissible) {{ errorMessage }}
               v-alert(v-if='!error', tile, color='blue lighten-5', :value='true')
                 v-icon.mr-3(color='blue') mdi-package-variant
-                span.blue--text You are about to install Wiki.js #[strong {{wikiVersion}}].
+                span.blue--text {{ $t('setup:installVersion', { version: wikiVersion }) }}
               v-card-text
-                .overline.pl-3 Administrator Account
+                .overline.pl-3 {{ $t('setup:administratorAccount') }}
                 v-container.pa-3.mt-3(grid-list-xl)
                   v-layout(row, wrap)
                     v-flex(xs12)
                       v-text-field(
                         outlined
                         v-model='conf.adminEmail',
-                        label='Administrator Email',
-                        hint='The email address of the administrator account.',
+                        :label='$t("setup:administratorEmail")',
+                        :hint='$t("setup:administratorEmailHint")',
                         persistent-hint
                         required
                         ref='adminEmailInput'
@@ -35,11 +37,11 @@
                         ref='adminPassword',
                         counter='255'
                         v-model='conf.adminPassword',
-                        label='Password',
+                        :label='$t("setup:password")',
                         :append-icon="pwdMode ? 'mdi-eye-off' : 'mdi-eye'"
                         @click:append="() => (pwdMode = !pwdMode)"
                         :type="pwdMode ? 'password' : 'text'"
-                        hint='At least 8 characters long.',
+                        :hint='$t("setup:passwordHint")',
                         persistent-hint
                       )
                     v-flex(xs6)
@@ -48,40 +50,40 @@
                         ref='adminPasswordConfirm',
                         counter='255'
                         v-model='conf.adminPasswordConfirm',
-                        label='Confirm Password',
+                        :label='$t("setup:confirmPassword")',
                         :append-icon="pwdConfirmMode ? 'mdi-eye-off' : 'mdi-eye'"
                         @click:append="() => (pwdConfirmMode = !pwdConfirmMode)"
                         :type="pwdConfirmMode ? 'password' : 'text'"
-                        hint='Verify your password again.',
+                        :hint='$t("setup:confirmPasswordHint")',
                         persistent-hint
                       )
                 v-divider.mb-4
-                .overline.pl-3.mb-5 Site URL
+                .overline.pl-3.mb-5 {{ $t('setup:siteUrl') }}
                 v-text-field.mb-4.mx-3(
                   outlined
                   ref='adminSiteUrl',
                   v-model='conf.siteUrl',
-                  label='Site URL',
-                  hint='Full URL to your wiki, without the trailing slash (e.g. https://wiki.example.com). This should be the public facing URL, not the internal one if using a reverse-proxy.',
+                  :label='$t("setup:siteUrl")',
+                  :hint='$t("setup:siteUrlHint")',
                   persistent-hint
                   @keyup.enter='install'
                 )
                 v-divider.mb-4
-                .overline.pl-3.mb-3 Telemetry
+                .overline.pl-3.mb-3 {{ $t('setup:telemetry') }}
                 v-switch.ml-3(
                   inset
                   color='primary',
                   v-model='conf.telemetry',
-                  label='Allow Telemetry',
+                  :label='$t("setup:allowTelemetry")',
                   persistent-hint,
-                  hint='Help Wiki.js developers improve this app with anonymized telemetry.'
+                  :hint='$t("setup:telemetryHint")'
                 )
-                a.pl-3(style='font-size: 12px; letter-spacing: initial;', href='https://docs.requarks.io/telemetry', target='_blank') Learn more
+                a.pl-3(style='font-size: 12px; letter-spacing: initial;', href='https://docs.requarks.io/telemetry', target='_blank') {{ $t('setup:learnMore') }}
               v-divider.mt-2
               v-card-actions
                 v-btn(color='primary', @click='install', :disabled='loading', x-large, depressed, block)
                   v-icon(left) mdi-check
-                  span Install
+                  span {{ $t('setup:install') }}
 
     v-dialog(v-model='loading', width='450', persistent)
       v-card(color='primary', dark).radius-7
@@ -93,11 +95,11 @@
               color='#FFF'
               )
           template(v-if='!success')
-            .subtitle-1.white--text Finalizing your installation...
-            .caption Just a moment
+            .subtitle-1.white--text {{ $t('setup:finalizing') }}
+            .caption {{ $t('setup:pleaseWait') }}
           template(v-else)
-            .subtitle-1.white--text Installation complete!
-            .caption Redirecting...
+            .subtitle-1.white--text {{ $t('setup:installationComplete') }}
+            .caption {{ $t('setup:redirecting') }}
 </template>
 
 <script>

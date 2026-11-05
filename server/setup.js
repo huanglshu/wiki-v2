@@ -10,6 +10,7 @@ const _ = require('lodash')
 const crypto = require('crypto')
 const pem2jwk = require('pem-jwk').pem2jwk
 const semver = require('semver')
+const { defaultLocale, getSetupLocales, homeLabel } = require('./helpers/setup-locales')
 
 const randomBytesAsync = require('util').promisify(crypto.randomBytes)
 
@@ -90,7 +91,7 @@ module.exports = () => {
       _.set(WIKI.config, 'graphEndpoint', 'https://graph.requarks.io')
       _.set(WIKI.config, 'host', req.body.siteUrl)
       _.set(WIKI.config, 'lang', {
-        code: 'en',
+        code: defaultLocale,
         autoUpdate: true,
         namespacing: false,
         namespaces: []
@@ -224,15 +225,11 @@ module.exports = () => {
           break
       }
 
-      // Create default locale
+      // Create default locale and English fallback
       WIKI.logger.info('Installing default locale...')
-      await WIKI.models.locales.query().insert({
-        code: 'en',
-        strings: {},
-        isRTL: false,
-        name: 'English',
-        nativeName: 'English'
-      })
+      for (const locale of getSetupLocales()) {
+        await WIKI.models.locales.query().insert(locale)
+      }
 
       // Create default groups
 
@@ -294,7 +291,7 @@ module.exports = () => {
         provider: 'local',
         password: req.body.adminPassword,
         name: 'Administrator',
-        locale: 'en',
+        locale: defaultLocale,
         defaultEditor: 'markdown',
         tfaIsActive: false,
         isActive: true,
@@ -309,7 +306,7 @@ module.exports = () => {
         email: 'guest@example.com',
         name: 'Guest',
         password: '',
-        locale: 'en',
+        locale: defaultLocale,
         defaultEditor: 'markdown',
         tfaIsActive: false,
         isSystem: true,
@@ -328,13 +325,13 @@ module.exports = () => {
         key: 'site',
         config: [
           {
-            locale: 'en',
+            locale: defaultLocale,
             items: [
               {
                 id: uuid(),
                 icon: 'mdi-home',
                 kind: 'link',
-                label: 'Home',
+                label: homeLabel,
                 target: '/',
                 targetType: 'home',
                 visibilityMode: 'all',

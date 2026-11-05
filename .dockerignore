@@ -1,0 +1,17 @@
+.git
+.venv
+.vscode
+.webpack-cache
+node_modules
+assets
+/config.yml
+/data/*
+!/data/sideload/
+!/data/sideload/**
+/logs
+/repo
+/uploads
+/content
+/temp
+*.log
+*.sqlite

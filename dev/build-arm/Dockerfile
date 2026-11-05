@@ -31,10 +31,13 @@ COPY --chown=node:node ./build/assets ./assets
 COPY --chown=node:node --from=build /wiki/node_modules ./node_modules
 COPY --chown=node:node ./server ./server
 COPY --chown=node:node ./build/server/views ./server/views
+COPY --chown=node:node ./data/sideload ./server/sideload
 COPY --chown=node:node ./data/sideload ./data/sideload
 COPY --chown=node:node ./dev/build/config.yml ./config.yml
 COPY --chown=node:node ./build/package.json ./package.json
 COPY --chown=node:node ./LICENSE ./LICENSE
+
+RUN node -e 'const fs = require("fs"); const pkg = JSON.parse(fs.readFileSync("package.json", "utf8")); pkg.dev = false; fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")'
 
 USER node
 

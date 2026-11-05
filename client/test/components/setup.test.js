@@ -5,10 +5,13 @@ const path = require('path')
 const { runInThisContext } = require('vm')
 const babel = require('@babel/core')
 const compiler = require('vue-template-compiler')
+const pug = require('pug')
 const zh = require('../../../data/sideload/zh.json')
+const en = require('../../../data/sideload/en.json')
 
 const source = fs.readFileSync(path.join(__dirname, '../../components/setup.vue'), 'utf8')
-const script = compiler.parseComponent(source).script.content
+const sfc = compiler.parseComponent(source)
+const script = sfc.script.content
 const code = babel.transformSync(script, {
   configFile: false,
   plugins: ['@babel/plugin-transform-modules-commonjs']
@@ -24,6 +27,17 @@ runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(localReq
 const component = componentModule.exports.default
 
 describe('setup validation', () => {
+  it('compiles the setup template and provides translations for its labels', () => {
+    const compiled = compiler.compile(pug.render(sfc.template.content))
+    expect(compiled.errors).toEqual([])
+    const keys = [...sfc.template.content.matchAll(/\$t\(['"]([^'"]+)['"]/g)].map(match => match[1])
+    expect(keys.length).toBeGreaterThan(0)
+    for (const key of keys) {
+      expect(zh[key]).toEqual(expect.any(String))
+      expect(en[key]).toEqual(expect.any(String))
+    }
+  })
+
   it.each([
     [{ adminEmail: '', adminPassword: 'password', adminPasswordConfirm: 'password', siteUrl: 'https://example.com' }, 'setup:emailRequired'],
     [{ adminEmail: 'invalid', adminPassword: 'password', adminPasswordConfirm: 'password', siteUrl: 'https://example.com' }, 'setup:emailInvalid'],

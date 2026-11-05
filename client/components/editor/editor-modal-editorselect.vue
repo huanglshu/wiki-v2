@@ -110,7 +110,7 @@ export default {
 </script>
 
 <style lang='scss'>
-.editor-select-exit {
+.v-btn.editor-select-exit {
   position: absolute;
   right: 8px;
   top: 8px;

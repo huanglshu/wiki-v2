@@ -6,7 +6,8 @@ const BruteKnex = require('../helpers/brute-knex')
 const router = express.Router()
 const _ = require('lodash')
 const commonHelper = require('../helpers/common')
-const english = require('../../data/sideload/en.json')
+const { loadBundledLocale } = require('../helpers/bundled-locales')
+const english = loadBundledLocale('en.json')
 
 const errorTranslationKeys = new Map(
   Object.entries(english)

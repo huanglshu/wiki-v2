@@ -21,7 +21,7 @@ const setupResources = translations => Object.fromEntries(
     .map(([key, value]) => [key.slice('setup:'.length), value])
 )
 setupI18n.init({
-  lng: navigator.language || 'en',
+  lng: 'zh',
   load: 'languageOnly',
   fallbackLng: 'en',
   ns: ['setup'],

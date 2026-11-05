@@ -15,4 +15,3 @@ modules:
   share:
     enabled: false
 bodyParserLimit: 100mb
-#admin@auldey.com / lsh19871011
