@@ -401,7 +401,9 @@ export default {
             if (respObj.responseResult.succeeded === true) {
               this.handleLoginResponse(respObj)
             } else {
-              throw new Error(respObj.responseResult.message)
+              throw new Error(respObj.responseResult.errorCode === 1002 ?
+                this.$t('auth:errors.invalidLoginMsg') :
+                respObj.responseResult.message)
             }
           } else {
             throw new Error(this.$t('auth:genericError'))
@@ -424,7 +426,7 @@ export default {
       if (this.securityCode.length !== 6) {
         this.$store.commit('showNotification', {
           style: 'red',
-          message: 'Enter a valid security code.',
+          message: this.$t('auth:errors.securityCodeRequired', { defaultValue: 'Enter a valid security code.' }),
           icon: 'alert'
         })
         if (setup) {
@@ -601,7 +603,9 @@ export default {
             })
             this.screen = 'login'
           } else {
-            throw new Error(respObj.message)
+            throw new Error(respObj.errorCode === 3002 ?
+              this.$t('auth:errors.mailNotConfigured', { defaultValue: respObj.message }) :
+              respObj.message)
           }
         } else {
           throw new Error(this.$t('auth:genericError'))

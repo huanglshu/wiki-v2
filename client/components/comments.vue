@@ -348,7 +348,7 @@ export default {
         })
         this.commentEditContent = _.get(results, 'data.comments.single.content', null)
         if (this.commentEditContent === null) {
-          throw new Error('Failed to load comment content.')
+          throw new Error(this.$t('common:notification.commentLoadFailed', { defaultValue: 'Failed to load comment content.' }))
         }
       } catch (err) {
         console.warn(err)

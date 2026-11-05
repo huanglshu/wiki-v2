@@ -133,7 +133,7 @@ export default {
     async refresh() {
       await this.$apollo.queries.loggers.refetch()
       this.$store.commit('showNotification', {
-        message: 'List of loggers has been refreshed.',
+        message: this.$t('common:notification.loggersRefreshed', { defaultValue: 'List of loggers has been refreshed.' }),
         style: 'success',
         icon: 'cached'
       })
@@ -152,7 +152,7 @@ export default {
         }
       })
       this.$store.commit('showNotification', {
-        message: 'Logging configuration saved successfully.',
+        message: this.$t('common:notification.loggingSaved', { defaultValue: 'Logging configuration saved successfully.' }),
         style: 'success',
         icon: 'check'
       })

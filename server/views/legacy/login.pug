@@ -6,7 +6,7 @@ block body
     .login
       .login-dialog
         if err
-          .login-error= err.message
+          .login-error= errorMessageKey ? t(errorMessageKey, { defaultValue: err.message }) : err.message
         form(method='post', action='/login')
           h1= config.title
           select(name='strategy')

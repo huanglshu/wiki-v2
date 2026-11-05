@@ -118,7 +118,7 @@ export default {
 
     if (!resp) {
       return this.$store.commit('showNotification', {
-        message: 'Failed to fetch latest version.',
+        message: this.$t('common:notification.latestVersionFailed', { defaultValue: 'Failed to fetch latest version.' }),
         style: 'warning',
         icon: 'warning'
       })

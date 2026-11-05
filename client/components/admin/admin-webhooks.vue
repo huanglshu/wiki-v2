@@ -90,7 +90,7 @@ export default {
         })
         this.$store.commit('showNotification', {
           style: 'success',
-          message: 'Configuration saved successfully.',
+          message: this.$t('common:notification.configSaved', { defaultValue: 'Configuration saved successfully.' }),
           icon: 'check'
         })
       } catch (err) {

@@ -23,7 +23,7 @@ export default {
     notification: get('notification'),
     notificationState: sync('notification@isActive'),
     message() {
-      return getNotificationMessage(this.notification.message, key => this.$t(key))
+      return getNotificationMessage(this.notification.message, (key, options) => this.$t(key, options))
     }
   }
 }

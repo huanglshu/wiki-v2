@@ -262,11 +262,12 @@
               tr(v-for='(fusr, idx) in failedUsers', :key='`fusr-` + idx')
                 td {{fusr.provider}}
                 td {{fusr.email}}
-                td {{fusr.error}}
+                td {{ localizeError(fusr.error) }}
 </template>
 
 <script>
 import _ from 'lodash'
+import { getNotificationMessage } from '../../helpers/notification-message'
 
 import { SemipolarSpinner } from 'epic-spinners'
 
@@ -332,6 +333,9 @@ export default {
     }
   },
   methods: {
+    localizeError (message) {
+      return getNotificationMessage(message, (key, options) => this.$t(key, options))
+    },
     async startImport () {
       this.isLoading = true
       this.progress = 0

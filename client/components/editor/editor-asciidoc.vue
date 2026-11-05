@@ -359,7 +359,7 @@ export default {
                       this.toggleModal(`editorModalDrawio`)
                     } catch (err) {
                       return this.$store.commit('showNotification', {
-                        message: 'Failed to process diagram data.',
+                        message: this.$t('common:notification.diagramFailed', { defaultValue: 'Failed to process diagram data.' }),
                         style: 'warning',
                         icon: 'warning'
                       })

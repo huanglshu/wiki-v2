@@ -101,7 +101,7 @@
             @click='isFailed = false'
             ) {{ $t('common:actions.close') }}
         v-card-text.pa-5.red.darken-4.white--text
-          span {{errorMessage}}
+          span {{ localizeError(errorMessage) }}
 </template>
 
 <script>
@@ -109,6 +109,7 @@ import { SelfBuildingSquareSpinner } from 'epic-spinners'
 
 import gql from 'graphql-tag'
 import _get from 'lodash/get'
+import { getNotificationMessage } from '../../helpers/notification-message'
 
 export default {
   components: {
@@ -207,6 +208,9 @@ export default {
     }
   },
   methods: {
+    localizeError (message) {
+      return getNotificationMessage(message, (key, options) => this.$t(key, options))
+    },
     downloadBackup () {
       window.location.assign(`/_backup/${this.filename}`)
     },

@@ -139,6 +139,7 @@
 
 <script>
 import _ from 'lodash'
+import { getNotificationMessage } from '../../helpers/notification-message'
 
 /* global WIKI */
 
@@ -226,7 +227,7 @@ export default {
         })
       } else {
         this.$store.commit('showNotification', {
-          message: this.$t('admin:locale.downloadError', { message: resp.message }),
+          message: this.$t('admin:locale.downloadError', { message: getNotificationMessage(resp.message, (key, options) => this.$t(key, options)) }),
           style: 'error',
           icon: 'warning'
         })
@@ -274,7 +275,7 @@ export default {
         }, 1000)
       } else {
         this.$store.commit('showNotification', {
-          message: this.$t('admin:locale.saveError', { message: resp.message }),
+          message: this.$t('admin:locale.saveError', { message: getNotificationMessage(resp.message, (key, options) => this.$t(key, options)) }),
           style: 'error',
           icon: 'warning'
         })

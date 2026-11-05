@@ -434,7 +434,7 @@ export default {
       await this.$apollo.queries.trees.refetch()
       this.current = {}
       this.$store.commit('showNotification', {
-        message: 'Navigation has been refreshed.',
+        message: this.$t('common:notification.navigationRefreshed', { defaultValue: 'Navigation has been refreshed.' }),
         style: 'success',
         icon: 'cached'
       })

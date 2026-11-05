@@ -6,6 +6,7 @@ const Promise = require('bluebird')
 const fs = require('fs-extra')
 const path = require('path')
 const yaml = require('js-yaml')
+const chineseUi = require('../../data/sideload/zh.json')
 
 /* global WIKI */
 
@@ -15,7 +16,7 @@ module.exports = {
   async init() {
     this.namespaces = WIKI.data.localeNamespaces
     this.engine = i18next
-    this.engine.init({
+    await this.engine.init({
       load: 'languageOnly',
       ns: this.namespaces,
       defaultNS: 'common',
@@ -88,6 +89,19 @@ module.exports = {
       } catch (err) {
         // ignore
       }
+    }
+
+    if (locale === 'zh') {
+      const overrides = {}
+      for (const [key, value] of Object.entries(chineseUi)) {
+        if (key.startsWith('common:serverError.') || key.startsWith('common:notification.') ||
+          ['auth:errors.invalidLoginMsg', 'auth:errors.mailNotConfigured', 'auth:errors.securityCodeRequired'].includes(key)) {
+          _.set(overrides, key.replace(':', '.'), value)
+        }
+      }
+      _.forOwn(overrides, (data, ns) => {
+        this.engine.addResourceBundle(locale, ns, data, true, true)
+      })
     }
   },
   /**

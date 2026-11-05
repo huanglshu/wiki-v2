@@ -6,6 +6,13 @@ const BruteKnex = require('../helpers/brute-knex')
 const router = express.Router()
 const _ = require('lodash')
 const commonHelper = require('../helpers/common')
+const english = require('../../data/sideload/en.json')
+
+const errorTranslationKeys = new Map(
+  Object.entries(english)
+    .filter(([key]) => key.startsWith('common:serverError.'))
+    .map(([key, message]) => [message, key])
+)
 
 const bruteforce = new ExpressBrute(new BruteKnex({
   createTable: true,
@@ -114,6 +121,7 @@ router.post('/login', bruteforce.prevent, async (req, res, next) => {
       const { formStrategies, socialStrategies } = await WIKI.models.authentication.getStrategiesForLegacyClient()
       res.render('legacy/login', {
         err,
+        errorMessageKey: errorTranslationKeys.get(err.message),
         formStrategies,
         socialStrategies
       })

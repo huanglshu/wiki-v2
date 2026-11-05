@@ -105,6 +105,13 @@ import _ from 'lodash'
 import validate from 'validate.js'
 import { BreedingRhombusSpinner } from 'epic-spinners'
 import confetti from 'canvas-confetti'
+import english from '../../data/sideload/en.json'
+
+const setupErrorKeys = new Map(
+  Object.entries(english)
+    .filter(([key]) => key.startsWith('setup:error.'))
+    .map(([key, message]) => [message, key])
+)
 
 /* global siteConfig */
 
@@ -143,45 +150,56 @@ export default {
     this.isDevMode = siteConfig.devMode === true
   },
   methods: {
+    localizeError (message) {
+      const key = setupErrorKeys.get(message)
+      return key ? this.$t(key, { defaultValue: message }) : message
+    },
     async install () {
       this.error = false
 
       const validationResults = validate(this.conf, {
         adminEmail: {
           presence: {
-            allowEmpty: false
+            allowEmpty: false,
+            message: this.$t('setup:emailRequired')
           },
-          email: true
+          email: { message: this.$t('setup:emailInvalid') }
         },
         adminPassword: {
           presence: {
-            allowEmpty: false
+            allowEmpty: false,
+            message: this.$t('setup:passwordRequired')
           },
           length: {
             minimum: 6,
-            maximum: 255
+            maximum: 255,
+            tooShort: this.$t('setup:passwordTooShort'),
+            tooLong: this.$t('setup:passwordTooLong')
           }
         },
         adminPasswordConfirm: {
-          equality: 'adminPassword'
+          equality: { attribute: 'adminPassword', message: this.$t('setup:passwordMismatch') }
         },
         siteUrl: {
           presence: {
-            allowEmpty: false
+            allowEmpty: false,
+            message: this.$t('setup:siteUrlRequired')
           },
           url: {
             schemes: ['http', 'https'],
             allowLocal: true,
-            allowDataUrl: false
+            allowDataUrl: false,
+            message: this.$t('setup:siteUrlInvalid')
           },
           format: {
             pattern: '^(?!.*/$).*$',
             flags: 'i',
-            message: 'must not have a trailing slash'
+            message: this.$t('setup:siteUrlTrailingSlash')
           }
         }
       }, {
-        format: 'flat'
+        format: 'flat',
+        fullMessages: false
       })
       if (validationResults) {
         this.error = true
@@ -219,11 +237,11 @@ export default {
             }, 10000)
           } else {
             this.error = true
-            this.errorMessage = resp.error
+            this.errorMessage = this.localizeError(resp.error)
             this.loading = false
           }
         } catch (err) {
-          window.alert(err.message)
+          window.alert(this.localizeError(err.message))
         }
       }, 1000)
     }

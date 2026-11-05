@@ -37,16 +37,21 @@ describe('core/localization', () => {
 
   it('waits for fallback resources to load', async () => {
     let resolveEnglish
+    let markEnglishStarted
+    const englishStarted = new Promise(resolve => { markEnglishStarted = resolve })
     findOne.mockImplementation((field, code) => {
       if (code === 'en') {
-        return new Promise(resolve => { resolveEnglish = resolve })
+        return new Promise(resolve => {
+          resolveEnglish = resolve
+          markEnglishStarted()
+        })
       }
       return Promise.resolve({ strings: { common: { greeting: 'Chinese' } } })
     })
 
     let initialized = false
     const initialization = localization.init().then(() => { initialized = true })
-    await new Promise(resolve => setImmediate(resolve))
+    await englishStarted
     expect(initialized).toBe(false)
     resolveEnglish({ strings: { common: { greeting: 'English' } } })
     await initialization
@@ -58,6 +63,12 @@ describe('core/localization', () => {
     global.WIKI.config.lang.namespaces = ['zh', 'en', 'fr']
     await localization.init()
     expect(findOne.mock.calls.map(call => call[1])).toEqual(['zh', 'en', 'fr'])
+  })
+
+  it('loads committed Chinese notification translations even without an offline language import', async () => {
+    await localization.init()
+    expect(localization.engine.t('common:serverError.AuthAccountBanned')).toBe('您的账户已被禁用。')
+    expect(localization.engine.t('auth:errors.mailNotConfigured')).toBe('邮件配置不完整或无效。')
   })
 
   it('does not load English twice when it is the current language', async () => {
