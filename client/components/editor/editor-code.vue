@@ -4,44 +4,44 @@
       .editor-code-sidebar
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.animated.fadeInLeft(icon, tile, v-on='on', dark, disabled).mx-0
+            v-btn.animated.fadeInLeft(icon, tile, v-on='on', :dark='$vuetify.theme.dark', disabled).mx-0
               v-icon mdi-link-plus
           span {{$t('editor:markup.insertLink')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalMedia`)').mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleModal(`editorModalMedia`)').mx-0
               v-icon(:color='activeModal === `editorModalMedia` ? `teal` : ``') mdi-folder-multiple-image
           span {{$t('editor:markup.insertAssets')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p2s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalBlocks`)', disabled).mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p2s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleModal(`editorModalBlocks`)', disabled).mx-0
               v-icon(:color='activeModal === `editorModalBlocks` ? `teal` : ``') mdi-view-dashboard-outline
           span {{$t('editor:markup.insertBlock')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p3s(icon, tile, v-on='on', dark, disabled).mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p3s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', disabled).mx-0
               v-icon mdi-code-braces
           span {{$t('editor:markup.insertCodeBlock')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p4s(icon, tile, v-on='on', dark, disabled).mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p4s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', disabled).mx-0
               v-icon mdi-library-video
           span {{$t('editor:markup.insertVideoAudio')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', dark, disabled).mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', disabled).mx-0
               v-icon mdi-chart-multiline
           span {{$t('editor:markup.insertDiagram')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p6s(icon, tile, v-on='on', dark, disabled).mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p6s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', disabled).mx-0
               v-icon mdi-function-variant
           span {{$t('editor:markup.insertMathExpression')}}
         template(v-if='$vuetify.breakpoint.mdAndUp')
           v-spacer
           v-tooltip(right, color='teal')
             template(v-slot:activator='{ on }')
-              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', dark, @click='toggleFullscreen').mx-0
+              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleFullscreen').mx-0
                 v-icon mdi-arrow-expand-all
             span {{$t('editor:markup.distractionFreeMode')}}
       .editor-code-editor

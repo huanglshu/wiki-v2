@@ -1,11 +1,11 @@
 <template lang='pug'>
-  v-app-bar.nav-header(color='black', dark, app, :clipped-left='!$vuetify.rtl', :clipped-right='$vuetify.rtl', fixed, flat, :extended='searchIsShown && $vuetify.breakpoint.smAndDown')
-    v-toolbar(color='deep-purple', flat, slot='extension', v-if='searchIsShown && $vuetify.breakpoint.smAndDown')
+  v-app-bar.nav-header(:color='headerColor', :class='{ "nav-header--site": siteHeader }', dark, app, :clipped-left='!$vuetify.rtl', :clipped-right='$vuetify.rtl', fixed, flat, :extended='searchIsShown && $vuetify.breakpoint.smAndDown')
+    v-toolbar(:color='mobileSearchColor', flat, slot='extension', v-if='searchIsShown && $vuetify.breakpoint.smAndDown')
       v-text-field(
         ref='searchFieldMobile'
         v-model='search'
         clearable
-        background-color='deep-purple'
+        :background-color='mobileSearchColor'
         color='white'
         :label='$t(`common:header.search`)'
         single-line
@@ -19,7 +19,7 @@
       )
     v-layout(row)
       v-flex(xs5, md4)
-        v-toolbar.nav-header-inner(color='black', dark, flat, :class='$vuetify.rtl ? `pr-3` : `pl-3`')
+        v-toolbar.nav-header-inner(:color='headerColor', dark, flat, :class='$vuetify.rtl ? `pr-3` : `pl-3`')
           v-avatar(tile, size='34', @click='goHome')
             v-img.org-logo(:src='logoUrl')
           //- v-menu(open-on-hover, offset-y, bottom, left, min-width='250', transition='slide-y-transition')
@@ -46,7 +46,7 @@
           v-toolbar-title(:class='{ "mx-3": $vuetify.breakpoint.mdAndUp, "mx-1": $vuetify.breakpoint.smAndDown }')
             span.subheading {{title}}
       v-flex(md4, v-if='$vuetify.breakpoint.mdAndUp')
-        v-toolbar.nav-header-inner(color='black', dark, flat)
+        v-toolbar.nav-header-inner(:color='headerColor', dark, flat)
           slot(name='mid')
             transition(name='navHeaderSearch', v-if='searchIsShown')
               v-text-field(
@@ -73,7 +73,7 @@
             v-btn.ml-2.mr-0(icon, href='/t', :aria-label='$t(`common:header.browseTags`)')
               v-icon(color='grey') mdi-tag-multiple
       v-flex(xs7, md4)
-        v-toolbar.nav-header-inner.pr-4(color='black', dark, flat)
+        v-toolbar.nav-header-inner.pr-4(:color='headerColor', dark, flat)
           v-spacer
           .navHeaderLoading.mr-3
             v-progress-circular(indeterminate, color='blue', :size='22', :width='2' v-show='isLoading')
@@ -168,9 +168,9 @@
           template(v-if='isAuthenticated && isAdmin')
             v-btn(v-if='mode !== `admin`', icon, tile, height='64', href='/a', :aria-label='$t(`common:header.admin`)')
               v-icon(color='grey') mdi-cog
-            v-btn(v-else, text, tile, height='64', href='/', :aria-label='$t(`common:header.backToSite`)')
+            v-btn.nav-header-back-to-site(v-else, text, tile, height='64', href='/', :aria-label='$t(`common:header.backToSite`)')
               v-icon(left, color='grey') mdi-exit-to-app
-              span {{$t('common:header.backToSite')}}
+              span.nav-header-back-to-site__label {{$t('common:header.backToSite')}}
             v-divider(vertical)
 
           //- ACCOUNT
@@ -250,6 +250,10 @@ export default {
     hideSearch: {
       type: Boolean,
       default: false
+    },
+    siteHeader: {
+      type: Boolean,
+      default: false
     }
   },
   data() {
@@ -271,6 +275,12 @@ export default {
     }
   },
   computed: {
+    headerColor () {
+      return this.siteHeader ? '#3360a0' : 'black'
+    },
+    mobileSearchColor () {
+      return this.siteHeader ? this.headerColor : 'deep-purple'
+    },
     search: sync('site/search'),
     searchIsFocused: sync('site/searchIsFocused'),
     searchIsLoading: sync('site/searchIsLoading'),
@@ -475,6 +485,20 @@ export default {
 .nav-header {
   //z-index: 1000;
 
+  &--site {
+    .nav-header-inner .v-btn .v-icon.grey--text {
+      color: #e3ebf7 !important;
+    }
+
+    .nav-header-inner .v-divider {
+      border-color: rgba(255, 255, 255, .2);
+    }
+
+    .nav-header-inner .v-text-field .v-input__slot {
+      background-color: rgba(255, 255, 255, .14) !important;
+    }
+  }
+
   .v-toolbar__extension {
     padding: 0;
 
@@ -494,6 +518,17 @@ export default {
   &-inner {
     .v-toolbar__content {
       padding: 0;
+    }
+  }
+
+  &-back-to-site {
+    .v-btn__content {
+      align-items: center;
+    }
+
+    .v-icon,
+    &__label {
+      line-height: 1;
     }
   }
 

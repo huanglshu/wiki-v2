@@ -1,6 +1,6 @@
 <template lang='pug'>
   .editor-asciidoc
-    v-toolbar.editor-asciidoc-toolbar(dense, color='primary', dark, flat, style='overflow-x: hidden;')
+    v-toolbar.editor-asciidoc-toolbar(dense, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`', :dark='$vuetify.theme.dark', flat, style='overflow-x: hidden;')
       template(v-if='isModalShown')
         v-spacer
         v-btn.animated.fadeInRight(text, @click='closeAllModal')
@@ -84,24 +84,24 @@
       .editor-asciidoc-sidebar
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.animated.fadeInLeft(icon, tile, v-on='on', dark, @click='insertLink').mx-0
+            v-btn.animated.fadeInLeft(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='insertLink').mx-0
               v-icon mdi-link-plus
           span {{$t('editor:markup.insertLink')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalMedia`)').mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p1s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleModal(`editorModalMedia`)').mx-0
               v-icon(:color='activeModal === `editorModalMedia` ? `teal` : ``') mdi-folder-multiple-image
           span {{$t('editor:markup.insertAssets')}}
         v-tooltip(right, color='teal')
           template(v-slot:activator='{ on }')
-            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', dark, @click='toggleModal(`editorModalDrawio`)').mx-0
+            v-btn.mt-3.animated.fadeInLeft.wait-p5s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleModal(`editorModalDrawio`)').mx-0
               v-icon mdi-chart-multiline
           span {{$t('editor:markup.insertDiagram')}}
         template(v-if='$vuetify.breakpoint.mdAndUp')
           v-spacer
           v-tooltip(right, color='teal')
             template(v-slot:activator='{ on }')
-              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', dark, @click='toggleFullscreen').mx-0
+              v-btn.mt-3.animated.fadeInLeft.wait-p8s(icon, tile, v-on='on', :dark='$vuetify.theme.dark', @click='toggleFullscreen').mx-0
                 v-icon mdi-arrow-expand-all
             span {{$t('editor:markup.distractionFreeMode')}}
       .editor-asciidoc-editor
@@ -515,6 +515,7 @@ $editor-ascii-height-mobile: calc(100vh - 112px - 16px);
   &-preview {
     flex: 1 1 50%;
     background-color: mc('grey', '100');
+    border-left: 1px solid #aaa;
     position: relative;
     height: $editor-ascii-height;
     overflow: hidden;
@@ -522,6 +523,7 @@ $editor-ascii-height-mobile: calc(100vh - 112px - 16px);
 
     @at-root .theme--dark & {
       background-color: mc('grey', '900');
+      border-left-color: #888;
     }
 
     @include until($tablet) {
@@ -606,9 +608,20 @@ $editor-ascii-height-mobile: calc(100vh - 112px - 16px);
   }
 
   &-toolbar {
-    background-color: mc('blue', '700');
-    background-image: linear-gradient(to bottom, mc('blue', '700') 0%, mc('blue','800') 100%);
-    color: #FFF;
+    &::after {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      height: 1px;
+      background-color: #b8b8b8;
+      content: '';
+      pointer-events: none;
+    }
+
+    &.theme--dark::after {
+      background-color: #626262;
+    }
 
     .v-toolbar__content {
       padding-left: 64px;

@@ -131,7 +131,7 @@
                 v-toolbar(color='teal', dark, dense, flat)
                   v-toolbar-title.subtitle-1 {{ $t('admin:locale.sideload') }}
                   v-spacer
-                  v-chip(label, color='white', small).teal--text coming soon
+                  v-chip(label, color='white', small).teal--text {{ $t('admin:ui.groupRules.comingSoon') }}
                 v-card-text
                   div {{ $t('admin:locale.sideloadHelp') }}
                   v-btn.ml-0.mt-3(color='teal', disabled) {{ $t('common:actions.browse') }}

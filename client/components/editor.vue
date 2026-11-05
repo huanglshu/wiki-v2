@@ -1,6 +1,6 @@
 <template lang="pug">
   v-app.editor(:dark='$vuetify.theme.dark')
-    nav-header(dense)
+    nav-header(dense, site-header)
       template(slot='mid')
         v-text-field.editor-title-input(
           dark
@@ -9,7 +9,6 @@
           v-model='currentPageTitle'
           :placeholder='pageTitlePlaceholder'
           hide-details
-          background-color='black'
           dense
           full-width
         )
@@ -597,8 +596,79 @@ export default {
       background-color: mc('grey', '900');
     }
 
+    .editor-markdown-sidebar,
+    .editor-asciidoc-sidebar,
+    .editor-code-sidebar {
+      border-right: 1px solid #888;
+    }
+
     &-title-input input {
       text-align: center;
+    }
+  }
+
+  .editor.theme--light {
+    background-color: #fff !important;
+
+    .application--wrap {
+      background-color: #fff;
+    }
+
+    .editor-markdown-sidebar,
+    .editor-asciidoc-sidebar,
+    .editor-code-sidebar {
+      background-color: #fff;
+      border-right-color: #aaa;
+    }
+
+    .editor-markdown-editor,
+    .editor-asciidoc-editor,
+    .editor-code-editor {
+      background-color: #fff;
+
+      .cm-s-wikijs-dark.CodeMirror {
+        background-color: #fff;
+        color: #212121;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-gutters {
+        background-color: #f5f5f5;
+        border-right-color: #dedede;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-linenumber,
+      .cm-s-wikijs-dark .CodeMirror-guttermarker-subtle {
+        color: #666;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-cursor {
+        border-left-color: #212121;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-activeline-background {
+        background-color: #f5f5f5;
+      }
+
+      .cm-s-wikijs-dark div.CodeMirror-selected,
+      .cm-s-wikijs-dark .cm-matchhighlight {
+        background-color: #cfe2ff;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-line span {
+        color: #212121;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-matchingbracket {
+        color: #212121 !important;
+      }
+
+      .cm-s-wikijs-dark span.cm-error {
+        background-color: #ffebee;
+      }
+
+      .cm-s-wikijs-dark .CodeMirror-buttonmarker {
+        color: #174a7e !important;
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 <template lang='pug'>
   v-app(:dark='$vuetify.theme.dark').profile
-    nav-header
+    nav-header(site-header)
     v-navigation-drawer.pb-0(v-model='profileDrawerShown', app, fixed, clipped, left, permanent)
       v-list(dense, nav)
         v-list-item(to='/profile', color='primary')

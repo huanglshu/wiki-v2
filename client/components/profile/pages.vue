@@ -31,8 +31,8 @@
                 td.admin-pages-path
                   v-chip(label, small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`') {{ props.item.locale }}
                   span.ml-2.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-2`') / {{ props.item.path }}
-                td {{ props.item.createdAt | moment('calendar') }}
-                td {{ props.item.updatedAt | moment('calendar') }}
+                td {{ formatPageDate(props.item.createdAt) }}
+                td {{ formatPageDate(props.item.updatedAt) }}
             template(slot='no-data')
               v-alert.ma-3(icon='mdi-alert', :value='true', outlined, color='grey')
                 em.caption {{$t('profile:pages.emptyList')}}
@@ -66,6 +66,16 @@ export default {
     }
   },
   methods: {
+    formatPageDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm')
+    },
     async refresh() {
       await this.$apollo.queries.pages.refetch()
       this.$store.commit('showNotification', {

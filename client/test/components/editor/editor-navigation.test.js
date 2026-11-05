@@ -73,4 +73,21 @@ describe('editor navigation', () => {
     expect(vm.isShown).toBe(false)
     expect(replace).toHaveBeenCalledWith('/')
   })
+
+  it('keeps the exit button without the floating back arrow', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../components/editor/editor-modal-editorselect.vue'), 'utf8')
+    const template = compiler.parseComponent(source).template.content
+
+    expect(template).toContain('@click=\'exitToHome\'')
+    expect(template).not.toContain('mdi-undo-variant')
+    expect(template).not.toContain('@click=\'goBack\'')
+  })
+
+  it('keeps the editor selector modal while showing the light background', () => {
+    const source = fs.readFileSync(path.join(__dirname, '../../../components/editor/editor-modal-editorselect.vue'), 'utf8')
+    const template = compiler.parseComponent(source).template.content
+
+    expect(template).toContain('persistent')
+    expect(template).toContain(":overlay-opacity='$vuetify.theme.dark ? undefined : 0'")
+  })
 })

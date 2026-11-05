@@ -1,6 +1,6 @@
 <template lang='pug'>
   v-app.admin
-    nav-header(hide-search)
+    nav-header(hide-search, site-header)
       template(slot='mid')
         v-spacer
         span.admin-area-title.white--text {{$t('admin:adminArea')}}

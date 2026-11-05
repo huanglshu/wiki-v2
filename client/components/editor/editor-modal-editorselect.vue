@@ -1,6 +1,5 @@
 <template lang='pug'>
-  v-dialog(v-model='isShown', persistent, max-width='700', no-click-animation)
-    v-btn(fab, fixed, bottom, right, color='grey darken-3', dark, @click='goBack', style='width: 50px;'): v-icon mdi-undo-variant
+  v-dialog(v-model='isShown', persistent, max-width='700', no-click-animation, :overlay-opacity='$vuetify.theme.dark ? undefined : 0')
     v-card.radius-7(color='blue darken-3', dark)
       v-btn.editor-select-exit(icon, dark, @click='exitToHome', :aria-label='$t("common:actions.exit")')
         v-icon mdi-close
@@ -91,9 +90,6 @@ export default {
     selectEditor (name) {
       this.currentEditor = `editor${_.startCase(name)}`
       this.isShown = false
-    },
-    goBack () {
-      window.history.go(-1)
     },
     exitToHome () {
       this.isShown = false

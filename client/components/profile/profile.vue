@@ -233,42 +233,6 @@
               v-list-item-content
                 v-list-item-title {{$t('profile:dateFormat')}}
                 v-list-item-subtitle {{ user.dateFormat && user.dateFormat.length > 0 ? user.dateFormat : $t('profile:localeDefault') }}
-              v-list-item-action
-                v-menu(
-                  v-model='editPop.dateFormat'
-                  :close-on-content-click='false'
-                  min-width='350'
-                  max-width='350'
-                  left
-                  )
-                  template(v-slot:activator='{ on }')
-                    v-btn(text, color='grey', small, v-on='on', @click='focusField(`iptDateFormat`)')
-                      v-icon(left) mdi-pencil
-                      span {{ $t('common:actions:edit') }}
-                  v-card(flat)
-                    v-select(
-                      ref='iptDateFormat'
-                      :items='dateFormats'
-                      v-model='user.dateFormat'
-                      :label='$t(`profile:dateFormat`)'
-                      solo
-                      flat
-                      dense
-                      hide-details
-                      @keydown.enter='editPop.dateFormat = false'
-                      @keydown.esc='editPop.dateFormat = false'
-                      style='height: 38px;'
-                    )
-                    v-card-chin
-                      v-spacer
-                      v-btn(
-                        small
-                        text
-                        color='primary'
-                        @click='editPop.dateFormat = false'
-                        )
-                        v-icon(left) mdi-check
-                        span {{$t('common:actions.ok')}}
             v-divider
             v-list-item
               v-list-item-avatar(size='32')
@@ -332,11 +296,11 @@
               .subtitle-1 {{$t('profile:activity.title')}}
           v-card-text.grey--text.text--darken-2
             .caption.grey--text {{$t('profile:activity.joinedOn')}}
-            .body-2: strong {{ user.createdAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.createdAt) }}
             .caption.grey--text.mt-3 {{$t('profile:activity.lastUpdatedOn')}}
-            .body-2: strong {{ user.updatedAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.updatedAt) }}
             .caption.grey--text.mt-3 {{$t('profile:activity.lastLoginOn')}}
-            .body-2: strong {{ user.lastLoginAt | moment('LLLL') }}
+            .body-2: strong {{ formatActivityTime(user.lastLoginAt) }}
             v-divider.mt-3
             .caption.grey--text.mt-3 {{$t('profile:activity.pagesCreated')}}
             .body-2: strong {{ user.pagesTotal }}
@@ -386,7 +350,6 @@ export default {
         location: false,
         jobTitle: false,
         timezone: false,
-        dateFormat: false,
         appearance: false
       },
       timezones: [
@@ -644,16 +607,6 @@ export default {
     }
   },
   computed: {
-    dateFormats () {
-      return [
-        { text: this.$t('profile:localeDefault'), value: '' },
-        { text: 'DD/MM/YYYY', value: 'DD/MM/YYYY' },
-        { text: 'DD.MM.YYYY', value: 'DD.MM.YYYY' },
-        { text: 'MM/DD/YYYY', value: 'MM/DD/YYYY' },
-        { text: 'YYYY-MM-DD', value: 'YYYY-MM-DD' },
-        { text: 'YYYY/MM/DD', value: 'YYYY/MM/DD' }
-      ]
-    },
     appearances () {
       return [
         { text: this.$t('profile:appearanceDefault'), value: '' },
@@ -712,6 +665,16 @@ export default {
     }
   },
   methods: {
+    formatActivityTime(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm')
+    },
     /**
      * Focus an input after delay
      */

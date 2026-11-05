@@ -227,9 +227,30 @@ $editor-height-mobile: calc(100vh - 56px - 16px);
 
   .ck.ck-toolbar {
     border: none;
+    border-bottom: 1px solid #d6d6d8;
     justify-content: center;
-    background-color: mc('grey', '300');
-    color: #FFF;
+    background-color: #f5f5f5;
+    color: #292929;
+    --ck-color-text: #292929;
+    --ck-color-toolbar-border: #d6d6d8;
+    --ck-color-button-default-hover-background: #e5e5e5;
+    --ck-color-button-default-active-background: #d6d6d6;
+    --ck-color-button-on-background: #dedede;
+    --ck-color-button-on-hover-background: #cccccc;
+    --ck-color-button-on-active-background: #bdbdbd;
+
+    @at-root .theme--dark & {
+      border-bottom-color: #555;
+      background-color: #292929;
+      color: #f5f5f5;
+      --ck-color-text: #f5f5f5;
+      --ck-color-toolbar-border: #555;
+      --ck-color-button-default-hover-background: #444;
+      --ck-color-button-default-active-background: #505050;
+      --ck-color-button-on-background: #505050;
+      --ck-color-button-on-hover-background: #606060;
+      --ck-color-button-on-active-background: #707070;
+    }
   }
 
   .ck.ck-toolbar__items {
