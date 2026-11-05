@@ -35,6 +35,14 @@ describe('helpers/page/getHomeRedirect', () => {
     expect(pageHelper.getHomeRedirect('/en/home', user, homeGroup)).toBe('/zh/home')
   })
 
+  it('uses the active site locale for the configured home page', () => {
+    global.WIKI.config.lang.code = 'en'
+    const group = { 2: { id: 2, redirectOnLogin: '/zh/首页?from=login#top' } }
+
+    expect(pageHelper.getHomeRedirect('/', user, group)).toBe('/en/首页?from=login#top')
+    expect(pageHelper.getHomeRedirect('/en/首页', user, group)).toBeNull()
+  })
+
   it.each(['/', '/?source=home', '/#top', '/docs/..', '//example.com', '/\\example.com', 'https://example.com'])(
     'rejects a loop or external target: %s',
     target => {

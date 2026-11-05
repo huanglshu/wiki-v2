@@ -70,11 +70,8 @@
                 @keyup.up='searchMove(`up`)'
                 autocomplete='off'
               )
-            v-tooltip(bottom)
-              template(v-slot:activator='{ on }')
-                v-btn.ml-2.mr-0(icon, v-on='on', href='/t', :aria-label='$t(`common:header.browseTags`)')
-                  v-icon(color='grey') mdi-tag-multiple
-              span {{$t('common:header.browseTags')}}
+            v-btn.ml-2.mr-0(icon, href='/t', :aria-label='$t(`common:header.browseTags`)')
+              v-icon(color='grey') mdi-tag-multiple
       v-flex(xs7, md4)
         v-toolbar.nav-header-inner.pr-4(color='black', dark, flat)
           v-spacer
@@ -97,19 +94,16 @@
           template(v-if='mode === `view` && locales.length > 0')
             v-menu(offset-y, bottom, transition='slide-y-transition', max-height='320px', min-width='210px', left)
               template(v-slot:activator='{ on: menu, attrs }')
-                v-tooltip(bottom)
-                  template(v-slot:activator='{ on: tooltip }')
-                    v-btn(
-                      icon
-                      v-bind='attrs'
-                      v-on='{ ...menu, ...tooltip }'
-                      :class='$vuetify.rtl ? `ml-3` : ``'
-                      tile
-                      height='64'
-                      :aria-label='$t(`common:header.language`)'
-                      )
-                      v-icon(color='grey') mdi-web
-                  span {{$t('common:header.language')}}
+                v-btn(
+                  icon
+                  v-bind='attrs'
+                  v-on='menu'
+                  :class='$vuetify.rtl ? `ml-3` : ``'
+                  tile
+                  height='64'
+                  :aria-label='$t(`common:header.language`)'
+                  )
+                  v-icon(color='grey') mdi-web
               v-list(nav)
                 template(v-for='(lc, idx) of locales')
                   v-list-item(@click='changeLocale(lc)')
@@ -119,22 +113,19 @@
 
           //- PAGE ACTIONS
 
-          template(v-if='hasAnyPagePermissions && path && mode !== `edit`')
+          template(v-if='false')
             v-menu(offset-y, bottom, transition='slide-y-transition', left)
               template(v-slot:activator='{ on: menu, attrs }')
-                v-tooltip(bottom)
-                  template(v-slot:activator='{ on: tooltip }')
-                    v-btn(
-                      icon
-                      v-bind='attrs'
-                      v-on='{ ...menu, ...tooltip }'
-                      :class='$vuetify.rtl ? `ml-3` : ``'
-                      tile
-                      height='64'
-                      :aria-label='$t(`common:header.pageActions`)'
-                      )
-                      v-icon(color='grey') mdi-file-document-edit-outline
-                  span {{$t('common:header.pageActions')}}
+                v-btn(
+                  icon
+                  v-bind='attrs'
+                  v-on='menu'
+                  :class='$vuetify.rtl ? `ml-3` : ``'
+                  tile
+                  height='64'
+                  :aria-label='$t(`common:header.pageActions`)'
+                  )
+                  v-icon(color='grey') mdi-file-document-edit-outline
               v-list(nav, :light='!$vuetify.theme.dark', :dark='$vuetify.theme.dark', :class='$vuetify.theme.dark ? `grey darken-4` : ``')
                 .overline.pa-4.grey--text {{$t('common:header.currentPage')}}
                 v-list-item.pl-4(@click='pageView', v-if='mode !== `view`')
@@ -167,23 +158,17 @@
 
           //- NEW PAGE
 
-          template(v-if='hasNewPagePermission && path && mode !== `edit`')
-            v-tooltip(bottom)
-              template(v-slot:activator='{ on }')
-                v-btn(icon, tile, height='64', v-on='on', @click='pageNew', :aria-label='$t(`common:header.newPage`)')
-                  v-icon(color='grey') mdi-text-box-plus-outline
-              span {{$t('common:header.newPage')}}
+          template(v-if='false')
+            v-btn(icon, tile, height='64', @click='pageNew', :aria-label='$t(`common:header.newPage`)')
+              v-icon(color='grey') mdi-text-box-plus-outline
             v-divider(vertical)
 
           //- ADMIN
 
           template(v-if='isAuthenticated && isAdmin')
-            v-tooltip(bottom, v-if='mode !== `admin`')
-              template(v-slot:activator='{ on }')
-                v-btn(icon, tile, height='64', v-on='on', href='/a', :aria-label='$t(`common:header.admin`)')
-                  v-icon(color='grey') mdi-cog
-              span {{$t('common:header.admin')}}
-            v-btn(v-else, text, tile, height='64', :href='loginRedirect', :aria-label='$t(`common:header.backToSite`)')
+            v-btn(v-if='mode !== `admin`', icon, tile, height='64', href='/a', :aria-label='$t(`common:header.admin`)')
+              v-icon(color='grey') mdi-cog
+            v-btn(v-else, text, tile, height='64', href='/', :aria-label='$t(`common:header.backToSite`)')
               v-icon(left, color='grey') mdi-exit-to-app
               span {{$t('common:header.backToSite')}}
             v-divider(vertical)
@@ -192,21 +177,18 @@
 
           v-menu(v-if='isAuthenticated', offset-y, bottom, min-width='300', transition='slide-y-transition', left)
             template(v-slot:activator='{ on: menu, attrs }')
-              v-tooltip(bottom)
-                template(v-slot:activator='{ on: tooltip }')
-                  v-btn(
-                    icon
-                    v-bind='attrs'
-                    v-on='{ ...menu, ...tooltip }'
-                    :class='$vuetify.rtl ? `ml-0` : ``'
-                    tile
-                    height='64'
-                    :aria-label='$t(`common:header.account`)'
-                    )
-                    v-icon(v-if='picture.kind === `initials`', color='grey') mdi-account-circle
-                    v-avatar(v-else-if='picture.kind === `image`', :size='34')
-                      v-img(:src='picture.url')
-                span {{$t('common:header.account')}}
+              v-btn(
+                icon
+                v-bind='attrs'
+                v-on='menu'
+                :class='$vuetify.rtl ? `ml-0` : ``'
+                tile
+                height='64'
+                :aria-label='$t(`common:header.account`)'
+                )
+                v-icon(v-if='picture.kind === `initials`', color='grey') mdi-account-circle
+                v-avatar(v-else-if='picture.kind === `image`', :size='34')
+                  v-img(:src='picture.url')
             v-list(nav)
               v-list-item.py-3.grey(:class='$vuetify.theme.dark ? `darken-4-l5` : `lighten-5`')
                 v-list-item-avatar
@@ -230,11 +212,8 @@
                 v-list-item-action: v-icon(color='red') mdi-logout
                 v-list-item-title.red--text {{$t('common:header.logout')}}
 
-          v-tooltip(v-else, left)
-            template(v-slot:activator='{ on }')
-              v-btn(icon, v-on='on', color='grey darken-3', href='/login', :aria-label='$t(`common:header.login`)')
-                v-icon(color='grey') mdi-account-circle
-            span {{$t('common:header.login')}}
+          v-btn(v-else, icon, color='grey darken-3', href='/login', :aria-label='$t(`common:header.login`)')
+            v-icon(color='grey') mdi-account-circle
 
     page-selector(mode='create', v-model='newPageModal', :open-handler='pageNewCreate', :locale='locale')
     page-selector(mode='move', v-model='movePageModal', :open-handler='pageMoveRename', :path='path', :locale='locale')
@@ -254,6 +233,7 @@ import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
 
 import movePageMutation from 'gql/common/common-pages-mutation-move.gql'
+import clearClientCache from '../../helpers/client-cache'
 
 /* global siteConfig, siteLangs */
 
@@ -307,7 +287,6 @@ export default {
     pictureUrl: get('user/pictureUrl'),
     isAuthenticated: get('user/authenticated'),
     permissions: get('user/permissions'),
-    loginRedirect: get('user/redirectOnLogin'),
     picture () {
       if (this.pictureUrl && this.pictureUrl.length > 1) {
         return {
@@ -351,6 +330,9 @@ export default {
   mounted () {
     this.$root.$on('pageEdit', () => {
       this.pageEdit()
+    })
+    this.$root.$on('pageNew', () => {
+      this.pageNew()
     })
     this.$root.$on('pageHistory', () => {
       this.pageHistory()
@@ -473,7 +455,8 @@ export default {
           break
       }
     },
-    logout () {
+    async logout () {
+      await clearClientCache()
       window.location.assign('/logout')
     },
     goHome () {

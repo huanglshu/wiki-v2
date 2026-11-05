@@ -125,15 +125,20 @@ module.exports = {
     const group = user.groups
       .map(entry => groups[_.isObject(entry) ? entry.id : entry])
       .find(entry => entry && !_.isEmpty(entry.redirectOnLogin) && entry.redirectOnLogin !== '/')
-    const target = _.get(group, 'redirectOnLogin')
-    if (typeof target !== 'string' || !target.startsWith('/') || target.startsWith('//') || target.includes('\\') || /[\r\n\t]/.test(target)) {
+    const configuredTarget = _.get(group, 'redirectOnLogin')
+    if (typeof configuredTarget !== 'string' || !configuredTarget.startsWith('/') || configuredTarget.startsWith('//') || configuredTarget.includes('\\') || /[\r\n\t]/.test(configuredTarget)) {
       return null
     }
 
     try {
+      let target = configuredTarget
       const url = new URL(target, 'http://localhost')
       if (url.origin !== 'http://localhost' || url.pathname === '/') {
         return null
+      }
+      const localeMatch = /^\/([A-Z]{2}(?:-[A-Z]{2})?)(?=\/)/i.exec(target)
+      if (localeMatch && localeMatch[1] !== WIKI.config.lang.code) {
+        target = `/${WIKI.config.lang.code}${target.substring(localeMatch[0].length)}`
       }
       if (rawPath !== '/' && homeEntryRegex.test(url.pathname)) {
         const currentPage = this.parsePath(rawPath)

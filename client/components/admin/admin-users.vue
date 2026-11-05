@@ -58,7 +58,7 @@
                 td: strong {{ props.item.name }}
                 td {{ props.item.email }}
                 td {{ getStrategyName(props.item.providerKey) }}
-                td {{ formatRelativeTime(props.item.createdAt) }}
+                td {{ formatCreatedDate(props.item.createdAt) }}
                 td
                   span(v-if='props.item.lastLoginAt') {{ formatRelativeTime(props.item.lastLoginAt) }}
                   em.grey--text(v-else) {{ $t('admin:ui.users.never') }}
@@ -155,6 +155,16 @@ export default {
       }
       const language = this.$i18n.i18next.language || this.$moment.locale()
       return value.locale(language === 'zh' ? 'zh-cn' : language).fromNow()
+    },
+    formatCreatedDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm:ss')
     },
     createUser() {
       this.isCreateDialogShown = true

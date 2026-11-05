@@ -11,7 +11,7 @@ const Vuetify = require('vuetify')
 const i18next = require('i18next')
 
 function loadRuleComponent() {
-  const source = fs.readFileSync(path.join(__dirname, 'admin-groups-edit-rules.vue'), 'utf8')
+  const source = fs.readFileSync(path.join(__dirname, '../../../components/admin/admin-groups-edit-rules.vue'), 'utf8')
   const sfc = compiler.parseComponent(source)
   const code = babel.transformSync(sfc.script.content, {
     configFile: false,

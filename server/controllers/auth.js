@@ -130,6 +130,8 @@ router.get('/logout', async (req, res) => {
   const redirURL = await WIKI.models.users.logout({ req, res })
   req.logout()
   res.clearCookie('jwt')
+  res.set('Cache-Control', 'no-store')
+  res.set('Clear-Site-Data', '"cache", "storage"')
   res.redirect(redirURL)
 })
 

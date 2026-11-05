@@ -5,7 +5,7 @@ block body
     .app-error
       a(href='/')
         img(src='/_assets/svg/logo-wikijs.svg')
-      strong Oops, something went wrong...
+      strong= t('common:error.pageTitle')
       span= message
             
       if error.stack

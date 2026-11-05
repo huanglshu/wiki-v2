@@ -21,7 +21,7 @@ Vue.use(VueI18Next)
 Vue.prototype.$moment = moment
 Vue.component('VCardInfo', { render: h => h('div') })
 
-const source = fs.readFileSync(path.join(__dirname, 'admin-storage.vue'), 'utf8')
+const source = fs.readFileSync(path.join(__dirname, '../../../components/admin/admin-storage.vue'), 'utf8')
 const sfc = compiler.parseComponent(source)
 const code = babel.transformSync(sfc.script.content, {
   configFile: false,
@@ -43,7 +43,7 @@ runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(localReq
 const component = Object.assign(componentModule.exports.default, compiler.compileToFunctions(pug.render(sfc.template.content)))
 const resources = {}
 for (const language of ['zh', 'en']) {
-  const strings = require(`../../../data/sideload/${language}.json`)
+  const strings = require(`../../../../data/sideload/${language}.json`)
   resources[language] = { admin: {}, common: {} }
   Object.entries(strings).forEach(([key, value]) => {
     const separator = key.indexOf(':')

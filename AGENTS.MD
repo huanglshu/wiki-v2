@@ -62,6 +62,7 @@ Webpack invocation also needs the option when it is not launched through
 - `client/modules/`: client boot and i18next/localization setup.
 - `client/graph/`: GraphQL documents used by the client.
 - `client/store/`: Vuex state.
+- `client/test/`: client Jest tests, mirroring the relevant source folders.
 - `server/app/`, `server/controllers/`, `server/graph/`: HTTP and GraphQL API.
 - `server/modules/`: analytics, comments, rendering, search, and storage modules.
 - `server/locales/`: localization loading documentation; local YAML locale files
@@ -131,6 +132,8 @@ generated bundle as the source of truth.
   clip, or shift fixed toolbar/grid elements.
 - Add tests only where the risk and existing test structure justify them. For
   narrow UI copy changes, run focused ESLint and inspect the affected template.
+- Put client Jest tests under `client/test/`, mirroring the relevant `client/`
+  source paths instead of placing them next to source files.
 
 ## Verification
 
@@ -202,6 +205,7 @@ Webpack 配置。如果开发 Webpack 不是通过 `yarn dev` 启动，同样需
 - `client/modules/`：客户端启动及 i18next/本地化初始化。
 - `client/graph/`：客户端使用的 GraphQL 文档。
 - `client/store/`：Vuex 状态。
+- `client/test/`：客户端 Jest 测试，按源码目录结构镜像组织。
 - `server/app/`、`server/controllers/`、`server/graph/`：HTTP 与 GraphQL API。
 - `server/modules/`：网站分析、评论、渲染、搜索和存储模块。
 - `server/locales/`：本地化加载说明；本地 YAML 语言文件已被有意排除在
@@ -260,6 +264,8 @@ Git 忽略。不要把这类文件当作可提交的修复。如果界面必须�
   工具栏和网格布局跳动。
 - 仅在风险和现有测试结构足以支撑时添加测试。对于范围较小的界面文案改动，
   运行针对性的 ESLint 并检查受影响的模板。
+- 客户端 Jest 测试统一放在 `client/test/`，按 `client/` 源码目录结构镜像
+  组织，不再与源码文件放在同一目录。
 
 ## 验证
 

@@ -59,6 +59,7 @@
 <script>
 import _ from 'lodash'
 import { get, sync } from 'vuex-pathify'
+import { getCodeDefaultContent } from './default-content'
 
 // ========================================
 // IMPORTS
@@ -175,8 +176,8 @@ export default {
   mounted() {
     this.$store.set('editor/editorKey', 'code')
 
-    if (this.mode === 'create') {
-      this.$store.set('editor/content', '<h1>Title</h1>\n\n<p>Some text here</p>')
+    if (this.mode === 'create' && !this.$store.get('editor/content')) {
+      this.$store.set('editor/content', getCodeDefaultContent(this.$t.bind(this)))
     }
 
     // Initialize CodeMirror

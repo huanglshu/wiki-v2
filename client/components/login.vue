@@ -256,6 +256,7 @@ import _ from 'lodash'
 import Cookies from 'js-cookie'
 import gql from 'graphql-tag'
 import { sync } from 'vuex-pathify'
+import clearClientCache from '../helpers/client-cache'
 
 export default {
   i18nOptions: { namespaces: 'auth' },
@@ -615,7 +616,7 @@ export default {
       }
       this.isLoading = false
     },
-    handleLoginResponse (respObj) {
+    async handleLoginResponse (respObj) {
       this.continuationToken = respObj.continuationToken
       if (respObj.mustChangePwd === true) {
         this.screen = 'changePwd'
@@ -642,26 +643,25 @@ export default {
         this.loaderColor = 'green darken-1'
         this.loaderTitle = this.$t('auth:loginSuccess')
         Cookies.set('jwt', respObj.jwt, { expires: 365, secure: window.location.protocol === 'https:' })
-        _.delay(() => {
-          const loginRedirect = Cookies.get('loginRedirect')
-          const isValidRedirect = loginRedirect && loginRedirect.startsWith('/') && !loginRedirect.startsWith('//') && !loginRedirect.includes('://')
-          if (loginRedirect === '/' && respObj.redirect) {
+        await clearClientCache()
+        const loginRedirect = Cookies.get('loginRedirect')
+        const isValidRedirect = loginRedirect && loginRedirect.startsWith('/') && !loginRedirect.startsWith('//') && !loginRedirect.includes('://')
+        if (loginRedirect === '/' && respObj.redirect) {
+          Cookies.remove('loginRedirect')
+          window.location.replace(respObj.redirect)
+        } else if (isValidRedirect) {
+          Cookies.remove('loginRedirect')
+          window.location.replace(loginRedirect)
+        } else {
+          if (loginRedirect) {
             Cookies.remove('loginRedirect')
-            window.location.replace(respObj.redirect)
-          } else if (isValidRedirect) {
-            Cookies.remove('loginRedirect')
-            window.location.replace(loginRedirect)
-          } else {
-            if (loginRedirect) {
-              Cookies.remove('loginRedirect')
-            }
-            if (respObj.redirect) {
-              window.location.replace(respObj.redirect)
-            } else {
-              window.location.replace('/')
-            }
           }
-        }, 1000)
+          if (respObj.redirect) {
+            window.location.replace(respObj.redirect)
+          } else {
+            window.location.replace('/')
+          }
+        }
       }
     }
   },

@@ -16,7 +16,7 @@ Vue.prototype.$t = key => key
 Vue.component('RouterLink', { render: h => h('a') })
 
 function loadComponent(filename) {
-  const source = fs.readFileSync(path.join(__dirname, filename), 'utf8')
+  const source = fs.readFileSync(path.join(__dirname, '../../../components/admin', filename), 'utf8')
   const sfc = compiler.parseComponent(source)
   const code = babel.transformSync(sfc.script.content, {
     configFile: false,

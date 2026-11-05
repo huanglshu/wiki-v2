@@ -64,7 +64,9 @@ const graphQLLink = ApolloLink.from([
       })
       store.commit('showNotification', {
         style: 'red',
-        message: isAuthError ? `You are not authorized to access this resource.` : `An unexpected error occurred.`,
+        message: isAuthError ?
+          'i18n:common:error.forbidden' :
+          'i18n:common:error.unexpected',
         icon: 'alert'
       })
     }
@@ -72,7 +74,7 @@ const graphQLLink = ApolloLink.from([
       console.error(networkError)
       store.commit('showNotification', {
         style: 'red',
-        message: `Network Error: ${networkError.message}`,
+        message: 'i18n:common:error.network',
         icon: 'alert'
       })
     }

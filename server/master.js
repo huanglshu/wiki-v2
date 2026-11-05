@@ -189,8 +189,12 @@ module.exports = async () => {
     } else {
       res.status(err.status || 500)
       _.set(res.locals, 'pageMeta.title', 'Error')
+      let errorMessage = err.message
+      if (/^i18n:/.test(err.message)) {
+        errorMessage = res.locals.t(err.message.slice(5))
+      }
       res.render('error', {
-        message: err.message,
+        message: errorMessage,
         error: WIKI.IS_DEBUG ? err : {}
       })
     }

@@ -227,6 +227,19 @@
             :order-xs1='tocPosition === `right`'
             :order-xs2='tocPosition !== `right`'
             )
+            v-btn.page-new-fab(
+              v-if='hasNewPagePermission'
+              fab
+              fixed
+              bottom
+              :right='!$vuetify.rtl'
+              :left='$vuetify.rtl'
+              color='teal'
+              dark
+              @click='pageNew'
+              :aria-label='$t(`common:header.newPage`)'
+              )
+              v-icon mdi-text-box-plus-outline
             v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasAnyPagePermissions && editShortcutsObj.editFab')
               template(v-slot:activator='{ on: onEditActivator }')
                 v-speed-dial(
@@ -574,6 +587,9 @@ export default {
     hasDeletePagesPermission: get('page/effectivePermissions@pages.delete'),
     hasReadSourcePermission: get('page/effectivePermissions@source.read'),
     hasReadHistoryPermission: get('page/effectivePermissions@history.read'),
+    hasNewPagePermission () {
+      return this.hasAdminPermission || this.hasWritePagesPermission
+    },
     hasAnyPagePermissions () {
       return this.hasAdminPermission || this.hasWritePagesPermission || this.hasManagePagesPermission ||
         this.hasDeletePagesPermission || this.hasReadSourcePermission || this.hasReadHistoryPermission
@@ -698,6 +714,9 @@ export default {
     pageEdit () {
       this.$root.$emit('pageEdit')
     },
+    pageNew () {
+      this.$root.$emit('pageNew')
+    },
     pageHistory () {
       this.$root.$emit('pageHistory')
     },
@@ -764,6 +783,10 @@ export default {
 
 .page-col-sd::-webkit-scrollbar {
   display: none;
+}
+
+.page-new-fab {
+  margin-bottom: 72px;
 }
 
 .page-header-section {

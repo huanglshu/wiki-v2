@@ -7,6 +7,7 @@ import { make } from 'vuex-pathify' // eslint-disable-line import/no-duplicates
 import page from './page'
 import site from './site'
 import user from './user'
+import { getLocalizedNotificationMarker } from '../helpers/notification-message'
 
 /* global WIKI */
 
@@ -51,9 +52,10 @@ export default new Vuex.Store({
       st.notification.isActive = newState
     },
     pushGraphError (st, err) {
+      const graphMessage = _.get(err, 'graphQLErrors[0].message', err.message)
       WIKI.$store.commit('showNotification', {
         style: 'red',
-        message: _.get(err, 'graphQLErrors[0].message', err.message),
+        message: getLocalizedNotificationMarker(graphMessage),
         icon: 'alert'
       })
     }

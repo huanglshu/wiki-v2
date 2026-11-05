@@ -129,6 +129,9 @@
 import _ from 'lodash'
 import { get, sync } from 'vuex-pathify'
 import DOMPurify from 'dompurify'
+import { getAsciiDocDefaultContent } from './default-content'
+
+/* global siteConfig, siteLangs */
 
 // ========================================
 // IMPORTS
@@ -385,8 +388,8 @@ export default {
   mounted() {
     this.$store.set('editor/editorKey', 'asciidoc')
 
-    if (this.mode === 'create') {
-      this.$store.set('editor/content', '== header\n\ncontent')
+    if (this.mode === 'create' && !this.$store.get('editor/content')) {
+      this.$store.set('editor/content', getAsciiDocDefaultContent(this.$t.bind(this)))
     }
 
     // Initialize CodeMirror

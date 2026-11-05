@@ -17,7 +17,7 @@ Vue.config.devtools = false
 Vue.use(Vuetify)
 Vue.use(VueI18Next)
 
-const source = fs.readFileSync(path.join(__dirname, 'admin-general.vue'), 'utf8')
+const source = fs.readFileSync(path.join(__dirname, '../../../components/admin/admin-general.vue'), 'utf8')
 const sfc = compiler.parseComponent(source)
 const code = babel.transformSync(sfc.script.content, {
   configFile: false,
@@ -34,7 +34,7 @@ runInThisContext(`(function (require, module, exports, WIKI) {\n${code}\n})`)(lo
 const component = Object.assign(componentModule.exports.default, compiler.compileToFunctions(pug.render(sfc.template.content)))
 const resources = {}
 for (const language of ['zh', 'en']) {
-  const strings = require(`../../../data/sideload/${language}.json`)
+  const strings = require(`../../../../data/sideload/${language}.json`)
   const admin = {}
   Object.entries(strings).forEach(([key, value]) => {
     if (key.startsWith('admin:ui.general.')) {

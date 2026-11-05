@@ -16,6 +16,14 @@
         )
         v-icon(left) mdi-check
         span {{ $t('common:actions.ok') }}
+      v-btn.ml-2.mx-0(
+        depressed
+        dark
+        color='error'
+        @click.native='closeToEditorSelector'
+        )
+        v-icon(left) mdi-close
+        span {{ $t('common:actions.close') }}
     v-card(tile)
       v-tabs(color='white', background-color='blue darken-1', dark, centered, v-model='currentTab')
         v-tab {{$t('editor:props.info')}}
@@ -349,6 +357,10 @@ export default {
     },
     close() {
       this.isShown = false
+    },
+    closeToEditorSelector() {
+      this.isShown = false
+      this.$emit('select-editor')
     },
     showPathSelector() {
       this.pageSelectorShown = true

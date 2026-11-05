@@ -7,7 +7,7 @@ const babel = require('@babel/core')
 const compiler = require('vue-template-compiler')
 
 function loadComponent() {
-  const source = fs.readFileSync(path.join(__dirname, 'nav-sidebar.vue'), 'utf8')
+  const source = fs.readFileSync(path.join(__dirname, '../../../../themes/default/components/nav-sidebar.vue'), 'utf8')
   const sfc = compiler.parseComponent(source)
   const code = babel.transformSync(sfc.script.content, {
     configFile: false,

@@ -1,5 +1,5 @@
 <template lang='pug'>
-  v-card.editor-modal-media.animated.fadeInLeft(flat, tile, :class='`is-editor-` + editorKey')
+  v-card.editor-modal-media.animated.fadeInLeft(flat, tile, :class='`is-editor-` + editorKey', @click.native='closeOnBackgroundClick')
     v-container.pa-3(grid-list-lg, fluid)
       v-layout(row, wrap)
         v-flex(xs12, lg9)
@@ -42,7 +42,7 @@
                     template(v-for='folder of folderTree')
                       span(:key='folder.id') {{folder.name}}
                       span.mx-1 /
-                .body-2(v-else) / #[em root]
+                .body-2(v-else) / #[em {{ $t('common:sidebar.root') }}]
               template(v-if='folders.length > 0 || currentFolderId > 0')
                 v-btn.is-icon.mx-1(:color='$vuetify.theme.dark ? `grey lighten-1` : `grey darken-2`', outlined, :dark='currentFolderId > 0', @click='upFolder()', :disabled='currentFolderId === 0')
                   v-icon mdi-folder-upload
@@ -76,7 +76,7 @@
                       v-chip.ma-0(x-small, :color='$vuetify.theme.dark ? `grey darken-4` : `grey lighten-4`')
                         .overline {{props.item.ext.toUpperCase().substring(1)}}
                     td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.fileSize | prettyBytes }}
-                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ props.item.createdAt | moment('from') }}
+                    td.caption(v-if='$vuetify.breakpoint.mdAndUp') {{ formatAssetDate(props.item.createdAt) }}
                     td(v-if='$vuetify.breakpoint.smAndUp')
                       v-menu(offset-x, min-width='200')
                         template(v-slot:activator='{ on }')
@@ -150,7 +150,7 @@
               )
             v-divider
             v-card-actions.pa-3
-              .caption.grey--text.text-darken-2 Max 10 files, 5 MB each
+              .caption.grey--text.text-darken-2 {{ $t('editor:assets.uploadLimit') }}
               v-spacer
               v-btn.px-4(color='teal', dark, @click='upload') {{$t('common:actions.upload')}}
 
@@ -185,7 +185,7 @@
                 outlined
                 single-line
                 color='teal'
-                placeholder='None'
+                :placeholder='$t("editor:assets.imageAlignOption.none")'
               )
 
     //- RENAME DIALOG
@@ -239,10 +239,20 @@ import listFolderAssetQuery from 'gql/editor/editor-media-query-folder-list.gql'
 import createAssetFolderMutation from 'gql/editor/editor-media-mutation-folder-create.gql'
 import renameAssetMutation from 'gql/editor/editor-media-mutation-asset-rename.gql'
 import deleteAssetMutation from 'gql/editor/editor-media-mutation-asset-delete.gql'
+import zhTranslations from '../../../data/sideload/zh.json'
+import enTranslations from '../../../data/sideload/en.json'
 
 const FilePond = vueFilePond()
 const localeSegmentRegex = /^[A-Z]{2}(-[A-Z]{2})?$/i
 const disallowedFolderChars = /[A-Z()=.!@#$%?&*+`~<>,;:\\/[\]¬{| ]/
+const imageAlignmentTranslationKeys = [
+  'assets.imageAlign',
+  'assets.imageAlignOption.none',
+  'assets.imageAlignOption.left',
+  'assets.imageAlignOption.center',
+  'assets.imageAlignOption.right',
+  'assets.imageAlignOption.absoluteTopRight'
+]
 
 export default {
   components: {
@@ -261,13 +271,6 @@ export default {
       assets: [],
       pagination: 1,
       remoteImageUrl: '',
-      imageAlignments: [
-        { text: 'None', value: '' },
-        { text: 'Left', value: 'left' },
-        { text: 'Centered', value: 'center' },
-        { text: 'Right', value: 'right' },
-        { text: 'Absolute Top Right', value: 'abstopright' }
-      ],
       imageAlignment: '',
       loading: false,
       newFolderDialog: false,
@@ -297,6 +300,15 @@ export default {
       }
 
       return Math.ceil(this.assets.length / 15)
+    },
+    imageAlignments () {
+      return [
+        { text: this.$t('editor:assets.imageAlignOption.none'), value: '' },
+        { text: this.$t('editor:assets.imageAlignOption.left'), value: 'left' },
+        { text: this.$t('editor:assets.imageAlignOption.center'), value: 'center' },
+        { text: this.$t('editor:assets.imageAlignOption.right'), value: 'right' },
+        { text: this.$t('editor:assets.imageAlignOption.absoluteTopRight'), value: 'abstopright' }
+      ]
     },
     headers() {
       return _.compact([
@@ -359,7 +371,33 @@ export default {
       return (neg ? '-' : '') + num + ' ' + unit
     }
   },
+  created() {
+    const i18next = this.$i18n.i18next
+    for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
+      for (const key of imageAlignmentTranslationKeys) {
+        i18next.addResource(locale, 'editor', key, translations[`editor:${key}`])
+      }
+    }
+  },
   methods: {
+    closeOnBackgroundClick(event) {
+      if (this.newFolderDialog || this.renameDialog || this.deleteDialog || this.previewDialog) {
+        return
+      }
+      if (event.target.closest('.v-card') === event.currentTarget) {
+        this.cancel()
+      }
+    },
+    formatAssetDate(date) {
+      if (!date) {
+        return date
+      }
+      const value = this.$moment(date)
+      if (!value.isValid()) {
+        return date
+      }
+      return value.locale('en').format('YYYY-MM-DD HH:mm:ss')
+    },
     async refresh() {
       await this.$apollo.queries.assets.refetch()
       this.$store.commit('showNotification', {

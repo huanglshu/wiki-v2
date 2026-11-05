@@ -10,7 +10,7 @@ const Vue = require('vue')
 const Vuetify = require('vuetify')
 const VueClipboards = require('vue-clipboards').default
 const moment = require('moment-timezone')
-const chinese = require('../../../data/sideload/zh.json')
+const chinese = require('../../../../data/sideload/zh.json')
 
 Vue.config.productionTip = false
 Vue.config.devtools = false
@@ -19,7 +19,7 @@ Vue.use(VueClipboards)
 Vue.prototype.$moment = moment
 Vue.prototype.$t = (key, options) => chinese[key] || (options && options.defaultValue) || key
 
-const source = fs.readFileSync(path.join(__dirname, 'admin-api.vue'), 'utf8')
+const source = fs.readFileSync(path.join(__dirname, '../../../components/admin/admin-api.vue'), 'utf8')
 const sfc = compiler.parseComponent(source)
 const code = babel.transformSync(sfc.script.content, {
   configFile: false,
@@ -93,6 +93,71 @@ describe('admin API key list', () => {
     const fields = apiKeys.selectionSet.selections.map(field => field.name.value)
     expect(fields).not.toContain('keyShort')
     expect(fields).not.toContain('key')
+  })
+
+  it('only opens deletion for revoked keys and deletes through GraphQL', async () => {
+    const api = {
+      ...component.methods,
+      current: {},
+      isDeleteConfirmDialogShown: false,
+      deleteLoading: false,
+      $t: Vue.prototype.$t,
+      $store: { commit: jest.fn() },
+      refresh: jest.fn().mockResolvedValue(),
+      $apollo: {
+        mutate: jest.fn().mockResolvedValue({
+          data: {
+            authentication: {
+              deleteApiKey: {
+                responseResult: { succeeded: true }
+              }
+            }
+          }
+        })
+      }
+    }
+
+    api.deleteKey({ id: 1, name: 'Active', isRevoked: false })
+    expect(api.isDeleteConfirmDialogShown).toBe(false)
+
+    api.deleteKey({ id: 2, name: 'Revoked', isRevoked: true })
+    expect(api.isDeleteConfirmDialogShown).toBe(true)
+    expect(api.current).toMatchObject({ id: 2, isRevoked: true })
+    expect(api.$apollo.mutate).not.toHaveBeenCalled()
+
+    await api.deleteConfirm()
+
+    expect(api.$apollo.mutate).toHaveBeenCalledWith(expect.objectContaining({
+      variables: { id: 2 }
+    }))
+    expect(api.$store.commit).toHaveBeenCalledWith('showNotification', expect.objectContaining({
+      message: 'API 密钥已成功删除。'
+    }))
+    expect(api.refresh).toHaveBeenCalledWith(false)
+    expect(api.isDeleteConfirmDialogShown).toBe(false)
+    expect(api.deleteLoading).toBe(false)
+  })
+
+  it('renders a delete action that is enabled only for revoked keys', async () => {
+    const activeKey = { id: 1, name: 'Active', expiration: null, createdAt: null, updatedAt: null, isRevoked: false }
+    const revokedKey = { id: 2, name: 'Revoked', expiration: null, createdAt: null, updatedAt: null, isRevoked: true }
+    const testComponent = {
+      ...component,
+      data() {
+        return { ...component.data.call(this), keys: [activeKey, revokedKey] }
+      }
+    }
+    const app = new Vue({ vuetify: new Vuetify(), render: h => h(testComponent) }).$mount()
+
+    try {
+      await Vue.nextTick()
+      const deleteButtons = [...app.$el.querySelectorAll('button[aria-label="删除"]')]
+      expect(deleteButtons).toHaveLength(2)
+      expect(deleteButtons[0].disabled).toBe(true)
+      expect(deleteButtons[1].disabled).toBe(false)
+    } finally {
+      app.$destroy()
+    }
   })
 
   it('fetches a single key without caching and clears it after the dialog closes', async () => {

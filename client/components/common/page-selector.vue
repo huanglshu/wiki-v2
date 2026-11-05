@@ -147,7 +147,7 @@ export default {
       tree: [
         {
           id: 0,
-          title: '/ (root)',
+          title: this.$t('common:sidebar.root', { defaultValue: 'root' }),
           children: []
         }
       ],
@@ -266,7 +266,7 @@ export default {
         this.tree = [
           {
             id: 0,
-            title: '/ (root)',
+            title: this.$t('common:sidebar.root', { defaultValue: 'root' }),
             children: []
           }
         ]

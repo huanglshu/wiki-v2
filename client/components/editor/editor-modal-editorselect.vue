@@ -2,6 +2,8 @@
   v-dialog(v-model='isShown', persistent, max-width='700', no-click-animation)
     v-btn(fab, fixed, bottom, right, color='grey darken-3', dark, @click='goBack', style='width: 50px;'): v-icon mdi-undo-variant
     v-card.radius-7(color='blue darken-3', dark)
+      v-btn.editor-select-exit(icon, dark, @click='exitToHome', :aria-label='$t("common:actions.exit")')
+        v-icon mdi-close
       v-card-text.text-center.py-4
         .subtitle-1.white--text {{$t('editor:select.title')}}
         v-container(grid-list-lg, fluid)
@@ -93,6 +95,10 @@ export default {
     goBack () {
       window.history.go(-1)
     },
+    exitToHome () {
+      this.isShown = false
+      window.location.replace('/')
+    },
     fromTemplate () {
       this.templateDialogIsShown = true
     },
@@ -108,5 +114,10 @@ export default {
 </script>
 
 <style lang='scss'>
-
+.editor-select-exit {
+  position: absolute;
+  right: 8px;
+  top: 8px;
+  z-index: 1;
+}
 </style>

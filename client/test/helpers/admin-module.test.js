@@ -1,4 +1,4 @@
-import { translateAdminModules } from './admin-module'
+import { translateAdminModules } from '../../helpers/admin-module'
 
 describe('admin module translations', () => {
   it('falls back to enum values when i18next returns a missing key without its namespace', () => {

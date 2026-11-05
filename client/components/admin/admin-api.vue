@@ -35,6 +35,7 @@
                   th {{$t('admin:api.headerLastUpdated')}}
                   th(width='120') {{$t('admin:ui.api.viewKey', { defaultValue: 'View Key' })}}
                   th(width='100') {{$t('admin:api.headerRevoke')}}
+                  th(width='100') {{$t('admin:api.headerDelete')}}
               tbody
                 tr(v-for='key of keys', :key='`key-` + key.id')
                   td
@@ -57,6 +58,18 @@
                           v-icon mdi-eye
                       span {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
                   td: v-btn(icon, @click='revoke(key)', :disabled='key.isRevoked'): v-icon(color='error') mdi-cancel
+                  td
+                    v-tooltip(bottom)
+                      template(v-slot:activator='{ on }')
+                        v-btn(
+                          icon
+                          v-on='on'
+                          @click='deleteKey(key)'
+                          :disabled='!key.isRevoked || deleteLoading'
+                          :aria-label='$t("admin:api.delete")'
+                        )
+                          v-icon(color='error') mdi-delete
+                      span {{ $t('admin:api.delete') }}
           v-card-text(v-else)
             v-alert.mb-0(icon='mdi-information', :value='true', outlined, color='info') {{$t('admin:api.noKeyInfo')}}
 
@@ -102,6 +115,17 @@
           v-spacer
           v-btn(text, @click='isRevokeConfirmDialogShown = false', :disabled='revokeLoading') {{$t('common:actions.cancel')}}
           v-btn(color='red', dark, @click='revokeConfirm', :loading='revokeLoading') {{$t('admin:api.revoke')}}
+
+    v-dialog(v-model='isDeleteConfirmDialogShown', max-width='500', persistent)
+      v-card
+        .dialog-header.is-red {{ $t('admin:api.deleteConfirm') }}
+        v-card-text.pa-4
+          i18next(tag='span', path='admin:api.deleteConfirmText')
+            strong(place='name') {{ current.name }}
+        v-card-actions
+          v-spacer
+          v-btn(text, @click='isDeleteConfirmDialogShown = false', :disabled='deleteLoading') {{ $t('common:actions.cancel') }}
+          v-btn(color='red', dark, @click='deleteConfirm', :loading='deleteLoading') {{ $t('admin:api.delete') }}
 </template>
 
 <script>
@@ -128,6 +152,8 @@ export default {
       revealedKey: '',
       isRevokeConfirmDialogShown: false,
       revokeLoading: false,
+      isDeleteConfirmDialogShown: false,
+      deleteLoading: false,
       current: {}
     }
   },
@@ -270,6 +296,13 @@ export default {
       this.current = key
       this.isRevokeConfirmDialogShown = true
     },
+    deleteKey (key) {
+      if (!key.isRevoked) {
+        return
+      }
+      this.current = key
+      this.isDeleteConfirmDialogShown = true
+    },
     async revokeConfirm () {
       this.revokeLoading = true
       try {
@@ -314,6 +347,51 @@ export default {
       }
       this.isRevokeConfirmDialogShown = false
       this.revokeLoading = false
+    },
+    async deleteConfirm () {
+      if (!this.current.isRevoked) {
+        return
+      }
+      this.deleteLoading = true
+      try {
+        const resp = await this.$apollo.mutate({
+          mutation: gql`
+            mutation ($id: Int!) {
+              authentication {
+                deleteApiKey (id: $id) {
+                  responseResult {
+                    succeeded
+                    errorCode
+                    slug
+                    message
+                  }
+                }
+              }
+            }
+          `,
+          variables: {
+            id: this.current.id
+          },
+          watchLoading (isLoading) {
+            this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-api-delete')
+          }
+        })
+        const responseResult = _.get(resp, 'data.authentication.deleteApiKey.responseResult', {})
+        if (responseResult.succeeded) {
+          this.$store.commit('showNotification', {
+            style: 'success',
+            message: this.$t('admin:api.deleteSuccess'),
+            icon: 'check'
+          })
+          await this.refresh(false)
+        } else {
+          throw new Error(responseResult.message || this.$t('common:error.unexpected'))
+        }
+      } catch (err) {
+        this.$store.commit('pushGraphError', err)
+      }
+      this.isDeleteConfirmDialogShown = false
+      this.deleteLoading = false
     }
   },
   apollo: {

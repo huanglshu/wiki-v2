@@ -8,7 +8,7 @@ const compiler = require('vue-template-compiler')
 const i18next = require('i18next')
 const _ = require('lodash')
 
-const source = fs.readFileSync(path.join(__dirname, 'admin-theme.vue'), 'utf8')
+const source = fs.readFileSync(path.join(__dirname, '../../../components/admin/admin-theme.vue'), 'utf8')
 const script = compiler.parseComponent(source).script.content
 const code = babel.transformSync(script, {
   configFile: false,
@@ -22,7 +22,7 @@ const localRequire = name => {
 }
 runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(localRequire, componentModule, componentModule.exports)
 const component = componentModule.exports.default
-const chinese = require('../../../data/sideload/zh.json')
+const chinese = require('../../../../data/sideload/zh.json')
 const themeTranslations = {}
 Object.entries(chinese).forEach(([key, value]) => {
   if (key.startsWith('admin:ui.theme.')) {

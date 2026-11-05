@@ -202,6 +202,28 @@ module.exports = {
       }
     },
     /**
+     * Delete a revoked API key
+     */
+    async deleteApiKey (obj, args, context) {
+      try {
+        const apiKey = await WIKI.models.apiKeys.query().findById(args.id)
+        if (!apiKey) {
+          throw new Error('API key not found.')
+        }
+        if (!apiKey.isRevoked) {
+          throw new Error('Only revoked API keys can be deleted.')
+        }
+        await WIKI.models.apiKeys.query().deleteById(args.id)
+        await WIKI.auth.reloadApiKeys()
+        WIKI.events.outbound.emit('reloadApiKeys')
+        return {
+          responseResult: graphHelper.generateSuccess('API Key deleted successfully')
+        }
+      } catch (err) {
+        return graphHelper.generateError(err)
+      }
+    },
+    /**
      * Update Authentication Strategies
      */
     async updateStrategies (obj, args, context) {

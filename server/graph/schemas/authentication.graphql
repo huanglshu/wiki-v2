@@ -71,6 +71,10 @@ type AuthenticationMutation {
     id: Int!
   ): DefaultResponse @auth(requires: ["manage:system", "manage:api"])
 
+  deleteApiKey(
+    id: Int!
+  ): DefaultResponse @auth(requires: ["manage:system", "manage:api"])
+
   setApiState(
     enabled: Boolean!
   ): DefaultResponse @auth(requires: ["manage:system", "manage:api"])

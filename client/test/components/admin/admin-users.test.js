@@ -36,7 +36,7 @@ const localRequire = name => {
 }
 
 function loadComponent(filename) {
-  const source = fs.readFileSync(path.join(__dirname, filename), 'utf8')
+  const source = fs.readFileSync(path.join(__dirname, '../../../components/admin', filename), 'utf8')
   const sfc = compiler.parseComponent(source)
   const code = babel.transformSync(sfc.script.content, {
     configFile: false,
@@ -120,7 +120,7 @@ describe('admin users localization', () => {
     expect(component.apollo.strategies.update({ authentication: {} })).toEqual([])
   })
 
-  it('formats creation and login times in the current language', async () => {
+  it('formats creation times as numeric dates and login times in the current language', async () => {
     const createdAt = moment().subtract(3, 'days').toISOString()
     const lastLoginAt = moment().subtract(2, 'days').toISOString()
     users.users = [
@@ -131,14 +131,16 @@ describe('admin users localization', () => {
     await Vue.nextTick()
     await Vue.nextTick()
 
-    expect(app.$el.textContent).toContain(moment(createdAt).locale('zh-cn').fromNow())
+    expect(app.$el.textContent).toContain(moment(createdAt).locale('en').format('YYYY-MM-DD HH:mm:ss'))
     expect(app.$el.textContent).toContain(moment(lastLoginAt).locale('zh-cn').fromNow())
     expect(app.$el.textContent).toContain('从未登录')
+    expect(users.formatCreatedDate(null)).toBeNull()
+    expect(users.formatCreatedDate('2026-02-30T00:00:00Z')).toBe('2026-02-30T00:00:00Z')
 
     await locale.changeLanguage('en')
     await Vue.nextTick()
 
-    expect(app.$el.textContent).toContain(moment(createdAt).locale('en').fromNow())
+    expect(app.$el.textContent).toContain(moment(createdAt).locale('en').format('YYYY-MM-DD HH:mm:ss'))
     expect(app.$el.textContent).toContain(moment(lastLoginAt).locale('en').fromNow())
     expect(app.$el.textContent).toContain('Never')
     expect(users.formatRelativeTime('2026-02-30T00:00:00Z')).toBe('2026-02-30T00:00:00Z')

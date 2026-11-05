@@ -45,8 +45,6 @@
           :class='isLatestVersion ? "green" : "red lighten-2"'
           dark
           )
-          v-btn.btn-animate-wrench(fab, absolute, :right='!$vuetify.rtl', :left='$vuetify.rtl', top, small, light, to='system', v-if='hasPermission(`manage:system`)')
-            v-icon(:color='isLatestVersion ? `green` : `red darken-4`', small) mdi-wrench
           v-card-text
             v-icon.dashboard-icon mdi-blur
             .subtitle-1 Wiki.js {{info.currentVersion}}
