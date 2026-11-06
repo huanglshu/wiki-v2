@@ -116,7 +116,7 @@ describe('navigation sidebar theme', () => {
     }
   })
 
-  it('retains the active page in browse mode', async () => {
+  it.each([['light', false], ['dark', true]])('retains the active page in %s browse mode', async (name, dark) => {
     const browseComponent = loadComponent().component
     const testComponent = {
       ...browseComponent,
@@ -127,8 +127,8 @@ describe('navigation sidebar theme', () => {
       }
     }
     const app = new Vue({
-      vuetify: new Vuetify(),
-      render: h => h(testComponent, { props: { navMode: 'TREE', dark: false, color: '' } })
+      vuetify: new Vuetify({ theme: { dark } }),
+      render: h => h(testComponent, { props: { navMode: 'TREE', dark, color: '' } })
     }).$mount()
 
     try {
@@ -136,6 +136,7 @@ describe('navigation sidebar theme', () => {
       const selected = app.$el.querySelector('.v-list-item--active')
       expect(selected).not.toBeNull()
       expect(selected.getAttribute('href')).toBe('/zh/docs')
+      expect(selected.classList.contains('primary--text')).toBe(!dark)
     } finally {
       app.$destroy()
     }

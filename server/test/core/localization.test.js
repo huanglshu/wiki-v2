@@ -69,6 +69,29 @@ describe('core/localization', () => {
     await localization.init()
     expect(localization.engine.t('common:serverError.AuthAccountBanned')).toBe('您的账户已被禁用。')
     expect(localization.engine.t('auth:errors.mailNotConfigured')).toBe('邮件配置不完整或无效。')
+    expect(localization.engine.t('common:code.copy')).toBe('复制代码')
+    expect(localization.engine.t('common:code.copied')).toBe('已复制')
+    expect(localization.engine.t('common:code.copyFailed')).toBe('复制失败，请按 Ctrl+C 手动复制。')
+  })
+
+  it('loads Chinese authentication provider names and descriptions without an offline language import', async () => {
+    await localization.init()
+    await expect(localization.getByNamespace('zh', 'admin')).resolves.toEqual(expect.arrayContaining([
+      { key: 'modules.authentication.auth0.title', value: 'Auth0' },
+      { key: 'modules.authentication.auth0.description', value: 'Auth0 为 Web、移动端、物联网及内部应用提供统一的身份平台。' },
+      { key: 'modules.authentication.local.title', value: '本地数据库' }
+    ]))
+  })
+
+  it('loads Chinese rendering translations without an offline language import', async () => {
+    await localization.init()
+    await expect(localization.getByNamespace('zh', 'admin')).resolves.toEqual(expect.arrayContaining([
+      { key: 'modules.rendering.markdownkatex.props.useblocks.hint', value: '处理由 $$ 符号包围的 TeX 区块。' },
+      { key: 'modules.rendering.markdownmathjax.props.useinline.hint', value: '处理由 $ 符号包围的行内 TeX 表达式。' },
+      { key: 'modules.rendering.markdownmathjax.props.useblocks.hint', value: '处理由 $$ 符号包围的 TeX 区块。' },
+      { key: 'modules.rendering.asciidoccore.props.safemode.hint', value: '设置将内容解析为 HTML 时使用的安全模式。' },
+      { key: 'modules.rendering.asciidoccore.enumText.server', value: '服务器' }
+    ]))
   })
 
   it('does not load English twice when it is the current language', async () => {
@@ -123,7 +146,7 @@ describe('core/localization', () => {
     })
 
     expect(result.errors).toBeUndefined()
-    expect(result.data.translations).toEqual([
+    expect(result.data.translations.filter(({ key }) => key.startsWith('versions'))).toEqual([
       { key: 'versions[7].x', value: '7.x' },
       { key: 'versions[8].x', value: '8.x' }
     ])

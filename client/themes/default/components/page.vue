@@ -41,7 +41,7 @@
             divider='/'
             )
             template(slot='item', slot-scope='props')
-              v-icon(v-if='props.item.path === "/"', small, @click='goHome') mdi-home
+              v-icon(v-if='props.item.path === "/"', size='20', @click='goHome') mdi-home
               v-btn.ma-0(v-else, :href='props.item.path', small, text, @click='navigateBreadcrumb($event, props.item)') {{props.item.name}}
           template(v-if='!isPublished')
             v-spacer
@@ -339,7 +339,7 @@
               span {{$t('common:page.editPage')}}
             v-alert.mb-5(v-if='!isPublished', color='red', outlined, icon='mdi-minus-circle', dense)
               .caption {{$t('common:page.unpublishedWarning')}}
-            .contents(ref='container')
+            .contents(ref='container', data-toolbar-order='label,wikijs-copy')
               slot(name='contents')
             .comments-container#discussion(v-if='commentsEnabled && commentsPerms.read && !printView')
               .comments-header
@@ -377,8 +377,8 @@ import Prism from 'prismjs'
 import mermaid from 'mermaid'
 import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
-import ClipboardJS from 'clipboard'
 import Vue from 'vue'
+import { createPrismCopyButton } from '../../../helpers/prism-copy'
 
 /* global siteLangs */
 
@@ -393,31 +393,7 @@ Prism.plugins.NormalizeWhitespace.setDefaults({
   'remove-initial-line-feed': true,
   'tabs-to-spaces': 2
 })
-Prism.plugins.toolbar.registerButton('copy-to-clipboard', (env) => {
-  let linkCopy = document.createElement('button')
-  linkCopy.textContent = 'Copy'
-
-  const clip = new ClipboardJS(linkCopy, {
-    text: () => { return env.code }
-  })
-
-  clip.on('success', () => {
-    linkCopy.textContent = 'Copied!'
-    resetClipboardText()
-  })
-  clip.on('error', () => {
-    linkCopy.textContent = 'Press Ctrl+C to copy'
-    resetClipboardText()
-  })
-
-  return linkCopy
-
-  function resetClipboardText() {
-    setTimeout(() => {
-      linkCopy.textContent = 'Copy'
-    }, 5000)
-  }
-})
+Prism.plugins.toolbar.registerButton('wikijs-copy', createPrismCopyButton)
 
 export default {
   components: {
@@ -757,7 +733,7 @@ export default {
 <style lang="scss">
 
 .page-nav-drawer--light {
-  background-color: #f8f8fa !important;
+  background-color: #fff !important;
 
   .v-list {
     background-color: transparent !important;
@@ -767,38 +743,36 @@ export default {
 
   .v-list-item {
     border-radius: 4px;
-    color: #252a32;
-  }
-
-  .v-list-item .v-icon {
-    color: #343a43;
-  }
-
-  .v-list-item--active {
-    background-color: #e7e7eb;
-    color: #252a32 !important;
-  }
-
-  .v-list-item--active::before {
-    opacity: 0;
-  }
-
-  .v-list-item--active .v-list-item__title {
-    font-weight: 600;
-  }
-
-  .v-subheader {
-    color: #5b616b;
   }
 }
 
 .breadcrumbs-nav {
+  flex-wrap: nowrap;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: 0;
+  padding-bottom: 0;
+
   .v-btn {
     min-width: 0;
+
+    &.v-size--small {
+      font-size: 15px;
+      letter-spacing: 0;
+      text-indent: 0;
+    }
+
     &__content {
       text-transform: none;
     }
   }
+  .v-breadcrumbs__divider {
+    font-size: 17.5px;
+    line-height: 1;
+  }
+
   .v-breadcrumbs__divider:nth-child(2n) {
     padding: 0 6px;
   }

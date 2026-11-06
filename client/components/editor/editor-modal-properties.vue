@@ -25,7 +25,7 @@
         v-icon(left) mdi-close
         span {{ $t('common:actions.close') }}
     v-card(tile)
-      v-tabs(color='white', background-color='blue darken-1', dark, centered, v-model='currentTab')
+      v-tabs.editor-props-tabs(color='black', background-color='white', light, centered, v-model='currentTab')
         v-tab {{$t('editor:props.info')}}
         v-tab {{$t('editor:props.scheduling')}}
         v-tab(:disabled='!hasScriptPermission') {{$t('editor:props.scripts')}}
@@ -373,7 +373,7 @@ export default {
       this.cm = CodeMirror.fromTextArea(ref, {
         tabSize: 2,
         mode: `text/${mode}`,
-        theme: 'wikijs-dark',
+        theme: 'default',
         lineNumbers: true,
         lineWrapping: true,
         line: true,
@@ -433,25 +433,33 @@ export default {
 
 <style lang='scss'>
 
+.editor-props-tabs > .v-tabs-bar {
+  box-shadow: inset 0 -1px 0 #dedede;
+}
+
 .editor-props-codeeditor {
-  background-color: mc('grey', '900');
+  background-color: #fff;
   min-height: 500px;
 
   > textarea {
     visibility: hidden;
   }
 
+  .CodeMirror-line span {
+    color: #212121;
+  }
+
   &-title {
-    background-color: mc('grey', '900');
-    border-bottom: 1px solid lighten(mc('grey', '900'), 10%);
-    color: #FFF;
+    background-color: #fff;
+    border-bottom: 1px solid #dedede;
+    color: #212121;
     padding: 10px;
   }
 
   &-hint {
-    background-color: mc('grey', '900');
-    border-top: 1px solid lighten(mc('grey', '900'), 5%);
-    color: mc('grey', '500');
+    background-color: #fff;
+    border-top: 1px solid #dedede;
+    color: #212121;
     padding: 5px 10px;
   }
 }

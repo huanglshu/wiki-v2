@@ -8,8 +8,6 @@
             .headline.primary--text.animated.fadeInLeft {{ $t('admin:auth.title') }}
             .subtitle-1.grey--text.animated.fadeInLeft.wait-p4s {{ $t('admin:auth.subtitle') }}
           v-spacer
-          v-btn.animated.fadeInDown.wait-p3s(icon, outlined, color='grey', href='https://docs.requarks.io/auth', target='_blank')
-            v-icon mdi-help-circle
           v-btn.animated.fadeInDown.wait-p2s.mx-3(icon, outlined, color='grey', @click='refresh')
             v-icon mdi-refresh
           v-btn.animated.fadeInDown(color='success', @click='save', depressed, large)
@@ -57,7 +55,7 @@
                       v-img(:src='str.logo', width='48px', height='24px', contain, :style='str.isDisabled ? `opacity: .25;` : ``')
                     v-list-item-content
                       v-list-item-title {{displayStrategy(str).title}}
-                      v-list-item-subtitle: .caption(:style='str.isDisabled ? `opacity: .4;` : ``') {{displayStrategy(str).description}}
+                      v-list-item-subtitle.admin-auth-strategy-description: .caption(:style='str.isDisabled ? `opacity: .4;` : ``') {{displayStrategy(str).description}}
                   v-divider(v-if='idx < strategies.length - 1')
 
       v-flex(xs12, lg9)
@@ -258,9 +256,7 @@ export default {
   },
   methods: {
     displayStrategy (strategy) {
-      return strategy && strategy.key === 'cas' ?
-        translateAdminModule('authentication', strategy, this.$t.bind(this)) :
-        strategy || {}
+      return translateAdminModule('authentication', strategy, this.$t.bind(this)) || {}
     },
     displayConfig (cfg) {
       if (!this.strategy.strategy || this.strategy.strategy.key !== 'cas') {
@@ -446,3 +442,10 @@ export default {
   }
 }
 </script>
+
+<style lang='scss'>
+.admin-auth-strategy-description {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+</style>

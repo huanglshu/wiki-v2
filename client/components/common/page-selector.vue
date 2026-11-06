@@ -23,9 +23,6 @@
         v-flex.grey(xs5, :class='$vuetify.theme.dark ? `darken-4` : `lighten-3`')
           v-toolbar(color='grey darken-3', dark, dense, flat)
             .body-2 {{$t('common:pageSelector.virtualFolders')}}
-            v-spacer
-            v-btn(icon, tile, href='https://docs.requarks.io/guide/pages#folders', target='_blank')
-              v-icon mdi-help-box
           div(style='height:400px;')
             vue-scroll(:ops='scrollStyle')
               v-treeview(
@@ -43,8 +40,8 @@
                 )
                 template(slot='prepend', slot-scope='{ item, open, leaf }')
                   v-icon mdi-{{ open ? 'folder-open' : 'folder' }}
-        v-flex(xs7)
-          v-toolbar(color='blue darken-2', dark, dense, flat)
+        v-flex.page-selector-pages(xs7)
+          v-toolbar(color='grey darken-3', dark, dense, flat)
             .body-2 {{$t('common:pageSelector.pages')}}
             //- v-spacer
             //- v-btn(icon, tile, disabled): v-icon mdi-content-save-move-outline
@@ -93,8 +90,10 @@
         )
       v-card-chin
         v-spacer
-        v-btn(text, @click='close') {{$t('common:actions.cancel')}}
-        v-btn.px-4(color='primary', @click='open', :disabled='!isValidPath')
+        v-btn.page-selector-action.px-4(outlined, color='black', @click='close')
+          v-icon(left) mdi-close
+          span {{$t('common:actions.cancel')}}
+        v-btn.page-selector-action.px-4(color='primary', @click='open', :disabled='!isValidPath')
           v-icon(left) mdi-check
           span {{$t('common:actions.select')}}
 </template>
@@ -336,6 +335,21 @@ export default {
 <style lang='scss'>
 
 .page-selector {
+  .page-selector-pages {
+    border-left: 1px solid #bdbdbd;
+  }
+
+  .page-selector-action {
+    .v-btn__content {
+      align-items: center;
+    }
+
+    .v-icon,
+    .v-btn__content > span {
+      line-height: 1;
+    }
+  }
+
   .v-treeview-node__label {
     font-size: 13px;
   }

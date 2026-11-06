@@ -1,5 +1,5 @@
 <template lang='pug'>
-  v-dialog(v-model='isShown', persistent, max-width='700', no-click-animation, :overlay-opacity='$vuetify.theme.dark ? undefined : 0')
+  v-dialog(v-model='isShown', persistent, max-width='700', no-click-animation)
     v-card.radius-7(color='blue darken-3', dark)
       v-btn.editor-select-exit(icon, dark, @click='exitToHome', :aria-label='$t("common:actions.exit")')
         v-icon mdi-close

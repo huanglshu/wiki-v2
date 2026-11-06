@@ -51,13 +51,14 @@
           :key='`parent-` + item.id'
           @click='fetchBrowseItems(item)'
           :input-value='item.id === currentParent.id'
+          :color='dark ? undefined : `primary`'
           style='min-height: 30px;'
           )
           v-list-item-avatar(size='18', :style='`padding-left: ` + (idx * 8) + `px; width: auto; margin: 0 5px 0 0;`')
             v-icon(small) mdi-folder-open
           v-list-item-title {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
         v-divider.mt-2
-        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path')
+        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ currentParent.title }}
@@ -67,7 +68,7 @@
           v-list-item-avatar(size='24')
             v-icon mdi-folder
           v-list-item-title {{ item.title }}
-        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :input-value='path === item.path')
+        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :input-value='path === item.path', :color='dark ? undefined : `primary`')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ item.title }}

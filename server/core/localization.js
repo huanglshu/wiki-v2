@@ -96,7 +96,10 @@ module.exports = {
       const overrides = {}
       for (const [key, value] of Object.entries(chineseUi)) {
         if (key.startsWith('common:serverError.') || key.startsWith('common:notification.') ||
+          key.startsWith('common:code.') ||
           key.startsWith('admin:modules.authentication.cas.') ||
+          /^admin:modules\.authentication\.[^.]+\.(title|description)$/.test(key) ||
+          key.startsWith('admin:modules.rendering.') ||
           ['auth:errors.invalidLoginMsg', 'auth:errors.mailNotConfigured', 'auth:errors.securityCodeRequired'].includes(key)) {
           _.set(overrides, key.replace(':', '.'), value)
         }

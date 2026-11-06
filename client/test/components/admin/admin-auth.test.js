@@ -158,10 +158,38 @@ describe('CAS authentication localization', () => {
   it('preserves other providers and falls back when a CAS translation is missing', () => {
     const other = { key: 'other', title: 'Other', description: 'Original' }
     const cfg = { key: 'unknown', value: { title: 'Original field', hint: 'Original hint' } }
-    expect(auth.displayStrategy(other)).toBe(other)
+    expect(auth.displayStrategy(other)).toMatchObject(other)
     auth.strategy = { strategy: other }
     expect(auth.displayConfig(cfg)).toBe(cfg.value)
     auth.strategy = { strategy: { key: 'cas' } }
     expect(auth.displayConfig(cfg)).toEqual(cfg.value)
+  })
+
+  it('localizes all provider names and descriptions and falls back in English', async () => {
+    const directory = path.join(__dirname, '../../../../server/modules/authentication')
+    const translations = require('../../../../data/sideload/zh.json')
+    const definitions = fs.readdirSync(directory, { withFileTypes: true })
+      .filter(entry => entry.isDirectory() && fs.existsSync(path.join(directory, entry.name, 'definition.yml')))
+      .map(entry => yaml.safeLoad(fs.readFileSync(path.join(directory, entry.name, 'definition.yml'), 'utf8')))
+
+    for (const provider of definitions) {
+      const prefix = `admin:modules.authentication.${provider.key}`
+      expect(translations[`${prefix}.title`]).toBeTruthy()
+      expect(translations[`${prefix}.description`]).toBeTruthy()
+      expect(auth.displayStrategy(provider)).toMatchObject({
+        key: provider.key,
+        title: translations[`${prefix}.title`],
+        description: translations[`${prefix}.description`]
+      })
+    }
+
+    await locale.changeLanguage('en')
+    for (const provider of definitions) {
+      expect(auth.displayStrategy(provider)).toMatchObject({
+        key: provider.key,
+        title: provider.title,
+        description: provider.description
+      })
+    }
   })
 })

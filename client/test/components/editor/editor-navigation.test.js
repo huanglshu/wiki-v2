@@ -97,11 +97,11 @@ describe('editor navigation', () => {
     ]))
   })
 
-  it('keeps the editor selector modal while showing the light background', () => {
+  it('uses the default dialog overlay for the editor selector', () => {
     const source = fs.readFileSync(path.join(__dirname, '../../../components/editor/editor-modal-editorselect.vue'), 'utf8')
     const template = compiler.parseComponent(source).template.content
 
     expect(template).toContain('persistent')
-    expect(template).toContain(":overlay-opacity='$vuetify.theme.dark ? undefined : 0'")
+    expect(template).not.toContain('overlay-opacity')
   })
 })
