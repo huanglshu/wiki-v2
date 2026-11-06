@@ -164,6 +164,14 @@ module.exports = class Storage extends Model {
             }, target.key)
           }
         } catch (err) {
+          const errorDetails = [
+            getStorageStatusMessage(err.message, 'Storage initialization failed.'),
+            err.code && `code: ${err.code}`,
+            err.statusCode && `status: ${err.statusCode}`,
+            err.requestId && `requestId: ${err.requestId}`
+          ].filter(Boolean).join(', ')
+          WIKI.logger.error(`(STORAGE/${target.key}) Initialization failed: ${errorDetails}`)
+
           // -> Save initialization error
           await WIKI.models.storage.query().patch({
             state: {
