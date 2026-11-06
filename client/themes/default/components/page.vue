@@ -32,7 +32,7 @@
 
     v-main(ref='content')
       template(v-if='path !== `home`')
-        v-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-d3` : `grey lighten-3`', flat, dense, v-if='$vuetify.breakpoint.smAndUp')
+        v-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-d3` : `white`', flat, dense, v-if='$vuetify.breakpoint.smAndUp')
           //- v-btn.pl-0(v-if='$vuetify.breakpoint.xsOnly', flat, @click='toggleNavigation')
           //-   v-icon(color='grey darken-2', left) menu
           //-   span Navigation
@@ -47,7 +47,7 @@
             v-spacer
             .caption.red--text {{$t('common:page.unpublished')}}
             status-indicator.ml-3(negative, pulse)
-        v-divider
+        v-divider.page-breadcrumb-divider
       v-container.grey.pa-0(fluid, :class='$vuetify.theme.dark ? `darken-4-l3` : `lighten-4`')
         v-row.page-header-section(no-gutters, align-content='center', style='height: 90px;')
           v-col.page-col-content.is-page-header(
@@ -378,7 +378,7 @@ import mermaid from 'mermaid'
 import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
 import Vue from 'vue'
-import { createPrismCopyButton } from '../../../helpers/prism-copy'
+import { registerPrismCopyButton } from '../../../helpers/prism-copy'
 
 /* global siteLangs */
 
@@ -393,7 +393,7 @@ Prism.plugins.NormalizeWhitespace.setDefaults({
   'remove-initial-line-feed': true,
   'tabs-to-spaces': 2
 })
-Prism.plugins.toolbar.registerButton('wikijs-copy', createPrismCopyButton)
+registerPrismCopyButton(Prism)
 
 export default {
   components: {
@@ -746,6 +746,13 @@ export default {
   }
 }
 
+.theme--light.v-divider.page-breadcrumb-divider {
+  position: relative;
+  z-index: 1;
+  border-color: #d0d7de;
+  box-shadow: 0 3px 1px -2px rgba(0, 0, 0, .2), 0 2px 2px 0 rgba(0, 0, 0, .14), 0 1px 5px 0 rgba(0, 0, 0, .12);
+}
+
 .breadcrumbs-nav {
   flex-wrap: nowrap;
   max-width: 100%;
@@ -793,6 +800,16 @@ export default {
 
 .page-col-sd::-webkit-scrollbar {
   display: none;
+}
+
+.page-toc-card .v-list--nav.v-list--dense {
+  .v-list-item {
+    min-height: 32px;
+  }
+
+  .v-list-item:not(:last-child):not(:only-child) {
+    margin-bottom: 2px;
+  }
 }
 
 .page-new-fab {

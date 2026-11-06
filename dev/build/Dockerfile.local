@@ -1,0 +1,53 @@
+# Install runtime dependencies for the image platform, not the host platform.
+FROM harbor.gdalpha.com/alpha-tools/nodejs:24.14.0-alpine3.23 AS production-dependencies
+
+ENV NODEJS_ORG_MIRROR=https://npmmirror.com/mirrors/node \
+    npm_config_build_from_source=true \
+    YARN_CACHE_FOLDER=/usr/local/share/.cache/yarn
+
+RUN sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.aliyun.com#g' /etc/apk/repositories && \
+    npm config set registry https://registry.npmmirror.com && \
+    apk add yarn g++ make cmake python3 py3-setuptools --no-cache
+
+WORKDIR /wiki
+
+COPY ./patches ./patches
+COPY ./dependency-package.json ./package.json
+COPY ./yarn.lock ./yarn.lock
+
+RUN sed -i 's#https://registry.npmjs.org#https://registry.npmmirror.com#g; s#https://registry.yarnpkg.com#https://registry.npmmirror.com#g' yarn.lock && \
+    yarn config set registry https://registry.npmmirror.com
+
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn,sharing=locked \
+    yarn --production --frozen-lockfile --non-interactive
+
+FROM harbor.gdalpha.com/alpha-tools/nodejs:24.14.0-alpine3.23
+LABEL maintainer="requarks.io"
+
+RUN sed -i 's#https://dl-cdn.alpinelinux.org#https://mirrors.aliyun.com#g' /etc/apk/repositories && \
+    npm config set registry https://registry.npmmirror.com && \
+    apk add bash curl git openssh gnupg sqlite --no-cache && \
+    mkdir -p /wiki/data/content /logs && \
+    chown -R node:node /wiki /logs
+
+WORKDIR /wiki
+
+COPY --chown=node:node ./assets ./assets
+COPY --chown=node:node --from=production-dependencies /wiki/node_modules ./node_modules
+COPY --chown=node:node ./server ./server
+COPY --chown=node:node ./data/sideload ./server/sideload
+COPY --chown=node:node ./data/sideload ./data/sideload
+COPY --chown=node:node ./dev/build/config.yml ./config.yml
+COPY --chown=node:node ./package.json ./package.json
+COPY --chown=node:node ./LICENSE ./LICENSE
+
+RUN node -e 'const fs = require("fs"); const pkg = JSON.parse(fs.readFileSync("package.json", "utf8")); pkg.dev = false; fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2) + "\n")'
+
+USER node
+
+VOLUME ["/wiki/data/content"]
+
+EXPOSE 3000
+EXPOSE 3443
+
+CMD ["node", "--no-deprecation", "server"]

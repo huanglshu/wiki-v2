@@ -143,7 +143,7 @@
         textarea(ref='cm')
       transition(name='editor-markdown-preview')
         .editor-markdown-preview(v-if='previewShown')
-          .editor-markdown-preview-content.contents(ref='editorPreviewContainer')
+          .editor-markdown-preview-content.contents(ref='editorPreviewContainer', data-toolbar-order='label,wikijs-copy')
             div(
               ref='editorPreview'
               v-html='previewHTML'
@@ -184,6 +184,7 @@ import 'codemirror/lib/codemirror.css'
 
 // Language
 import 'codemirror/mode/markdown/markdown.js'
+import 'codemirror/mode/sql/sql.js'
 
 // Addons
 import 'codemirror/addon/selection/active-line.js'
@@ -226,6 +227,7 @@ import mermaid from 'mermaid'
 import katexHelper from './common/katex'
 import tabsetHelper from './markdown/tabset'
 import cmFold from './common/cmFold'
+import { registerPrismCopyButton } from '../../helpers/prism-copy'
 
 // ========================================
 // INIT
@@ -244,6 +246,7 @@ Prism.plugins.NormalizeWhitespace.setDefaults({
   'remove-initial-line-feed': true,
   'tabs-to-spaces': 2
 })
+registerPrismCopyButton(Prism)
 
 // Markdown Instance
 const md = new MarkdownIt({

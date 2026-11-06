@@ -670,6 +670,16 @@ export default {
         color: #174a7e !important;
       }
     }
+
+    .editor-markdown-editor .cm-s-wikijs-dark .CodeMirror-line {
+      .cm-comment { color: #57606a; }
+      .cm-keyword, .cm-tag { color: #0550ae; }
+      .cm-string, .cm-string-2 { color: #116329; }
+      .cm-number, .cm-atom { color: #953800; }
+      .cm-operator { color: #cf222e; }
+      .cm-def, .cm-variable-2, .cm-builtin { color: #6639ba; }
+      .cm-header, .cm-link { color: #0550ae; }
+    }
   }
 
   .atom-spinner.is-inline {

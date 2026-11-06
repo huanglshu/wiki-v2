@@ -35,6 +35,8 @@ describe('default theme code blocks', () => {
       expect(getComputedStyle(keyword).color).toBe('rgb(5, 80, 174)')
       expect(getComputedStyle(string).color).toBe('rgb(17, 99, 41)')
       expect(getComputedStyle(button).width).toBe('32px')
+      expect(getComputedStyle(pre).maxHeight).toBe('calc(40.25rem + 2px)')
+      expect(getComputedStyle(pre).overflow).toBe('auto')
 
       root.className = 'theme--dark'
       expect(getComputedStyle(pre).backgroundColor).not.toBe('rgb(255, 255, 255)')

@@ -740,6 +740,8 @@
     background-color: mc('grey', '900');
     padding: 1rem 1rem 1rem 3rem;
     margin: 1rem 0;
+    max-height: calc(#{30 * .85rem * 1.5 + 2rem} + 2px);
+    overflow: auto;
 
     @at-root .theme--dark & {
       background-color: darken(mc('grey', '900'), 5%);
@@ -833,6 +835,7 @@
   }
 
   .code-toolbar > .toolbar .toolbar-item > .prism-copy-button {
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -845,6 +848,24 @@
     .mdi {
       font-size: 18px;
       line-height: 1;
+    }
+
+    .prism-copy-status:not([hidden]) {
+      position: absolute;
+      right: calc(100% + 8px);
+      top: 50%;
+      transform: translateY(-50%);
+      width: max-content;
+      max-width: min(240px, 60vw);
+      padding: 4px 8px;
+      border-radius: 4px;
+      background: #30343b;
+      color: #fff;
+      font-size: 12px;
+      line-height: 1.4;
+      white-space: normal;
+      text-align: center;
+      pointer-events: none;
     }
 
     @at-root .theme--light & {
@@ -1367,6 +1388,8 @@
     .prismjs{
       box-shadow: none;
       background-color: #FFF;
+      max-height: none;
+      overflow: visible;
 
       @at-root .theme--dark & {
         background-color: #FFF;

@@ -100,8 +100,8 @@ describe('editor workspace theme', () => {
       expect(window.getComputedStyle(cursor).borderLeftColor).toBe('#212121')
       expect(window.getComputedStyle(activeLine).backgroundColor).toBe('rgb(245, 245, 245)')
       expect(window.getComputedStyle(selection).backgroundColor).toBe('rgb(207, 226, 255)')
-      expect(window.getComputedStyle(tag).color).toBe('rgb(33, 33, 33)')
-      expect(window.getComputedStyle(string).color).toBe('rgb(33, 33, 33)')
+      expect(window.getComputedStyle(tag).color).toBe(name === 'markdown' ? 'rgb(5, 80, 174)' : 'rgb(33, 33, 33)')
+      expect(window.getComputedStyle(string).color).toBe(name === 'markdown' ? 'rgb(17, 99, 41)' : 'rgb(33, 33, 33)')
       expect(window.getComputedStyle(bracket).color).toBe('rgb(33, 33, 33)')
 
       root.className = 'editor theme--dark'
