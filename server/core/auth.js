@@ -112,7 +112,7 @@ module.exports = {
    */
   authenticate (req, res, next) {
     WIKI.auth.passport.authenticate('jwt', {session: false}, async (err, user, info) => {
-      if (err) { return next() }
+      if (err) { return next(err) }
       let mustRevalidate = false
 
       // Expired but still valid within N days, just renew
@@ -162,18 +162,22 @@ module.exports = {
           res.set('Cache-Control', 'no-store')
         } catch (errc) {
           WIKI.logger.warn(errc)
-          return next()
+          return next(errc)
         }
       }
 
       // JWT is NOT valid, set as guest
       if (!user) {
-        if (WIKI.auth.guest.cacheExpiration <= DateTime.utc()) {
-          WIKI.auth.guest = await WIKI.models.users.getGuestUser()
-          WIKI.auth.guest.cacheExpiration = DateTime.utc().plus({ minutes: 1 })
+        try {
+          if (WIKI.auth.guest.cacheExpiration <= DateTime.utc()) {
+            WIKI.auth.guest = await WIKI.models.users.getGuestUser()
+            WIKI.auth.guest.cacheExpiration = DateTime.utc().plus({ minutes: 1 })
+          }
+          req.user = WIKI.auth.guest
+          return next()
+        } catch (guestError) {
+          return next(guestError)
         }
-        req.user = WIKI.auth.guest
-        return next()
       }
 
       // Process API tokens

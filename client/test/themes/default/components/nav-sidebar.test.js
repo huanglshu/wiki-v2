@@ -88,6 +88,22 @@ describe('navigation sidebar breadcrumb selection', () => {
     expect(nav.fetchBrowseItems).not.toHaveBeenCalled()
     expect(query).toHaveBeenCalledTimes(1)
   })
+
+  it('fetches a fresh tree when explicitly refreshing the current path', async () => {
+    const page = { id: 6, path: 'DB/MYSQL/users', title: 'Users', isFolder: false, pageId: 9, parent: 0, locale: 'zh' }
+    const query = jest.fn().mockResolvedValue({ data: { pages: { tree: [page] } } })
+    const nav = Object.assign(component.data(), {
+      $apollo: { query },
+      $store: { commit: jest.fn(), get: jest.fn().mockReturnValue(9) },
+      path: page.path,
+      locale: 'zh'
+    })
+
+    await component.methods.loadFromCurrentPath.call(nav, true)
+
+    expect(query).toHaveBeenCalledWith(expect.objectContaining({ fetchPolicy: 'network-only' }))
+    expect(nav.currentItems).toEqual([page])
+  })
 })
 
 describe('navigation sidebar theme', () => {

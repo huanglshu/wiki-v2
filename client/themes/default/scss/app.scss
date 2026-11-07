@@ -743,6 +743,12 @@
     max-height: calc(#{30 * .85rem * 1.5 + 2rem} + 2px);
     overflow: auto;
 
+    &::selection, & *::selection {
+      background: #3367d1;
+      color: #fff;
+      text-shadow: none;
+    }
+
     @at-root .theme--dark & {
       background-color: darken(mc('grey', '900'), 5%);
     }
@@ -872,6 +878,10 @@
       background-color: #f3f4f6;
       color: #424b55;
     }
+  }
+
+  .mermaid > svg[viewBox] {
+    height: auto;
   }
 
   .diagram {

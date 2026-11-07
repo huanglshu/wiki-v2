@@ -23,7 +23,13 @@ function loadComponent(filename) {
     plugins: ['@babel/plugin-transform-modules-commonjs']
   }).code
   const componentModule = { exports: {} }
-  const localRequire = name => name.startsWith('gql/') ? {} : require(name)
+  const localRequire = name => {
+    if (name.startsWith('gql/')) return {}
+    if (name === '../../../data/sideload/zh.json') return require('../../../../data/sideload/zh.json')
+    if (name === '../../../data/sideload/en.json') return require('../../../../data/sideload/en.json')
+    if (name === '../../helpers/version') return require('../../../helpers/version')
+    return require(name)
+  }
   runInThisContext(`(function (require, module, exports, siteLangs) {\n${code}\n})`)(localRequire, componentModule, componentModule.exports, [])
   return Object.assign(componentModule.exports.default, compiler.compileToFunctions(pug.render(sfc.template.content)))
 }

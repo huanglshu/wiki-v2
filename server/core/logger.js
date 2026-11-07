@@ -1,5 +1,6 @@
 // const _ = require('lodash')
 const winston = require('winston')
+const { DateTime } = require('luxon')
 
 /* global WIKI */
 
@@ -8,7 +9,7 @@ module.exports = {
   init(uid) {
     const loggerFormats = [
       winston.format.label({ label: uid }),
-      winston.format.timestamp()
+      winston.format.timestamp({ format: () => DateTime.local().setZone('Asia/Shanghai').toFormat('yyyy-MM-dd HH:mm:ss') })
     ]
 
     if (WIKI.config.logFormat === 'json') {

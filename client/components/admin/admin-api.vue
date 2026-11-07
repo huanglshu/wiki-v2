@@ -77,10 +77,11 @@
 
     v-dialog(v-model='isViewKeyDialogShown', max-width='750')
       v-card
-        .dialog-header.is-short {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
+        .dialog-header.is-short.api-key-dialog-header
+          span.api-key-dialog-title {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
+          span.api-key-dialog-name(:title='viewedKeyName') {{ viewedKeyName }}
         v-card-text.pt-5
-          .body-2 {{ viewedKeyName }}
-          v-textarea.mt-3(
+          v-textarea(
             :value='revealedKey'
             filled
             no-resize
@@ -88,22 +89,19 @@
             :rows='6'
             hide-details
           )
-        v-card-actions
+        v-card-actions.api-key-dialog-actions
           v-spacer
-          v-tooltip(top)
-            template(v-slot:activator='{ on }')
-              v-btn(
-                icon
-                v-on='on'
-                v-clipboard='revealedKey'
-                @success='onKeyCopied'
-                @error='onKeyCopyError'
-                :disabled='!revealedKey'
-                :aria-label='$t("admin:ui.api.copyKey", { defaultValue: "Copy Key" })'
-              )
-                v-icon mdi-content-copy
-            span {{ $t('admin:ui.api.copyKey', { defaultValue: 'Copy Key' }) }}
-          v-btn(text, @click='isViewKeyDialogShown = false') {{$t('common:actions.close')}}
+          v-btn(color='red', dark, @click='isViewKeyDialogShown = false') {{$t('common:actions.close')}}
+          v-btn(
+            color='primary'
+            dark
+            v-clipboard='revealedKey'
+            @success='onKeyCopied'
+            @error='onKeyCopyError'
+            :disabled='!revealedKey'
+            :aria-label='$t("admin:ui.api.copyKey", { defaultValue: "Copy Key" })'
+          )
+            span {{$t('common:actions.copy')}}
 
     v-dialog(v-model='isRevokeConfirmDialogShown', max-width='500', persistent)
       v-card
@@ -435,5 +433,23 @@ export default {
 </script>
 
 <style lang='scss'>
+
+.api-key-dialog-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr) minmax(0, 1fr);
+  column-gap: 8px;
+}
+
+.api-key-dialog-title,
+.api-key-dialog-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.api-key-dialog-name {
+  text-align: center;
+}
 
 </style>

@@ -13,6 +13,9 @@ module.exports = {
     async assets() { return {} }
   },
   AssetQuery: {
+    async uploadMaxFileSize() {
+      return WIKI.config.uploads.maxFileSize
+    },
     async list(obj, args, context) {
       let cond = {
         folderId: args.folderId === 0 ? null : args.folderId
@@ -41,6 +44,18 @@ module.exports = {
         const path = parentPath ? `${parentPath}/${r.slug}` : r.slug
         return WIKI.auth.checkAccess(context.req.user, ['read:assets'], { path })
       })
+    },
+    async folderEmpty(obj, args, context) {
+      if (args.folderId <= 0) {
+        return false
+      }
+      const hierarchy = await WIKI.models.assetFolders.getHierarchy(args.folderId)
+      if (!hierarchy.length || !WIKI.auth.checkAccess(context.req.user, ['manage:assets'], { path: hierarchy.map(folder => folder.slug).join('/') })) {
+        return false
+      }
+      const child = await WIKI.models.knex('assetFolders').where({ parentId: args.folderId }).first('id')
+      const file = await WIKI.models.knex('assets').where({ folderId: args.folderId }).first('id')
+      return !child && !file
     }
   },
   AssetMutation: {
@@ -67,6 +82,40 @@ module.exports = {
         } else {
           throw new WIKI.Error.AssetFolderExists()
         }
+      } catch (err) {
+        return graphHelper.generateError(err)
+      }
+    },
+    /**
+     * Delete an empty asset folder.
+     */
+    async deleteFolder(obj, args, context) {
+      try {
+        if (args.id <= 0) {
+          throw new WIKI.Error.AssetFolderInvalid()
+        }
+        const hierarchy = await WIKI.models.assetFolders.getHierarchy(args.id)
+        if (!hierarchy.length) {
+          throw new WIKI.Error.AssetFolderInvalid()
+        }
+        const path = hierarchy.map(folder => folder.slug).join('/')
+        if (!WIKI.auth.checkAccess(context.req.user, ['manage:assets'], { path })) {
+          throw new WIKI.Error.AssetDeleteForbidden()
+        }
+
+        await WIKI.models.knex.transaction(async trx => {
+          const folder = await trx('assetFolders').where({ id: args.id }).forUpdate().first()
+          if (!folder) {
+            throw new WIKI.Error.AssetFolderInvalid()
+          }
+          const child = await trx('assetFolders').where({ parentId: args.id }).first('id')
+          const asset = await trx('assets').where({ folderId: args.id }).first('id')
+          if (child || asset) {
+            throw new WIKI.Error.AssetFolderNotEmpty()
+          }
+          await trx('assetFolders').where({ id: args.id }).del()
+        })
+        return { responseResult: graphHelper.generateSuccess('Asset folder has been deleted successfully.') }
       } catch (err) {
         return graphHelper.generateError(err)
       }

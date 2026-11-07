@@ -503,6 +503,38 @@ router.get('/*', async (req, res, next) => {
           })
         }
 
+        const softNavigation = !_.get(page, 'extra.css') &&
+          !_.get(page, 'extra.js') &&
+          !(WIKI.config.features.featurePageComments && _.get(WIKI, 'data.commentProvider.codeTemplate')) &&
+          !/<\s*(?:tabset|script|style)\b/i.test(page.render || '')
+        let pageFilename = WIKI.config.lang.namespacing ? `${pageArgs.locale}/${page.path}` : page.path
+        pageFilename += page.contentType === 'markdown' ? '.md' : '.html'
+
+        if (req.get('X-Wiki-Page-Navigation') === '1') {
+          res.set('Cache-Control', 'private, no-store')
+          return res.json({
+            softNavigation,
+            page: softNavigation ? {
+              id: page.id,
+              locale: page.localeCode,
+              path: page.path,
+              title: page.title,
+              description: page.description,
+              tags: page.tags,
+              createdAt: page.createdAt,
+              updatedAt: page.updatedAt,
+              authorName: page.authorName,
+              authorId: page.authorId,
+              editor: page.editorKey,
+              isPublished: page.isPublished,
+              toc: page.toc,
+              render: page.render,
+              filename: pageFilename
+            } : null,
+            effectivePermissions: softNavigation ? effectivePermissions : null
+          })
+        }
+
         // -> Build sidebar navigation
         let sdi = 1
         const sidebar = (await WIKI.models.navigation.getTree({ cache: true, locale: pageArgs.locale, groups: req.user.groups })).map(n => ({
@@ -569,10 +601,6 @@ router.get('/*', async (req, res, next) => {
             })
           }
 
-          // -> Page Filename (for edit on external repo button)
-          let pageFilename = WIKI.config.lang.namespacing ? `${pageArgs.locale}/${page.path}` : page.path
-          pageFilename += page.contentType === 'markdown' ? '.md' : '.html'
-
           // -> Render view
           res.render('page', {
             page,
@@ -580,7 +608,8 @@ router.get('/*', async (req, res, next) => {
             injectCode,
             comments: commentTmpl,
             effectivePermissions,
-            pageFilename
+            pageFilename,
+            softNavigation
           })
         }
       } else if (pageArgs.path === 'home') {

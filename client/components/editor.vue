@@ -41,7 +41,7 @@
       editor-modal-properties(v-model='dialogProps', @select-editor='backToEditorSelector')
       editor-modal-editorselect(v-model='dialogEditorSelector')
       editor-modal-unsaved(v-model='dialogUnsaved', @discard='exitGo')
-      component(:is='activeModal')
+      component(:is='activeModal', v-bind='activeModal === `editorModalMedia` ? { management: true, selection: true, insertion: true } : {}')
 
     loader(v-model='dialogProgress', :title='$t(`editor:save.processing`)', :subtitle='$t(`editor:save.pleaseWait`)')
     notify

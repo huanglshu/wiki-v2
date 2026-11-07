@@ -311,7 +311,11 @@ export default {
           this.newcomment = ''
           await this.fetch()
           this.$nextTick(() => {
-            this.$vuetify.goTo(`#comment-post-id-${_.get(resp, 'data.comments.create.id', 0)}`, this.scrollOpts)
+            const scrollArea = this.$el.closest('.page-scroll-area')
+            const scrollOpts = scrollArea ?
+              { ...this.scrollOpts, container: scrollArea, appOffset: false } :
+              this.scrollOpts
+            this.$vuetify.goTo(`#comment-post-id-${_.get(resp, 'data.comments.create.id', 0)}`, scrollOpts)
           })
         } else {
           throw new Error(_.get(resp, 'data.comments.create.responseResult.message', 'An unexpected error occurred.'))

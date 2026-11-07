@@ -24,7 +24,7 @@ const code = babel.transformSync(sfc.script.content, {
   plugins: ['@babel/plugin-transform-modules-commonjs']
 }).code
 const componentModule = { exports: {} }
-const store = { commit: jest.fn(), set: jest.fn(), registerModule: jest.fn() }
+const store = { state: {}, commit: jest.fn(), set: jest.fn(), registerModule: jest.fn() }
 const localRequire = name => {
   if (name === 'vuex-pathify') return { sync: () => ({ get: () => '', set: () => {} }) }
   if (name === '../../store/editor') return { __esModule: true, default: {} }
@@ -72,6 +72,17 @@ describe('admin general robots options', () => {
     app.$destroy()
     if (root && root.parentNode) root.parentNode.removeChild(root)
     jest.clearAllMocks()
+  })
+
+  it('uses the management layout to select the site logo', () => {
+    expect(source).toContain("component(:is='activeModal', management, selection)")
+    const context = { config: {}, $store: store, $root: { $on: jest.fn(), $off: jest.fn() } }
+    component.methods.browseLogo.call(context)
+    expect(store.set).toHaveBeenCalledWith('editor/editorKey', 'common')
+    expect(context.activeModal).toBe('editorModalMedia')
+    component.mounted.call(context)
+    context.$root.$on.mock.calls[0][1]({ path: '/images/logo.png' })
+    expect(context.config.logoUrl).toBe('/images/logo.png')
   })
 
   it('renders translated option labels and preserves selected values', async () => {

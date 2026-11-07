@@ -183,9 +183,18 @@ describe('admin API key list', () => {
       }))
       expect(api.isViewKeyDialogShown).toBe(true)
       expect(api.revealedKey).toBe('secret-token')
+      const header = document.querySelector('.api-key-dialog-header')
+      expect(header.querySelector('.api-key-dialog-name').textContent.trim()).toBe('Example')
+      expect(header.querySelector('.api-key-dialog-name').getAttribute('title')).toBe('Example')
 
       const copyButton = [...document.querySelectorAll('button')].find(button => button.getAttribute('aria-label') === '复制密钥')
       expect(copyButton).toBeDefined()
+      const buttons = [...document.querySelectorAll('.api-key-dialog-actions button')]
+      expect(buttons.map(button => button.textContent.trim())).toEqual(['关闭', '复制'])
+      expect(buttons[0].classList.contains('red')).toBe(true)
+      expect(buttons[0].classList.contains('theme--dark')).toBe(true)
+      expect(buttons[1].classList.contains('primary')).toBe(true)
+      expect(buttons[1].querySelector('.mdi-content-copy')).toBeNull()
       expect(copyButton.disabled).toBe(false)
       expect(copyButton.$clipboards).toBeDefined()
       expect(copyButton.$clipboards.text(copyButton)).toBe('secret-token')

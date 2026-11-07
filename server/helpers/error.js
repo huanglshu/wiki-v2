@@ -9,6 +9,14 @@ module.exports = {
     message: 'An asset folder with the same name already exists.',
     code: 2002
   }),
+  AssetFolderNotEmpty: CustomError('AssetFolderNotEmpty', {
+    message: 'The asset folder contains files or subfolders.',
+    code: 2010
+  }),
+  AssetFolderInvalid: CustomError('AssetFolderInvalid', {
+    message: 'This asset folder does not exist or is invalid.',
+    code: 2011
+  }),
   AssetGenericError: CustomError('AssetGenericError', {
     message: 'An unexpected error occured during asset operation.',
     code: 2001

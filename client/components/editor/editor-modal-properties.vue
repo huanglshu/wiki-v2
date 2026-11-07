@@ -3,28 +3,13 @@
     v-model='isShown'
     persistent
     width='1000'
+    content-class='editor-props-dialog'
     :fullscreen='$vuetify.breakpoint.smAndDown'
     )
     .dialog-header
       v-icon(color='white') mdi-tag-text-outline
       .subtitle-1.white--text.ml-3 {{$t('editor:props.pageProperties')}}
-      v-spacer
-      v-btn.mx-0(
-        outlined
-        dark
-        @click.native='close'
-        )
-        v-icon(left) mdi-check
-        span {{ $t('common:actions.ok') }}
-      v-btn.ml-2.mx-0(
-        depressed
-        dark
-        color='error'
-        @click.native='closeToEditorSelector'
-        )
-        v-icon(left) mdi-close
-        span {{ $t('common:actions.close') }}
-    v-card(tile)
+    v-card.editor-props-card(tile)
       v-tabs.editor-props-tabs(color='black', background-color='white', light, centered, v-model='currentTab')
         v-tab {{$t('editor:props.info')}}
         v-tab {{$t('editor:props.scheduling')}}
@@ -249,6 +234,15 @@
           .editor-props-codeeditor-hint
             .caption {{$t('editor:props.cssHint')}}
 
+      v-card-actions.editor-props-actions
+        v-spacer
+        v-btn.mx-0(depressed, dark, color='error', @click.native='closeToEditorSelector')
+          v-icon(left) mdi-close
+          span {{ $t('common:actions.close') }}
+        v-btn.ml-2.mx-0(outlined, color='primary', @click.native='close')
+          v-icon(left) mdi-check
+          span {{ $t('common:actions.ok') }}
+
     page-selector(:mode='pageSelectorMode', v-model='pageSelectorShown', :path='path', :locale='locale', :open-handler='setPath')
 </template>
 
@@ -432,6 +426,44 @@ export default {
 </script>
 
 <style lang='scss'>
+
+.editor-props-dialog.v-dialog--fullscreen {
+  display: flex;
+  flex-direction: column;
+
+  > .editor-props-card {
+    flex: 1 0 auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .editor-props-tabs {
+    flex: 1 0 auto;
+  }
+}
+
+.editor-props-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 1;
+  padding: 12px 16px;
+  background-color: #fff;
+  border-top: 1px solid #dedede;
+}
+
+.editor-props-actions .v-btn__content {
+  display: inline-flex;
+  align-items: center;
+}
+
+.editor-props-actions .v-btn__content > span {
+  line-height: 18px;
+}
+
+.theme--dark.editor-props-card .editor-props-actions {
+  background-color: #1e1e1e;
+  border-color: #616161;
+}
 
 .editor-props-tabs > .v-tabs-bar {
   box-shadow: inset 0 -1px 0 #dedede;

@@ -11,7 +11,7 @@
           v-btn.animated.fadeInDown(color='success', depressed, @click='save', large)
             v-icon(left) mdi-check
             span {{ $t('common:actions.apply') }}
-        v-form.pt-3
+        v-form.pt-3(ref='securityForm')
           v-layout(row wrap)
             v-flex(lg6 xs12)
               v-card.animated.fadeInUp
@@ -124,11 +124,13 @@
                     outlined
                     :label='$t("admin:ui.security.uploads.maxSize")'
                     required
-                    v-model='config.uploadMaxFileSize'
+                    v-model='uploadMaxFileSizeMB'
+                    type='number'
                     prepend-icon='mdi-progress-upload'
                     :hint='$t("admin:ui.security.uploads.maxSizeHint")'
+                    :rules='[positiveUploadSizeRule]'
                     persistent-hint
-                    suffix='KB'
+                    suffix='MB'
                     style='max-width: 450px;'
                     )
                   v-text-field.mt-3(
@@ -138,6 +140,7 @@
                     v-model='config.uploadMaxFiles'
                     prepend-icon='mdi-upload-lock'
                     :hint='$t("admin:ui.security.uploads.maxBatchHint")'
+                    :rules='[positiveUploadCountRule]'
                     persistent-hint
                     :suffix='$t("admin:ui.security.uploads.fileSuffix")'
                     style='max-width: 450px;'
@@ -236,7 +239,7 @@
                     persistent-hint
                   )
 
-    component(:is='activeModal')
+    component(:is='activeModal', management, selection)
 </template>
 
 <script>
@@ -245,10 +248,14 @@ import { sync } from 'vuex-pathify'
 import gql from 'graphql-tag'
 
 import editorStore from '../../store/editor'
+import zhTranslations from '../../../data/sideload/zh.json'
+import enTranslations from '../../../data/sideload/en.json'
 
 /* global WIKI */
 
-WIKI.$store.registerModule('editor', editorStore)
+if (!WIKI.$store.state.editor) {
+  WIKI.$store.registerModule('editor', editorStore)
+}
 
 export default {
   i18nOptions: { namespaces: 'editor' },
@@ -289,10 +296,57 @@ export default {
     }
   },
   computed: {
-    activeModal: sync('editor/activeModal')
+    activeModal: sync('editor/activeModal'),
+    uploadMaxFileSizeMB: {
+      get () {
+        return this.bytesToMB(this.config.uploadMaxFileSize)
+      },
+      set (value) {
+        this.config.uploadMaxFileSize = this.mbToBytes(value)
+      }
+    }
+  },
+  created () {
+    for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
+      for (const key of ['maxSizePositive', 'maxBatchPositive', 'limitsPositive']) {
+        const path = `ui.security.uploads.${key}`
+        this.$i18n.i18next.addResource(locale, 'admin', path, translations[`admin:${path}`])
+      }
+    }
   },
   methods: {
+    bytesToMB (bytes) {
+      return (_.toSafeInteger(bytes) / (1024 * 1024)).toString()
+    },
+    mbToBytes (megabytes) {
+      const value = _.toNumber(megabytes)
+      return Number.isFinite(value) ? Math.round(value * 1024 * 1024) : 0
+    },
+    positiveUploadSizeRule (value) {
+      const size = _.toNumber(value)
+      return (Number.isFinite(size) && size > 0) || this.$t('admin:ui.security.uploads.maxSizePositive')
+    },
+    positiveUploadCountRule (value) {
+      if (value === '' || value === null || value === undefined) {
+        return this.$t('admin:ui.security.uploads.maxBatchPositive')
+      }
+      const count = _.toNumber(value)
+      return (String(count) === String(value) && Number.isInteger(count) && count > 0) || this.$t('admin:ui.security.uploads.maxBatchPositive')
+    },
     async save () {
+      if (this.$refs.securityForm && !this.$refs.securityForm.validate()) {
+        return
+      }
+      const uploadMaxFileSize = _.toSafeInteger(_.get(this.config, 'uploadMaxFileSize', 0))
+      const uploadMaxFiles = _.toSafeInteger(_.get(this.config, 'uploadMaxFiles', 0))
+      if (uploadMaxFileSize <= 0 || uploadMaxFiles <= 0) {
+        this.$store.commit('showNotification', {
+          style: 'error',
+          message: this.$t('admin:ui.security.uploads.limitsPositive'),
+          icon: 'warning'
+        })
+        return
+      }
       try {
         await this.$apollo.mutate({
           mutation: gql`
@@ -359,8 +413,8 @@ export default {
             authJwtAudience: _.get(this.config, 'authJwtAudience', ''),
             authJwtExpiration: _.get(this.config, 'authJwtExpiration', ''),
             authJwtRenewablePeriod: _.get(this.config, 'authJwtRenewablePeriod', ''),
-            uploadMaxFileSize: _.toSafeInteger(_.get(this.config, 'uploadMaxFileSize', 0)),
-            uploadMaxFiles: _.toSafeInteger(_.get(this.config, 'uploadMaxFiles', 0)),
+            uploadMaxFileSize,
+            uploadMaxFiles,
             uploadScanSVG: _.get(this.config, 'uploadScanSVG', false),
             uploadForceDownload: _.get(this.config, 'uploadForceDownload', false),
             securityOpenRedirect: _.get(this.config, 'securityOpenRedirect', false),

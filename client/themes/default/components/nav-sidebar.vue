@@ -36,6 +36,7 @@
           :href='item.t'
           :target='item.y === `externalblank` ? `_blank` : `_self`'
           :rel='item.y === `externalblank` ? `noopener` : ``'
+          @click='navigateLink($event, item.t)'
           )
           v-list-item-avatar(size='24', tile)
             v-icon(v-if='item.c.match(/fa[a-z] fa-/)', size='19') {{ item.c }}
@@ -58,7 +59,7 @@
             v-icon(small) mdi-folder-open
           v-list-item-title {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
         v-divider.mt-2
-        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`')
+        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + currentParent.locale + `/` + currentParent.path)')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ currentParent.title }}
@@ -68,7 +69,7 @@
           v-list-item-avatar(size='24')
             v-icon mdi-folder
           v-list-item-title {{ item.title }}
-        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :input-value='path === item.path', :color='dark ? undefined : `primary`')
+        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :input-value='path === item.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + item.locale + `/` + item.path)')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ item.title }}
@@ -121,6 +122,9 @@ export default {
     locale: get('page/locale')
   },
   methods: {
+    navigateLink (event, href) {
+      this.$emit('navigate', event, href)
+    },
     switchMode (mode) {
       this.currentMode = mode
       window.localStorage.setItem('navPref', mode)
@@ -226,57 +230,64 @@ export default {
       this.currentItems = _.get(resp, 'data.pages.tree', [])
       this.$store.commit(`loadingStop`, 'browse-load')
     },
-    async loadFromCurrentPath() {
+    async loadFromCurrentPath(forceRefresh = false) {
       this.$store.commit(`loadingStart`, 'browse-load')
-      const resp = await this.$apollo.query({
-        query: gql`
-          query ($path: String, $locale: String!) {
-            pages {
-              tree(path: $path, mode: ALL, locale: $locale, includeAncestors: true) {
-                id
-                path
-                title
-                isFolder
-                pageId
-                parent
-                locale
+      try {
+        const resp = await this.$apollo.query({
+          query: gql`
+            query ($path: String, $locale: String!) {
+              pages {
+                tree(path: $path, mode: ALL, locale: $locale, includeAncestors: true) {
+                  id
+                  path
+                  title
+                  isFolder
+                  pageId
+                  parent
+                  locale
+                }
               }
             }
+          `,
+          fetchPolicy: forceRefresh ? 'network-only' : 'cache-first',
+          variables: {
+            path: this.path,
+            locale: this.locale
           }
-        `,
-        fetchPolicy: 'cache-first',
-        variables: {
-          path: this.path,
-          locale: this.locale
+        })
+        const items = _.get(resp, 'data.pages.tree', [])
+        const curPage = _.find(items, ['pageId', this.$store.get('page/id')])
+        if (!curPage) {
+          console.warn('Could not find current page in page tree listing!')
+          return
         }
-      })
-      const items = _.get(resp, 'data.pages.tree', [])
-      const curPage = _.find(items, ['pageId', this.$store.get('page/id')])
-      if (!curPage) {
-        console.warn('Could not find current page in page tree listing!')
-        return
-      }
 
-      let curParentId = curPage.parent
-      let invertedAncestors = []
-      while (curParentId) {
-        const curParent = _.find(items, ['id', curParentId])
-        if (!curParent) {
-          break
+        let curParentId = curPage.parent
+        let invertedAncestors = []
+        while (curParentId) {
+          const curParent = _.find(items, ['id', curParentId])
+          if (!curParent) {
+            break
+          }
+          invertedAncestors.push(curParent)
+          curParentId = curParent.parent
         }
-        invertedAncestors.push(curParent)
-        curParentId = curParent.parent
+
+        this.parents = [{ id: 0, title: '/ (root)' }, ...invertedAncestors.reverse()]
+        this.currentParent = _.last(this.parents)
+
+        this.loadedCache = [curPage.parent]
+        this.currentItems = _.filter(items, ['parent', curPage.parent])
+      } finally {
+        this.$store.commit(`loadingStop`, 'browse-load')
       }
-
-      this.parents = [this.currentParent, ...invertedAncestors.reverse()]
-      this.currentParent = _.last(this.parents)
-
-      this.loadedCache = [curPage.parent]
-      this.currentItems = _.filter(items, ['parent', curPage.parent])
-      this.$store.commit(`loadingStop`, 'browse-load')
     },
-    goHome () {
-      window.location.assign(siteLangs.length > 0 ? `/${this.locale}/home` : '/')
+    goHome (event) {
+      const href = siteLangs.length > 0 ? `/${this.locale}/home` : '/'
+      this.$emit('navigate', event, href)
+      if (!event.defaultPrevented) {
+        window.location.assign(href)
+      }
     }
   },
   mounted () {

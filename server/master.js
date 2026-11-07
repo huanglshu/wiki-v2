@@ -148,6 +148,7 @@ module.exports = async () => {
   app.use(async (req, res, next) => {
     res.locals.siteConfig = {
       title: WIKI.config.title,
+      host: WIKI.config.host,
       theme: WIKI.config.theming.theme,
       darkMode: WIKI.config.theming.darkMode,
       tocPosition: WIKI.config.theming.tocPosition || 'left',

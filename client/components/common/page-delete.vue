@@ -26,6 +26,7 @@
 
 <script>
 import _ from 'lodash'
+import gql from 'graphql-tag'
 import { get } from 'vuex-pathify'
 
 import deletePageMutation from 'gql/common/common-pages-mutation-delete.gql'
@@ -67,22 +68,50 @@ export default {
     async deletePage() {
       this.loading = true
       this.$store.commit(`loadingStart`, 'page-delete')
+      const pageId = this.pageId
+      const pagePath = this.pagePath
+      const pageLocale = this.pageLocale
       this.$nextTick(async () => {
         try {
+          const tree = await this.$apollo.query({
+            query: gql`
+              query ($path: String!, $locale: String!) {
+                pages {
+                  tree(path: $path, mode: ALL, locale: $locale) {
+                    path
+                    isFolder
+                    pageId
+                  }
+                }
+              }
+            `,
+            variables: { path: pagePath, locale: pageLocale },
+            fetchPolicy: 'network-only'
+          })
+          const nextPage = _.find(_.get(tree, 'data.pages.tree', []), item =>
+            !item.isFolder && item.pageId && item.pageId !== pageId
+          )
+          const destination = nextPage ? `/${pageLocale}/${nextPage.path}` : '/'
           const resp = await this.$apollo.mutate({
             mutation: deletePageMutation,
             variables: {
-              id: this.pageId
+              id: pageId
             }
           })
           if (_.get(resp, 'data.pages.delete.responseResult.succeeded', false)) {
             this.isShown = false
-            _.delay(() => {
-              document.body.classList.add('page-deleted')
+            const navigation = { destination, pageId, handled: false }
+            this.$root.$emit('page-deleted', navigation)
+            if (navigation.handled) {
+              document.body.classList.remove('page-deleted-pending', 'page-deleted')
+            } else {
               _.delay(() => {
-                window.location.assign('/')
-              }, 1200)
-            }, 400)
+                document.body.classList.add('page-deleted')
+                _.delay(() => {
+                  window.location.assign(destination)
+                }, 1200)
+              }, 400)
+            }
           } else {
             throw new Error(_.get(resp, 'data.pages.delete.responseResult.message', this.$t('common:error.unexpected')))
           }

@@ -256,7 +256,7 @@
                       persistent-hint
                       )
 
-    component(:is='activeModal')
+    component(:is='activeModal', management, selection)
 
 </template>
 
@@ -271,7 +271,9 @@ import editorStore from '../../store/editor'
 
 const titleRegex = /[<>"]/i
 
-WIKI.$store.registerModule('editor', editorStore)
+if (!WIKI.$store.state.editor) {
+  WIKI.$store.registerModule('editor', editorStore)
+}
 
 export default {
   i18nOptions: { namespaces: 'editor' },

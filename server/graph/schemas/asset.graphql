@@ -23,6 +23,12 @@ type AssetQuery {
   folders(
     parentFolderId: Int!
   ): [AssetFolder] @auth(requires: ["manage:system", "read:assets"])
+
+  folderEmpty(
+    folderId: Int!
+  ): Boolean! @auth(requires: ["manage:system", "manage:assets"])
+
+  uploadMaxFileSize: Int! @auth(requires: ["manage:system", "write:assets"])
 }
 
 # -----------------------------------------------
@@ -35,6 +41,10 @@ type AssetMutation {
     slug: String!
     name: String
   ): DefaultResponse @auth(requires: ["manage:system", "write:assets"])
+
+  deleteFolder(
+    id: Int!
+  ): DefaultResponse @auth(requires: ["manage:system", "manage:assets"])
 
   renameAsset(
     id: Int!

@@ -5,6 +5,29 @@ const path = require('path')
 const sass = require('sass')
 
 describe('default theme code blocks', () => {
+  it('scales Mermaid SVG height with its width', () => {
+    const clientPath = path.resolve(__dirname, '../../../..')
+    const scssPath = path.join(clientPath, 'scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const theme = fs.readFileSync(path.join(clientPath, 'themes/default/scss/app.scss'), 'utf8')
+    const style = document.createElement('style')
+    style.textContent = sass.renderSync({
+      data: `${globals}\n${theme}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    document.head.appendChild(style)
+
+    const root = document.createElement('div')
+    root.innerHTML = '<main class="v-main"><div class="contents"><div class="mermaid"><svg viewBox="0 0 1000 800" height="800"></svg></div></div></main>'
+    document.body.appendChild(root)
+    try {
+      expect(getComputedStyle(root.querySelector('svg')).height).toBe('auto')
+    } finally {
+      root.remove()
+      style.remove()
+    }
+  })
+
   it('uses readable light colors without changing the dark theme', () => {
     const clientPath = path.resolve(__dirname, '../../../..')
     const scssPath = path.join(clientPath, 'scss')

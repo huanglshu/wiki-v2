@@ -41,6 +41,19 @@ module.exports = {
   SiteMutation: {
     async updateConfig(obj, args, context) {
       try {
+        const uploadMaxFileSize = _.get(args, 'uploadMaxFileSize')
+        const uploadMaxFiles = _.get(args, 'uploadMaxFiles')
+        if (uploadMaxFileSize !== undefined && (!Number.isInteger(uploadMaxFileSize) || uploadMaxFileSize <= 0)) {
+          const err = new Error('Maximum upload file size must be greater than 0.')
+          err.name = 'InvalidUploadMaxFileSize'
+          throw err
+        }
+        if (uploadMaxFiles !== undefined && (!Number.isInteger(uploadMaxFiles) || uploadMaxFiles <= 0)) {
+          const err = new Error('Maximum upload file count must be a whole number greater than 0.')
+          err.name = 'InvalidUploadMaxFiles'
+          throw err
+        }
+
         if (args.hasOwnProperty('host')) {
           let siteHost = _.trim(args.host)
           if (siteHost.endsWith('/')) {
