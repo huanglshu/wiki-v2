@@ -21,6 +21,9 @@ function loadComponent() {
   }).code
   const componentModule = { exports: {} }
   const localRequire = name => {
+    if (name === '../../../../data/sideload/zh.json') {
+      return require('../../../../../data/sideload/zh.json')
+    }
     if (name === 'vuex-pathify') {
       return { get: () => () => '' }
     }
@@ -42,6 +45,16 @@ describe('navigation sidebar breadcrumb selection', () => {
 
   afterEach(() => {
     jest.restoreAllMocks()
+  })
+
+  it('loads the directory copy messages from the Chinese sideload', () => {
+    const addResource = jest.fn()
+
+    component.created.call({ $i18n: { i18next: { addResource } } })
+
+    expect(addResource).toHaveBeenCalledWith('zh', 'common', 'sidebar.copyDirectoryPath', '复制目录路径')
+    expect(addResource).toHaveBeenCalledWith('zh', 'common', 'sidebar.directoryPathCopied', '目录路径已复制。')
+    expect(addResource).toHaveBeenCalledWith('zh', 'common', 'sidebar.directoryPathCopyFailed', '复制目录路径失败。')
   })
 
   it('opens and selects a virtual directory', async () => {
@@ -110,6 +123,12 @@ describe('navigation sidebar theme', () => {
   const { component } = loadComponent()
   const items = [{ k: 'link', l: 'Documents', t: '/zh/docs', c: 'mdi-folder-outline' }]
 
+  Vue.directive('clipboard', {
+    bind(el, binding) {
+      el.dataset.clipboard = binding.value
+    }
+  })
+
   it.each([
     ['light', false, '', 'theme--light'],
     ['dark', true, 'grey darken-4-d4', 'theme--dark']
@@ -153,6 +172,39 @@ describe('navigation sidebar theme', () => {
       expect(selected).not.toBeNull()
       expect(selected.getAttribute('href')).toBe('/zh/docs')
       expect(selected.classList.contains('primary--text')).toBe(!dark)
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('copies the active directory path without selecting the directory row', async () => {
+    const browseComponent = loadComponent().component
+    const fetchBrowseItems = jest.fn()
+    const directory = { id: 4, path: '中控台（CenterConsole）', title: '中控台（CenterConsole）', isFolder: true, pageId: null, parent: 0, locale: 'zh' }
+    const testComponent = {
+      ...browseComponent,
+      methods: { ...browseComponent.methods, fetchBrowseItems },
+      mounted() {
+        this.currentMode = 'browse'
+        this.currentParent = directory
+        this.parents = [{ id: 0, title: '/ (root)' }, directory]
+      }
+    }
+    const app = new Vue({
+      vuetify: new Vuetify(),
+      render: h => h(testComponent, { props: { navMode: 'TREE' } })
+    }).$mount()
+
+    try {
+      await Vue.nextTick()
+      const copyButton = app.$el.querySelector('.nav-sidebar-directory-copy')
+      expect(copyButton.dataset.clipboard).toBe('/中控台（CenterConsole）/')
+      expect(copyButton.getAttribute('aria-label')).toBe('common:sidebar.copyDirectoryPath')
+      expect(copyButton.previousElementSibling.classList.contains('spacer')).toBe(true)
+
+      copyButton.click()
+      expect(fetchBrowseItems).not.toHaveBeenCalled()
+      expect(component.methods.directoryPathForCopy('/中控台（CenterConsole）/')).toBe('/中控台（CenterConsole）/')
     } finally {
       app.$destroy()
     }

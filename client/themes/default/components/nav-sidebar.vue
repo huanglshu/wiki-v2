@@ -58,6 +58,19 @@
           v-list-item-avatar(size='18', :style='`padding-left: ` + (idx * 8) + `px; width: auto; margin: 0 5px 0 0;`')
             v-icon(small) mdi-folder-open
           v-list-item-title {{ item.id === 0 ? '/ ' + $t('common:sidebar.root') : item.title }}
+          v-spacer(v-if='item.id === currentParent.id')
+          v-btn.nav-sidebar-directory-copy(
+            v-if='item.id === currentParent.id'
+            icon
+            x-small
+            :aria-label='$t("common:sidebar.copyDirectoryPath", { defaultValue: "Copy directory path" })'
+            :title='$t("common:sidebar.copyDirectoryPath", { defaultValue: "Copy directory path" })'
+            v-clipboard='directoryPathForCopy(item.path)'
+            @click.stop='stopDirectoryNavigation'
+            @success='onDirectoryPathCopied'
+            @error='onDirectoryPathCopyError'
+            )
+            v-icon(small) mdi-content-copy
         v-divider.mt-2
         v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + currentParent.locale + `/` + currentParent.path)')
           v-list-item-avatar(size='24')
@@ -80,6 +93,7 @@ import _ from 'lodash'
 import gql from 'graphql-tag'
 import { get } from 'vuex-pathify'
 import { VMenu } from 'vuetify/lib/components/VMenu'
+import zhTranslations from '../../../../data/sideload/zh.json'
 
 /* global siteLangs */
 
@@ -121,9 +135,39 @@ export default {
     path: get('page/path'),
     locale: get('page/locale')
   },
+  created () {
+    const i18next = this.$i18n && this.$i18n.i18next
+    if (i18next) {
+      for (const key of ['sidebar.copyDirectoryPath', 'sidebar.directoryPathCopied', 'sidebar.directoryPathCopyFailed']) {
+        i18next.addResource('zh', 'common', key, zhTranslations[`common:${key}`])
+      }
+    }
+  },
   methods: {
     navigateLink (event, href) {
       this.$emit('navigate', event, href)
+    },
+    directoryPathForCopy (path) {
+      const normalizedPath = _.trim(path || '', '/')
+      return normalizedPath ? `/${normalizedPath}/` : '/'
+    },
+    stopDirectoryNavigation () {},
+    onDirectoryPathCopied (event) {
+      if (event && event.clearSelection) {
+        event.clearSelection()
+      }
+      this.$store.commit('showNotification', {
+        style: 'success',
+        message: this.$t('common:sidebar.directoryPathCopied', { defaultValue: 'Directory path copied.' }),
+        icon: 'check'
+      })
+    },
+    onDirectoryPathCopyError () {
+      this.$store.commit('showNotification', {
+        style: 'red',
+        message: this.$t('common:sidebar.directoryPathCopyFailed', { defaultValue: 'Failed to copy directory path.' }),
+        icon: 'alert'
+      })
     },
     switchMode (mode) {
       this.currentMode = mode
@@ -306,4 +350,10 @@ export default {
 </script>
 
 <style lang='scss'>
+.nav-sidebar-directory-copy {
+  flex: 0 0 28px;
+  height: 28px;
+  margin-right: -8px;
+  width: 28px;
+}
 </style>

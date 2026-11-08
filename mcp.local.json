@@ -1,0 +1,13 @@
+{
+  "command": "npx",
+  "args": [
+    "-y",
+    "@ni-c/wikijs-mcp"
+  ],
+  "env": {
+    "WIKIJS_URL": "https://127.0.0.1:3000",
+    "WIKIJS_TOKEN": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhcGkiOjMsImdycCI6MSwiaWF0IjoxNzkzNzg3MzgxLCJleHAiOjE4MjUzNDQ5ODEsImF1ZCI6InVybjp3aWtpLmpzIiwiaXNzIjoidXJuOndpa2kuanMifQ.C7AoqCJMZOfqLXxs8hzgfFU_BfQITQQAkg7P5c1Rq2Rcth2npu1k-Hgh9CTykZXkdyQ0MWOJ9E2AaoB2bHeZ50UaRic5AKj-K1FkS8koU5h0Gcuv-DJvAA9t_wrNuAAvC3w7w8XUSlZE1ZpKyhGUR19KdTohpMSv6i65Uw0-XWK4Dguil1114xeUHFEoPHk-k52oR5YG7SdEAmTgSUVv1b_7GV3zzQDkN3RH9nXVzuKpNkYlfoO37hHu2mAL9lhGqqxsvJkDVA2loLkxNfdDj_kne_rx7itBrqP1api-ooF2_IoAC-tsbzGXVHtJZhAfosvZUFuDLOSm9GeFtspRzg",
+    "WIKIJS_LOCALE": "zh",
+    "WIKIJS_DENY_TOOLS": "delete_*,purge_page_history,set_api_state,revoke_api_key,migrate_pages_locale"
+  }
+}
