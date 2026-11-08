@@ -34,6 +34,7 @@
         v-list-item(
           v-if='item.k === `link`'
           :href='item.t'
+          :title='item.l'
           :target='item.y === `externalblank` ? `_blank` : `_self`'
           :rel='item.y === `externalblank` ? `noopener` : ``'
           @click='navigateLink($event, item.t)'
@@ -50,6 +51,7 @@
         v-list-item(
           v-for='(item, idx) of parents'
           :key='`parent-` + item.id'
+          :title='item.id === 0 ? `/ ` + $t(`common:sidebar.root`) : item.title'
           @click='fetchBrowseItems(item)'
           :input-value='item.id === currentParent.id'
           :color='dark ? undefined : `primary`'
@@ -72,17 +74,17 @@
             )
             v-icon(small) mdi-content-copy
         v-divider.mt-2
-        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + currentParent.locale + `/` + currentParent.path)')
+        v-list-item.mt-2(v-if='currentParent.pageId > 0', :key='`directorypage-` + currentParent.id', :href='`/` + currentParent.locale + `/` + currentParent.path', :title='currentParent.title', :input-value='path === currentParent.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + currentParent.locale + `/` + currentParent.path)')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ currentParent.title }}
         v-subheader.pl-4 {{$t('common:sidebar.currentDirectory')}}
       template(v-for='item of currentItems')
-        v-list-item(v-if='item.isFolder', :key='`childfolder-` + item.id', @click='fetchBrowseItems(item)')
+        v-list-item(v-if='item.isFolder', :key='`childfolder-` + item.id', :title='item.title', @click='fetchBrowseItems(item)')
           v-list-item-avatar(size='24')
             v-icon mdi-folder
           v-list-item-title {{ item.title }}
-        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :input-value='path === item.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + item.locale + `/` + item.path)')
+        v-list-item(v-else, :key='`childpage-` + item.id', :href='`/` + item.locale + `/` + item.path', :title='item.title', :input-value='path === item.path', :color='dark ? undefined : `primary`', @click='navigateLink($event, `/` + item.locale + `/` + item.path)')
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ item.title }}
@@ -264,7 +266,7 @@ export default {
             }
           }
         `,
-        fetchPolicy: 'cache-first',
+        fetchPolicy: 'network-only',
         variables: {
           parent: item.id,
           locale: this.locale

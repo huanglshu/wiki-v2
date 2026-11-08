@@ -16,18 +16,25 @@
         .subheading {{$t('common:header.searchNoResult')}}
       template(v-if='search && search.length >= 2 && results && results.length > 0')
         v-subheader.white--text {{$t('common:header.searchResultsCount', { total: response.totalHits })}}
-        v-list.search-results-items.radius-7.py-0(two-line, dense)
-          template(v-for='(item, idx) of results')
-            v-list-item(@click='goToPage(item)', @click.middle="goToPageInNewTab(item)", :key='item.id', :class='idx === cursor ? `highlighted` : ``')
-              v-list-item-avatar(tile)
-                img(src='/_assets/svg/icon-selective-highlighting.svg')
-              v-list-item-content
-                v-list-item-title(v-text='item.title')
-                v-list-item-subtitle.caption(v-text='item.description')
-                .caption.grey--text(v-text='item.path')
-              v-list-item-action
-                v-chip(label, outlined) {{item.locale.toUpperCase()}}
-            v-divider(v-if='idx < results.length - 1')
+        .search-results-items.radius-7(role='listbox')
+          .search-result-line(
+            v-for='(item, idx) of results'
+            :key='item.id'
+            role='option'
+            :aria-selected='idx === cursor ? `true` : `false`'
+            :class='idx === cursor ? `highlighted` : ``'
+            :title='getItemTooltip(item)'
+            @mouseenter='cursor = idx'
+            @click='goToPage(item)'
+            @click.middle='goToPageInNewTab(item)'
+          )
+            .search-result-line__code
+              template(v-for='(seg, segIdx) of getHighlightedSegments(item.description || item.title, search)')
+                mark.search-highlight(v-if='seg.match', :key='segIdx', v-text='seg.text')
+                span(v-else, :key='segIdx', v-text='seg.text')
+            .search-result-line__meta
+              span.search-result-line__doc(v-text='item.title || item.path')
+              span.search-result-line__lineno(v-if='getLineNumber(item)', v-text='getLineNumber(item)')
         v-pagination.mt-3(
           v-if='paginationLength > 1'
           dark
@@ -69,7 +76,7 @@ export default {
     return {
       cursor: 0,
       pagination: 1,
-      perPage: 10,
+      perPage: 20,
       response: {
         results: [],
         suggestions: [],
@@ -132,6 +139,76 @@ export default {
     })
   },
   methods: {
+    getLineNumber(item) {
+      if (!item || !item.id) {
+        return ''
+      }
+      const parts = String(item.id).split(':')
+      const candidate = parts.length > 1 ? parts[parts.length - 1] : ''
+      return /^\d+$/.test(candidate) ? candidate : ''
+    },
+    getItemTooltip(item) {
+      if (!item) {
+        return ''
+      }
+      const lineNo = this.getLineNumber(item)
+      return lineNo ? `${item.path}:${lineNo}` : String(item.path || item.title || '')
+    },
+    getSearchTerms(rawQuery) {
+      const trimmed = _.trim(String(rawQuery || ''))
+      if (!trimmed) {
+        return []
+      }
+      return _.uniq(trimmed.split(/\s+/).filter(Boolean)).sort((a, b) => b.length - a.length)
+    },
+    clipLineAroundMatch(rawText, terms) {
+      const text = String(rawText || '').replace(/\s+/g, ' ').trim()
+      if (!text || text.length <= 110 || !terms.length) {
+        return text
+      }
+      const lowerText = text.toLowerCase()
+      let firstMatchIdx = -1
+      terms.forEach(term => {
+        const idx = lowerText.indexOf(term.toLowerCase())
+        if (idx !== -1 && (firstMatchIdx === -1 || idx < firstMatchIdx)) {
+          firstMatchIdx = idx
+        }
+      })
+      if (firstMatchIdx <= 50) {
+        return text
+      }
+      const start = Math.max(0, firstMatchIdx - 28)
+      return `...${text.slice(start)}`
+    },
+    getHighlightedSegments(rawText, rawQuery) {
+      const terms = this.getSearchTerms(rawQuery)
+      const text = this.clipLineAroundMatch(rawText, terms)
+      if (!text) {
+        return []
+      }
+      if (!terms.length) {
+        return [{ text, match: false }]
+      }
+      const pattern = terms.map(t => _.escapeRegExp(t)).join('|')
+      if (!pattern) {
+        return [{ text, match: false }]
+      }
+      const regex = new RegExp(`(${pattern})`, 'gi')
+      const parts = text.split(regex)
+      const lowerTerms = terms.map(t => t.toLowerCase())
+      const segments = []
+      parts.forEach(part => {
+        if (!part) {
+          return
+        }
+        const isMatch = lowerTerms.includes(part.toLowerCase())
+        segments.push({
+          text: part,
+          match: isMatch
+        })
+      })
+      return segments.length ? segments : [{ text, match: false }]
+    },
     setSearchTerm(term) {
       this.search = term
     },
@@ -221,15 +298,74 @@ export default {
   }
 
   &-items {
+    background-color: #1e1f22;
+    border: 1px solid #393b40;
+    padding: 4px 0;
     text-align: left;
+    overflow: hidden;
+  }
 
-    .highlighted {
-      background: #FFF linear-gradient(to bottom, #FFF, mc('orange', '100'));
+  .search-result-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 28px;
+    padding: 3px 14px;
+    cursor: pointer;
+    user-select: none;
+    font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Microsoft YaHei', sans-serif;
+    transition: background-color .1s ease;
 
-      @at-root .theme--dark & {
-        background: mc('grey', '900') linear-gradient(to bottom, mc('orange', '900'), darken(mc('orange', '900'), 15%));
-      }
+    &:hover {
+      background-color: #2b2d30;
     }
+
+    &.highlighted {
+      background-color: #2e436e;
+    }
+
+    &__code {
+      flex: 1 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #dcdfe4;
+      font-size: 13.5px;
+      line-height: 22px;
+    }
+
+    &__meta {
+      flex: 0 0 auto;
+      max-width: 36%;
+      margin-left: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: right;
+      color: #6f737a;
+      font-size: 12.5px;
+      line-height: 22px;
+    }
+
+    &:hover .search-result-line__meta,
+    &.highlighted .search-result-line__meta {
+      color: #cfd6e6;
+    }
+
+    &__lineno {
+      margin-left: 5px;
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  .search-highlight {
+    background-color: rgba(214, 157, 56, 0.42);
+    border: 1px solid #d69d38;
+    border-radius: 3px;
+    color: #fff8e7;
+    padding: 0 2px;
+    font-weight: 500;
   }
 
   &-suggestions {

@@ -116,6 +116,10 @@ describe('admin pages pagination', () => {
       const descendants = vm => [vm, ...vm.$children.flatMap(descendants)]
       const select = descendants(panel).find(vm => vm.$options.name === 'v-select' && vm.items.length === 3 && vm.items[0].value === 20)
 
+      expect(app.$el.querySelector('.admin-pages-filter-locale')).toBeNull()
+      expect(app.$el.querySelector('.admin-pages-filter-state')).toBeNull()
+      expect(panel.selectedLang).toBeNull()
+      expect(panel.selectedState).toBeNull()
       expect([...controls.children].map(child => child.tagName)).toEqual(['SPAN', 'NAV', 'DIV'])
       expect(controls.querySelector('span').textContent.trim()).toBe('共 101 个页面')
       expect(select.items.map(item => item.text)).toEqual(['20条/页', '50条/页', '100条/页'])

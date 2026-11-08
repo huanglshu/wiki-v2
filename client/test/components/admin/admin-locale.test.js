@@ -22,7 +22,11 @@ const code = babel.transformSync(sfc.script.content, {
   plugins: ['@babel/plugin-transform-modules-commonjs']
 }).code
 const componentModule = { exports: {} }
-const localRequire = name => name.startsWith('gql/') ? {} : require(name)
+const localRequire = name => {
+  if (name.startsWith('gql/')) return {}
+  if (name === '../../helpers/notification-message') return require('../../../helpers/notification-message')
+  return require(name)
+}
 runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(localRequire, componentModule, componentModule.exports)
 const component = Object.assign(componentModule.exports.default, compiler.compileToFunctions(pug.render(sfc.template.content)))
 const resources = {}
@@ -38,8 +42,8 @@ for (const language of ['zh', 'en']) {
   })
 }
 
-describe('locale package sideload indicator', () => {
-  it('follows the active system language', async () => {
+describe('admin locale view', () => {
+  it('does not render the sideload locale package card', async () => {
     const locale = i18next.createInstance()
     await locale.init({ lng: 'zh', fallbackLng: 'en', ns: ['admin', 'common'], resources, initImmediate: false })
     const app = new Vue({
@@ -50,10 +54,8 @@ describe('locale package sideload indicator', () => {
 
     try {
       await Vue.nextTick()
-      expect(app.$el.querySelector('.v-chip').textContent.trim()).toBe('即将推出...')
-      await locale.changeLanguage('en')
-      await Vue.nextTick()
-      expect(app.$el.querySelector('.v-chip').textContent.trim()).toBe('Coming Soon')
+      expect(app.$el.textContent).not.toContain('加载区域包')
+      expect(app.$el.textContent).not.toContain('即将推出...')
     } finally {
       app.$destroy()
     }

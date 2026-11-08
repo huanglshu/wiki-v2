@@ -3,6 +3,7 @@ const fs = require('fs')
 const { pipeline } = require('node:stream/promises')
 const { Transform } = require('node:stream')
 const { getAnalysisSettings } = require('./analyzer')
+const { queryPageLineMatches } = require('../../../helpers/search-lines')
 
 /* global WIKI */
 
@@ -130,46 +131,14 @@ module.exports = {
    */
   async query(q, opts) {
     try {
-      const results = await this.client.search({
-        index: this.config.indexName,
-        body: {
-          query: {
-            simple_query_string: {
-              query: `*${q}*`,
-              fields: ['title^20', 'description^3', 'tags^8', 'content^1'],
-              default_operator: 'and',
-              analyze_wildcard: true
-            }
-          },
-          from: 0,
-          size: 50,
-          _source: ['title', 'description', 'path', 'locale'],
-          suggest: {
-            suggestions: {
-              text: q,
-              completion: {
-                field: 'suggest',
-                size: 5,
-                skip_duplicates: true,
-                fuzzy: true
-              }
-            }
-          }
-        }
-      })
-      return {
-        results: _.get(results, this.config.apiVersion === '8.x' ? 'hits.hits' : 'body.hits.hits', []).map(r => ({
-          id: r._id,
-          locale: r._source.locale,
-          path: r._source.path,
-          title: r._source.title,
-          description: r._source.description
-        })),
-        suggestions: _.reject(_.get(results, 'suggest.suggestions', []).map(s => _.get(s, 'options[0].text', false)), s => !s),
-        totalHits: _.get(results, this.config.apiVersion === '8.x' ? 'hits.total.value' : 'body.hits.total.value', _.get(results, this.config.apiVersion === '8.x' ? 'hits.total' : 'body.hits.total', 0))
-      }
+      return await queryPageLineMatches(q, opts)
     } catch (err) {
       WIKI.logger.warn('Search Engine Error: ', _.get(err, 'meta.body.error', err))
+      return {
+        results: [],
+        suggestions: [],
+        totalHits: 0
+      }
     }
   },
 

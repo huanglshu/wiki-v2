@@ -39,25 +39,6 @@
               hide-details
               dense
               )
-            v-spacer
-            v-select.admin-pages-filter-locale(
-              solo
-              flat
-              hide-details
-              dense
-              :label='$t("admin:ui.pages.locale")'
-              :items='langs'
-              v-model='selectedLang'
-            )
-            v-select.admin-pages-filter-state(
-              solo
-              flat
-              hide-details
-              dense
-              :label='$t("admin:ui.pages.state")'
-              :items='states'
-              v-model='selectedState'
-            )
           v-divider
           v-data-table(
             :items='filteredPages'
@@ -270,16 +251,6 @@ export default {
   .admin-pages-filter-search {
     flex: 0 1 247px;
     max-width: 247px;
-  }
-
-  .admin-pages-filter-locale {
-    flex: 0 1 125px;
-    max-width: 125px;
-  }
-
-  .admin-pages-filter-state {
-    flex: 0 1 167px;
-    max-width: 167px;
   }
 }
 

@@ -39,6 +39,11 @@ describe('admin dashboard version card', () => {
     expect(require('../../../../data/sideload/zh.json')['admin:dashboard.versionUnknown']).toEqual(expect.any(String))
   })
 
+  it('renders recentPages and lastLogins headings with larger subtitle-1 typography', () => {
+    expect(sfc.template.content).toContain(".subtitle-1.font-weight-medium {{$t('admin:dashboard.recentPages')}}")
+    expect(sfc.template.content).toContain(".subtitle-1.font-weight-medium {{$t('admin:dashboard.lastLogins')}}")
+  })
+
   it.each([
     ['2.5.317.1', '2.5.317.1', true],
     ['2.5.317.1', '2.5.318', false],

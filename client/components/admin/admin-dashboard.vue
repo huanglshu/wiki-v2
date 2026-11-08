@@ -55,7 +55,7 @@
         v-card.radius-7.animated.fadeInUp.wait-p2s
           v-toolbar(:color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`', dense, flat)
             v-spacer
-            .overline {{$t('admin:dashboard.recentPages')}}
+            .subtitle-1.font-weight-medium {{$t('admin:dashboard.recentPages')}}
             v-spacer
           v-data-table.pb-2(
             :items='recentPages'
@@ -76,7 +76,7 @@
         v-card.radius-7.animated.fadeInUp.wait-p4s
           v-toolbar(:color='$vuetify.theme.dark ? `grey darken-2` : `grey lighten-5`', dense, flat)
             v-spacer
-            .overline {{$t('admin:dashboard.lastLogins')}}
+            .subtitle-1.font-weight-medium {{$t('admin:dashboard.lastLogins')}}
             v-spacer
           v-data-table.pb-2(
             :items='lastLogins'

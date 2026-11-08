@@ -84,6 +84,33 @@ describe('navigation sidebar breadcrumb selection', () => {
     expect(query).toHaveBeenCalledTimes(2)
   })
 
+  it('refreshes the child list when an already loaded directory is selected again', async () => {
+    const directory = { id: 5, path: 'DB/MYSQL', title: 'MYSQL', isFolder: true, pageId: null, parent: 4, locale: 'zh' }
+    const staleChild = { id: 6, path: 'DB/MYSQL/old', title: 'Old', isFolder: false, pageId: 9, parent: 5, locale: 'zh' }
+    const refreshedChild = { id: 7, path: 'DB/MYSQL/new', title: 'New', isFolder: false, pageId: 10, parent: 5, locale: 'zh' }
+    const query = jest.fn().mockResolvedValue({ data: { pages: { tree: [refreshedChild] } } })
+    const nav = Object.assign(component.data(), {
+      $apollo: { query },
+      $store: { commit: jest.fn() },
+      locale: 'zh',
+      currentParent: directory,
+      parents: [{ id: 0, title: '/ (root)' }, directory],
+      loadedCache: [directory.id],
+      currentItems: [staleChild]
+    })
+    Object.keys(component.methods).forEach(name => {
+      nav[name] = component.methods[name].bind(nav)
+    })
+
+    await component.methods.fetchBrowseItems.call(nav, directory)
+
+    expect(query).toHaveBeenCalledWith(expect.objectContaining({
+      fetchPolicy: 'network-only',
+      variables: { parent: directory.id, locale: 'zh' }
+    }))
+    expect(nav.currentItems).toEqual([refreshedChild])
+  })
+
   it('does not intercept a breadcrumb that points to a real page', async () => {
     const page = { id: 9, path: 'DB/MYSQL', title: 'MYSQL', isFolder: false, pageId: 42, parent: 4, locale: 'zh' }
     const query = jest.fn().mockResolvedValue({ data: { pages: { tree: [page] } } })
@@ -205,6 +232,35 @@ describe('navigation sidebar theme', () => {
       copyButton.click()
       expect(fetchBrowseItems).not.toHaveBeenCalled()
       expect(component.methods.directoryPathForCopy('/中控台（CenterConsole）/')).toBe('/中控台（CenterConsole）/')
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('sets the full item title as tooltip on sidebar links and folders', async () => {
+    const browseComponent = loadComponent().component
+    const parentDir = { id: 10, path: '业务中台（ACDP）/微服务启动参数', title: '微服务启动参数', isFolder: true, pageId: null, parent: 1, locale: 'zh' }
+    const childPage = { id: 98, path: '业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-logistics', title: 'yunxi-dg-base-center-logistics', isFolder: false, pageId: 98, parent: 10, locale: 'zh' }
+    const testComponent = {
+      ...browseComponent,
+      methods: { ...browseComponent.methods, fetchBrowseItems: jest.fn() },
+      mounted() {
+        this.currentMode = 'browse'
+        this.currentParent = parentDir
+        this.parents = [{ id: 0, title: '/ (root)' }, parentDir]
+        this.currentItems = [childPage]
+      }
+    }
+    const app = new Vue({
+      vuetify: new Vuetify(),
+      render: h => h(testComponent, { props: { navMode: 'TREE', dark: false } })
+    }).$mount()
+
+    try {
+      await Vue.nextTick()
+      const pageLink = app.$el.querySelector('a.v-list-item[href="/zh/业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-logistics"]')
+      expect(pageLink).not.toBeNull()
+      expect(pageLink.getAttribute('title')).toBe('yunxi-dg-base-center-logistics')
     } finally {
       app.$destroy()
     }
