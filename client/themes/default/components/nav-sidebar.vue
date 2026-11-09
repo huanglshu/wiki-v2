@@ -394,7 +394,7 @@ export default {
   width: 28px;
 }
 
-.directory-search.v-text-field.v-text-field--outlined.v-input--dense {
+.directory-search.v-text-field.v-text-field--enclosed.v-text-field--outlined.v-input--dense {
   font-size: 13px;
 
   > .v-input__control > .v-input__slot {
