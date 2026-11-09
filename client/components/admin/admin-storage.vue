@@ -141,17 +141,44 @@
                   persistent-hint
                   :class='cfg.value.hint ? "mb-2" : ""'
                   )
+                  template(slot='append')
+                    v-tooltip(bottom, v-if='cfg.value.sensitive')
+                      template(v-slot:activator='{ on }')
+                        v-btn(
+                          icon
+                          small
+                          v-on='on'
+                          @click.stop='toggleSecret(target, cfg)'
+                          :aria-label='secretButtonLabel(target, cfg)'
+                          :loading='revealingSecretKey === secretFieldKey(target, cfg)'
+                        )
+                          v-icon {{ isSecretRevealed(target, cfg) ? "mdi-eye-off" : "mdi-eye" }}
+                      span {{ secretButtonLabel(target, cfg) }}
                 v-text-field(
                   v-else
                   outlined
                   :key='cfg.key'
                   :label='cfg.value.title'
                   v-model='cfg.value.value'
+                  :type='cfg.value.sensitive && !isSecretRevealed(target, cfg) ? "password" : "text"'
                   prepend-icon='mdi-cog-box'
                   :hint='cfg.value.hint ? cfg.value.hint : ""'
                   persistent-hint
                   :class='cfg.value.hint ? "mb-2" : ""'
                   )
+                  template(slot='append')
+                    v-tooltip(bottom, v-if='cfg.value.sensitive')
+                      template(v-slot:activator='{ on }')
+                        v-btn(
+                          icon
+                          small
+                          v-on='on'
+                          @click.stop='toggleSecret(target, cfg)'
+                          :aria-label='secretButtonLabel(target, cfg)'
+                          :loading='revealingSecretKey === secretFieldKey(target, cfg)'
+                        )
+                          v-icon {{ isSecretRevealed(target, cfg) ? "mdi-eye-off" : "mdi-eye" }}
+                      span {{ secretButtonLabel(target, cfg) }}
               v-divider.mt-3
               .overline.my-5 {{$t('admin:storage.syncDirection')}}
               .body-2.ml-3 {{$t('admin:storage.syncDirectionSubtitle')}}
@@ -226,6 +253,7 @@ import { LoopingRhombusesSpinner } from 'epic-spinners'
 
 import statusQuery from 'gql/admin/storage/storage-query-status.gql'
 import targetsQuery from 'gql/admin/storage/storage-query-targets.gql'
+import targetSecretQuery from 'gql/admin/storage/storage-query-target-secret.gql'
 import targetExecuteActionMutation from 'gql/admin/storage/storage-mutation-executeaction.gql'
 import targetsSaveMutation from 'gql/admin/storage/storage-mutation-save-targets.gql'
 import { translateAdminModules } from '../../helpers/admin-module'
@@ -250,6 +278,8 @@ export default {
     return {
       runningAction: false,
       runningActionHandler: '',
+      revealedSecrets: {},
+      revealingSecretKey: '',
       selectedTarget: '',
       target: {
         supportedModes: []
@@ -265,13 +295,79 @@ export default {
   },
   watch: {
     selectedTarget(newValue, oldValue) {
+      this.hideAllSecrets()
       this.target = _.find(this.targets, ['key', newValue]) || {}
     },
     targets(newValue, oldValue) {
+      this.hideAllSecrets()
       this.selectedTarget = _.get(_.find(this.targets, ['isEnabled', true]), 'key', 'disk')
     }
   },
   methods: {
+    secretFieldKey(target, cfg) {
+      return `${target.key}:${cfg.key}`
+    },
+    isSecretRevealed(target, cfg) {
+      return _.has(this.revealedSecrets, this.secretFieldKey(target, cfg))
+    },
+    secretButtonLabel(target, cfg) {
+      return this.$t(this.isSecretRevealed(target, cfg) ? 'admin:ui.storage.hideSecret' : 'admin:ui.storage.showSecret')
+    },
+    async toggleSecret(target, cfg) {
+      const fieldKey = this.secretFieldKey(target, cfg)
+      const revealed = _.get(this.revealedSecrets, fieldKey)
+      if (revealed) {
+        cfg.value.value = revealed.maskedValue
+        this.$delete(this.revealedSecrets, fieldKey)
+        return
+      }
+
+      this.revealingSecretKey = fieldKey
+      try {
+        const resp = await this.$apollo.query({
+          query: targetSecretQuery,
+          variables: {
+            targetKey: target.key,
+            configKey: cfg.key
+          },
+          fetchPolicy: 'no-cache'
+        })
+        const secret = _.get(resp, 'data.storage.targetSecret')
+        if (_.isNil(secret)) {
+          throw new Error('Storage secret unavailable')
+        }
+        if (!this._isBeingDestroyed && !this._isDestroyed) {
+          this.$set(this.revealedSecrets, fieldKey, {
+            maskedValue: cfg.value.value
+          })
+          cfg.value.value = secret
+        }
+      } catch (err) {
+        if (!this._isBeingDestroyed && !this._isDestroyed) {
+          this.$store.commit('showNotification', {
+            style: 'red',
+            message: this.$t('admin:ui.storage.secretError'),
+            icon: 'alert'
+          })
+        }
+      } finally {
+        this.revealingSecretKey = ''
+      }
+    },
+    hideAllSecrets() {
+      for (const [fieldKey, revealed] of Object.entries(this.revealedSecrets)) {
+        const separator = fieldKey.indexOf(':')
+        const targetKey = fieldKey.slice(0, separator)
+        const configKey = fieldKey.slice(separator + 1)
+        const target = _.find(this.targets, ['key', targetKey])
+        const cfg = _.find(target && target.config, ['key', configKey])
+        if (cfg) {
+          cfg.value.value = revealed.maskedValue
+        }
+      }
+      this.revealedSecrets = {}
+      this.revealingSecretKey = ''
+    },
     formatStorageTime(date) {
       if (!date) {
         return this.$t('common:notApplicable')

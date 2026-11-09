@@ -2,7 +2,7 @@
   v-list(nav, dense)
     v-list-item(@click='', ref='copyUrlButton')
       v-icon(color='grey', small) mdi-content-copy
-      v-list-item-title.px-3 Copy URL
+      v-list-item-title.px-3 {{ $t('common:page.copyUrl') }}
     v-list-item(:href='`mailto:?subject=` + encodeURIComponent(title) + `&body=` + encodeURIComponent(url) + `%0D%0A%0D%0A` + encodeURIComponent(description)')
       v-icon(color='grey', small) mdi-email-outline
       v-list-item-title.px-3 Email
@@ -36,6 +36,7 @@
 import ClipboardJS from 'clipboard'
 
 export default {
+  i18nOptions: { namespaces: 'common' },
   props: {
     url: {
       type: String,
@@ -67,6 +68,20 @@ export default {
       )
 
       popupWindow.focus()
+    },
+    showCopySuccess () {
+      this.$store.commit('showNotification', {
+        style: 'success',
+        message: this.$t('common:page.copyUrlSuccess'),
+        icon: 'content-copy'
+      })
+    },
+    showCopyError () {
+      this.$store.commit('showNotification', {
+        style: 'red',
+        message: this.$t('common:page.copyUrlError'),
+        icon: 'alert'
+      })
     }
   },
   mounted () {
@@ -74,20 +89,8 @@ export default {
       text: () => { return this.url }
     })
 
-    clip.on('success', () => {
-      this.$store.commit('showNotification', {
-        style: 'success',
-        message: `URL copied successfully`,
-        icon: 'content-copy'
-      })
-    })
-    clip.on('error', () => {
-      this.$store.commit('showNotification', {
-        style: 'red',
-        message: `Failed to copy to clipboard`,
-        icon: 'alert'
-      })
-    })
+    clip.on('success', this.showCopySuccess)
+    clip.on('error', this.showCopyError)
 
     /**
      * Center the popup on dual screens

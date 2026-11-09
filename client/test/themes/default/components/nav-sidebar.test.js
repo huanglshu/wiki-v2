@@ -129,6 +129,48 @@ describe('navigation sidebar breadcrumb selection', () => {
     expect(query).toHaveBeenCalledTimes(1)
   })
 
+  it('filters current folders and files on the client only', () => {
+    const currentItems = [
+      { id: 1, title: 'Centos日常运维', isFolder: true },
+      { id: 2, title: 'MYSQL命令行创建用户和授权', isFolder: false },
+      { id: 3, title: 'mysql-backup.sql', isFolder: false },
+      { id: 4, title: 'K8S', isFolder: true }
+    ]
+    const nav = {
+      currentItems,
+      directorySearch: ' mysql '
+    }
+
+    const filtered = component.computed.filteredCurrentItems.call(nav)
+
+    expect(filtered.map(item => item.id)).toEqual([2, 3])
+    expect(filtered.map(item => item.isFolder)).toEqual([false, false])
+
+    nav.directorySearch = ''
+    expect(component.computed.filteredCurrentItems.call(nav)).toBe(currentItems)
+  })
+
+  it('clears the search when another directory is selected', () => {
+    const nav = Object.assign(component.data(), {
+      directorySearch: 'MYSQL'
+    })
+    component.methods.clearDirectorySearch.call(nav)
+
+    expect(nav.directorySearch).toBe('')
+  })
+
+  it('clears the search when switching between custom and browse modes', () => {
+    const nav = Object.assign(component.data(), {
+      currentMode: 'browse',
+      directorySearch: 'MYSQL'
+    })
+    nav.clearDirectorySearch = component.methods.clearDirectorySearch.bind(nav)
+    component.methods.switchMode.call(nav, 'custom')
+
+    expect(nav.directorySearch).toBe('')
+    expect(nav.currentMode).toBe('custom')
+  })
+
   it('fetches a fresh tree when explicitly refreshing the current path', async () => {
     const page = { id: 6, path: 'DB/MYSQL/users', title: 'Users', isFolder: false, pageId: 9, parent: 0, locale: 'zh' }
     const query = jest.fn().mockResolvedValue({ data: { pages: { tree: [page] } } })
@@ -261,6 +303,90 @@ describe('navigation sidebar theme', () => {
       const pageLink = app.$el.querySelector('a.v-list-item[href="/zh/业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-logistics"]')
       expect(pageLink).not.toBeNull()
       expect(pageLink.getAttribute('title')).toBe('yunxi-dg-base-center-logistics')
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('renders an inline directory search with a clear control', async () => {
+    const browseComponent = loadComponent().component
+    const parentDir = { id: 10, path: '业务中台（ACDP）', title: '业务中台（ACDP）', isFolder: true, pageId: null, parent: 1, locale: 'zh' }
+    const folder = { id: 11, path: '业务中台（ACDP）/环境配置', title: '环境配置', isFolder: true, pageId: null, parent: 10, locale: 'zh' }
+    const page = { id: 12, path: '业务中台（ACDP）/开发规范', title: '开发规范', isFolder: false, pageId: 12, parent: 10, locale: 'zh' }
+    const testComponent = {
+      ...browseComponent,
+      mounted() {
+        this.currentMode = 'browse'
+        this.currentParent = parentDir
+        this.parents = [{ id: 0, title: '/ (root)' }, parentDir]
+        this.currentItems = [folder, page]
+      }
+    }
+    const app = new Vue({
+      vuetify: new Vuetify(),
+      render: h => h(testComponent, { props: { navMode: 'TREE' } })
+    }).$mount()
+
+    try {
+      await Vue.nextTick()
+      const input = app.$el.querySelector('.directory-search input')
+      expect(input).not.toBeNull()
+      expect(input.getAttribute('aria-label')).toBe('common:sidebar.searchDirectory')
+      expect(app.$el.querySelector('.directory-search .mdi-magnify')).not.toBeNull()
+
+      input.value = '规范'
+      input.dispatchEvent(new Event('input'))
+      await Vue.nextTick()
+
+      expect(app.$el.textContent).toContain('开发规范')
+      expect(app.$el.textContent).not.toContain('环境配置')
+
+      const clearButton = app.$el.querySelector('.directory-search .v-input__icon--clear')
+      expect(clearButton).not.toBeNull()
+      const nav = app.$children[0]
+      nav.directorySearch = ''
+      await Vue.nextTick()
+
+      expect(app.$el.textContent).toContain('环境配置')
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('searches root directory items and clears the query when entering a folder', async () => {
+    const browseComponent = loadComponent().component
+    const folder = { id: 1, title: 'Centos', isFolder: true }
+    const page = { id: 2, title: 'Documents', path: 'docs', locale: 'zh', isFolder: false }
+    const testComponent = {
+      ...browseComponent,
+      mounted() {
+        this.currentMode = 'browse'
+        this.currentItems = [folder, page]
+      }
+    }
+    const app = new Vue({
+      vuetify: new Vuetify(),
+      render: h => h(testComponent, { props: { navMode: 'TREE' } })
+    }).$mount()
+
+    try {
+      await Vue.nextTick()
+      const input = app.$el.querySelector('.directory-search input')
+      expect(input).not.toBeNull()
+
+      input.value = 'centos'
+      input.dispatchEvent(new Event('input'))
+      await Vue.nextTick()
+
+      expect(app.$el.textContent).toContain('Centos')
+      expect(app.$el.textContent).not.toContain('Documents')
+
+      const nav = app.$children[0]
+      nav.currentParent = folder
+      await Vue.nextTick()
+
+      expect(nav.directorySearch).toBe('')
+      expect(app.$el.textContent).toContain('Documents')
     } finally {
       app.$destroy()
     }

@@ -110,4 +110,51 @@ describe('admin storage status localization', () => {
     expect(storage.formatStorageTime(null)).toBe('不适用')
     expect(storage.formatStorageTime('2026-02-30T00:00:00Z')).toBe('不适用')
   })
+
+  it('reveals a sensitive storage value without caching and restores the mask', async () => {
+    storage.$store = { commit: jest.fn() }
+    storage.$apollo = {
+      query: jest.fn().mockResolvedValue({
+        data: {
+          storage: {
+            targetSecret: 'real-secret'
+          }
+        }
+      })
+    }
+    const target = { key: 's3' }
+    const cfg = { key: 'secretAccessKey', value: { value: '********' } }
+
+    await storage.toggleSecret(target, cfg)
+
+    expect(storage.$apollo.query).toHaveBeenCalledWith(expect.objectContaining({
+      variables: { targetKey: 's3', configKey: 'secretAccessKey' },
+      fetchPolicy: 'no-cache'
+    }))
+    expect(cfg.value.value).toBe('real-secret')
+    expect(storage.isSecretRevealed(target, cfg)).toBe(true)
+    expect(storage.secretButtonLabel(target, cfg)).toBe('隐藏明文')
+
+    await storage.toggleSecret(target, cfg)
+
+    expect(cfg.value.value).toBe('********')
+    expect(storage.isSecretRevealed(target, cfg)).toBe(false)
+  })
+
+  it('restores all revealed masks when the selected target changes', () => {
+    const s3 = {
+      key: 's3',
+      config: [{ key: 'secretAccessKey', value: { value: '********' } }]
+    }
+    const cfg = s3.config[0]
+    storage.targets = [s3]
+    storage.$set(storage.revealedSecrets, 's3:secretAccessKey', { maskedValue: '********' })
+    cfg.value.value = 'real-secret'
+
+    storage.hideAllSecrets()
+
+    expect(cfg.value.value).toBe('********')
+    expect(storage.revealedSecrets).toEqual({})
+    expect(storage.revealingSecretKey).toBe('')
+  })
 })

@@ -23,7 +23,7 @@ export default {
           backendOptions: [
             {
               expirationTime: 1000 * 60 * 60 * 24, // 24h
-              defaultVersion: '2026-11-06-code-copy'
+              defaultVersion: '2026-11-09-sidebar-search'
             },
             {
               loadPath: '{{lng}}/{{ns}}',

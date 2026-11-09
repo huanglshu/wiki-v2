@@ -78,8 +78,20 @@
           v-list-item-avatar(size='24')
             v-icon mdi-text-box
           v-list-item-title {{ currentParent.title }}
-        v-subheader.pl-4 {{$t('common:sidebar.currentDirectory')}}
-      template(v-for='item of currentItems')
+      v-text-field.directory-search.mx-2.mt-1.mb-2(
+        v-model='directorySearch'
+        dense
+        outlined
+        clearable
+        hide-details
+        prepend-inner-icon='mdi-magnify'
+        :placeholder='$t("common:sidebar.searchDirectory")'
+        :aria-label='$t("common:sidebar.searchDirectory")'
+        @click:clear='clearDirectorySearch'
+        )
+      v-subheader.pl-4(v-if='directorySearch && filteredCurrentItems.length < 1')
+        em {{ $t('common:sidebar.noDirectoryResults') }}
+      template(v-for='item of filteredCurrentItems')
         v-list-item(v-if='item.isFolder', :key='`childfolder-` + item.id', :title='item.title', @click='fetchBrowseItems(item)')
           v-list-item-avatar(size='24')
             v-icon mdi-folder
@@ -125,6 +137,7 @@ export default {
     return {
       currentMode: 'custom',
       currentItems: [],
+      directorySearch: '',
       currentParent: {
         id: 0,
         title: '/ (root)'
@@ -135,7 +148,23 @@ export default {
   },
   computed: {
     path: get('page/path'),
-    locale: get('page/locale')
+    locale: get('page/locale'),
+    filteredCurrentItems () {
+      const query = _.toLower(_.trim(this.directorySearch))
+      if (!query) {
+        return this.currentItems
+      }
+      return _.filter(this.currentItems, item => _.toLower(item.title || '').includes(query))
+    }
+  },
+  watch: {
+    currentParent (newParent, oldParent) {
+      const newId = newParent && newParent.id
+      const oldId = oldParent && oldParent.id
+      if (newId !== oldId) {
+        this.clearDirectorySearch()
+      }
+    }
   },
   created () {
     const i18next = this.$i18n && this.$i18n.i18next
@@ -171,7 +200,13 @@ export default {
         icon: 'alert'
       })
     },
+    clearDirectorySearch () {
+      this.directorySearch = ''
+    },
     switchMode (mode) {
+      if (mode !== this.currentMode) {
+        this.clearDirectorySearch()
+      }
       this.currentMode = mode
       window.localStorage.setItem('navPref', mode)
       if (mode === `browse` && this.loadedCache.length < 1) {
@@ -357,5 +392,24 @@ export default {
   height: 28px;
   margin-right: -8px;
   width: 28px;
+}
+
+.directory-search.v-text-field.v-text-field--outlined.v-input--dense {
+  font-size: 13px;
+
+  > .v-input__control > .v-input__slot {
+    min-height: 32px;
+    padding: 0 8px;
+  }
+
+  .v-input__prepend-inner,
+  .v-input__append-inner {
+    align-self: center;
+    margin-top: 0;
+  }
+
+  .v-icon {
+    font-size: 18px;
+  }
 }
 </style>

@@ -17,6 +17,10 @@ extend type Mutation {
 type StorageQuery {
   targets: [StorageTarget] @auth(requires: ["manage:system"])
   status: [StorageStatus] @auth(requires: ["manage:system"])
+  targetSecret(
+    targetKey: String!
+    configKey: String!
+  ): String @auth(requires: ["manage:system"])
 }
 
 # -----------------------------------------------

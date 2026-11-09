@@ -38,6 +38,22 @@ module.exports = {
       }), ['title', 'key'])
       return targets
     },
+    async targetSecret(obj, args, context) {
+      if (context && context.res) {
+        context.res.setHeader('Cache-Control', 'no-store')
+      }
+      const targetInfo = _.find(WIKI.data.storage, ['key', args.targetKey])
+      const configData = targetInfo && targetInfo.props && Object.prototype.hasOwnProperty.call(targetInfo.props, args.configKey) ? targetInfo.props[args.configKey] : null
+      if (!configData || configData.sensitive !== true) {
+        throw new Error('Invalid sensitive storage field')
+      }
+
+      const target = await WIKI.models.storage.query().select('config').findById(args.targetKey)
+      if (!target || !target.config || !Object.prototype.hasOwnProperty.call(target.config, args.configKey)) {
+        throw new Error('Invalid storage target')
+      }
+      return _.isNil(target.config[args.configKey]) ? '' : String(target.config[args.configKey])
+    },
     async status(obj, args, context, info) {
       let activeTargets = await WIKI.models.storage.query().where('isEnabled', true)
       return activeTargets.map(tgt => {
