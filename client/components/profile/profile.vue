@@ -8,6 +8,9 @@
             .headline.primary--text.animated.fadeInLeft {{$t('profile:title')}}
             .subheading.grey--text.animated.fadeInLeft {{$t('profile:subtitle')}}
           v-spacer
+          v-btn.animated.fadeInDown.mr-3(color='grey', outlined, @click='goBack', large)
+            v-icon(left) mdi-arrow-left
+            span {{$t('common:newpage.goback')}}
           v-btn.animated.fadeInDown(color='success', depressed, @click='saveProfile', :loading='saveLoading', large)
             v-icon(left) mdi-check
             span {{$t('common:actions.save')}}
@@ -665,6 +668,13 @@ export default {
     }
   },
   methods: {
+    goBack() {
+      if (window.history.length > 1) {
+        this.$router.go(-1)
+      } else {
+        window.location.assign('/')
+      }
+    },
     formatActivityTime(date) {
       if (!date) {
         return date
