@@ -63,6 +63,56 @@ describe('document scrolling', () => {
     expect(css).toMatch(/\.v-main__wrap\s*>\s*\.page-breadcrumb-toolbar\s*\{\s*flex:\s*0 0 auto;/)
   })
 
+  it('places the page path copy button directly after the current breadcrumb', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const toolbar = root.querySelector('template').content.querySelector('.page-breadcrumb-toolbar')
+    const findCopyButton = templateElement => {
+      const copyButton = templateElement.content.querySelector('.page-breadcrumb-copy')
+      if (copyButton) {
+        return copyButton
+      }
+      return [...templateElement.content.querySelectorAll('template')]
+        .map(findCopyButton)
+        .find(Boolean)
+    }
+    const copyButton = findCopyButton(toolbar.querySelector('template'))
+
+    expect(copyButton).not.toBeNull()
+    expect(copyButton.getAttribute('v-if')).toBe('props.item.pagePath === viewPage.path')
+    expect(copyButton.previousElementSibling.getAttribute(':href')).toBe('props.item.path')
+    expect(copyButton.getAttribute(':aria-label')).toBe('$t("common:page.copyCurrentPath")')
+    expect(copyButton.getAttribute('v-clipboard')).toBe('currentPagePathCopyText')
+  })
+
+  it('copies the decoded page path with a leading slash', () => {
+    const vm = { viewPage: { path: '业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-openapi' } }
+    expect(component.computed.currentPagePathCopyText.call(vm)).toBe('/业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-openapi')
+  })
+
+  it('decodes the current browser path by segment', () => {
+    const path = component.methods.decodePathSegments('/zh/%E4%B8%9A%E5%8A%A1%E4%B8%AD%E5%8F%B0%EF%BC%88ACDP%EF%BC%89/%E5%BE%AE%E6%9C%8D%E5%8A%A1%E5%90%AF%E5%8A%A8%E5%8F%82%E6%95%B0/yunxi-dg-base-center-openapi')
+    expect(path).toBe('/zh/业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-openapi')
+  })
+
+  it('reports page path copy success and failure', () => {
+    const vm = {
+      $store: { commit: jest.fn() },
+      $t: jest.fn(key => key)
+    }
+    const clearSelection = jest.fn()
+    component.methods.onPagePathCopied.call(vm, { clearSelection })
+    component.methods.onPagePathCopyError.call(vm)
+
+    expect(clearSelection).toHaveBeenCalled()
+    expect(vm.$store.commit).toHaveBeenCalledWith('showNotification', expect.objectContaining({
+      message: 'common:page.currentPathCopied'
+    }))
+    expect(vm.$store.commit).toHaveBeenCalledWith('showNotification', expect.objectContaining({
+      message: 'common:page.currentPathCopyFailed'
+    }))
+  })
+
   it('uses the content scroll position for the return-to-top button', () => {
     const vm = { $refs: { scrollArea: { scrollTop: 300, clientHeight: 600 } } }
     component.methods.upBtnScroll.call(vm)

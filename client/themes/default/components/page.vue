@@ -43,7 +43,19 @@
             )
             template(slot='item', slot-scope='props')
               v-icon(v-if='props.item.path === "/"', size='20', @click='goHome') mdi-home
-              v-btn.ma-0(v-else, :href='props.item.path', small, text, @click='navigateBreadcrumb($event, props.item)') {{props.item.name}}
+              template(v-else)
+                v-btn.ma-0(:href='props.item.path', small, text, @click='navigateBreadcrumb($event, props.item)') {{props.item.name}}
+                v-btn.page-breadcrumb-copy(
+                  v-if='props.item.pagePath === viewPage.path'
+                  icon
+                  small
+                  :aria-label='$t("common:page.copyCurrentPath")'
+                  :title='$t("common:page.copyCurrentPath")'
+                  v-clipboard='currentPagePathCopyText'
+                  @success='onPagePathCopied'
+                  @error='onPagePathCopyError'
+                  )
+                  v-icon(small) mdi-content-copy
           template(v-if='!viewPage.isPublished')
             v-spacer
             .caption.red--text {{$t('common:page.unpublished')}}
@@ -559,6 +571,12 @@ export default {
     pageUrl () {
       return this.currentViewUrl || window.location.href
     },
+    currentPagePath () {
+      return this.decodePathSegments(window.location.pathname)
+    },
+    currentPagePathCopyText () {
+      return `/${this.viewPage.path}`
+    },
     upBtnPosition () {
       if (this.$vuetify.breakpoint.mdAndUp) {
         return this.$vuetify.rtl ? `right: 235px;` : `left: 235px;`
@@ -605,7 +623,7 @@ export default {
   created() {
     if (this.$i18n && this.$i18n.i18next) {
       for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
-        for (const key of ['page.moreActions', 'page.newPageTooltip']) {
+        for (const key of ['page.moreActions', 'page.newPageTooltip', 'page.copyCurrentPath', 'page.currentPathCopied', 'page.currentPathCopyFailed']) {
           this.$i18n.i18next.addResource(locale, 'common', key, translations[`common:${key}`])
         }
       }
@@ -713,6 +731,15 @@ export default {
     }
   },
   methods: {
+    decodePathSegments (path) {
+      return path.split('/').map(segment => {
+        try {
+          return decodeURIComponent(segment)
+        } catch (error) {
+          return segment
+        }
+      }).join('/')
+    },
     handlePageDeleted (navigation) {
       const sidebar = this.$refs.navSidebar
       if (sidebar && sidebar.currentMode === 'browse') {
@@ -896,6 +923,23 @@ export default {
         window.location.assign(href)
       }
     },
+    onPagePathCopied (event) {
+      if (event && event.clearSelection) {
+        event.clearSelection()
+      }
+      this.$store.commit('showNotification', {
+        style: 'success',
+        message: this.$t('common:page.currentPathCopied'),
+        icon: 'check'
+      })
+    },
+    onPagePathCopyError () {
+      this.$store.commit('showNotification', {
+        style: 'red',
+        message: this.$t('common:page.currentPathCopyFailed'),
+        icon: 'alert'
+      })
+    },
     async navigateBreadcrumb (event, item) {
       if (event.button > 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return
@@ -1054,6 +1098,7 @@ export default {
 }
 
 .breadcrumbs-nav {
+  flex: 1 1 auto;
   flex-wrap: nowrap;
   max-width: 100%;
   min-width: 0;
@@ -1061,7 +1106,9 @@ export default {
   overflow-y: hidden;
   padding-top: 0;
   padding-bottom: 0;
+}
 
+.page-breadcrumb-toolbar {
   .v-btn {
     min-width: 0;
 
@@ -1073,10 +1120,17 @@ export default {
       text-indent: 0;
     }
 
+    &.page-breadcrumb-copy {
+      flex: 0 0 32px;
+      height: 32px;
+      width: 32px;
+    }
+
     &__content {
       text-transform: none;
     }
   }
+
   .v-breadcrumbs__divider {
     font-size: 17.5px;
     line-height: 1;
@@ -1085,6 +1139,7 @@ export default {
   .v-breadcrumbs__divider:nth-child(2n) {
     padding: 0 3px;
   }
+
   .v-breadcrumbs__divider:nth-child(2) {
     padding: 0 3px 0 6px;
   }
