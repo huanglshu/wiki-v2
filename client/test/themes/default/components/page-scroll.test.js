@@ -49,6 +49,17 @@ describe('document scrolling', () => {
     expect(root.querySelector('template').content.querySelector('.breadcrumbs-nav')).not.toBeNull()
   })
 
+  it('omits the page title section while keeping configured edit shortcuts in the content area', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    expect(root.querySelector('.page-header-section')).toBeNull()
+    expect(root.querySelector('.page-header-headings')).toBeNull()
+    const shortcuts = root.querySelector('.page-col-content .page-edit-shortcuts')
+    expect(shortcuts).not.toBeNull()
+    expect(shortcuts.querySelector('[\\@click="pageEdit"]')).not.toBeNull()
+    expect(shortcuts.querySelector('[\\:href="editMenuExternalUrl"]')).not.toBeNull()
+  })
+
   it('prevents the breadcrumb toolbar from growing in the page layout', () => {
     const root = document.createElement('div')
     root.innerHTML = pug.render(sfc.template.content)

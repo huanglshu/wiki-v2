@@ -693,6 +693,10 @@
     }
   }
 
+  ol > li > p {
+    display: block;
+  }
+
   dl {
     dt {
       margin-top: 0.3em;
@@ -827,6 +831,7 @@
       display: block;
       font-size: .85rem;
       font-family: 'Roboto Mono', monospace;
+      line-height: 1.5;
 
       &:after, &:before {
         content: initial;
@@ -1292,6 +1297,199 @@
     }
   }
 
+  @at-root .theme--light & {
+    color: #424b55;
+    font-size: 15px;
+    line-height: 1.8;
+
+    > div > *:first-child {
+      margin-top: 0;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+      color: #303943;
+      font-weight: 500;
+      line-height: 1.4;
+      margin: 1.5rem 0 .5rem;
+
+      &::after {
+        content: none;
+      }
+    }
+
+    h1 { font-size: 1.75rem; }
+    h2 {
+      margin-top: 2.5rem;
+      padding: 0 0 .65rem .75rem;
+      border-bottom: 1px solid #e9edf1;
+      font-size: 1.25rem;
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: .3em;
+        width: 3px;
+        height: .85em;
+        border-radius: 2px;
+        background: #327bb7;
+      }
+
+      @at-root .theme--light.is-rtl .v-main .contents h2 {
+        padding: 0 .75rem .65rem 0;
+
+        &::before {
+          left: auto;
+          right: 0;
+        }
+      }
+    }
+    h3 {
+      color: #3272a8;
+      font-size: 1rem;
+    }
+    h4, h5, h6 { font-size: 1rem; }
+
+    p {
+      padding-top: .75rem;
+    }
+
+    hr {
+      margin: 2rem 0;
+      background-color: #e9edf1;
+    }
+
+    ol:not(.links-list):not(.grid-list),
+    ul:not(.tabset-tabs):not(.contains-task-list):not(.links-list):not(.grid-list) {
+      padding-top: .5rem;
+
+      li + li {
+        margin-top: .25rem;
+      }
+    }
+
+    ul:not(.tabset-tabs):not(.contains-task-list):not(.links-list):not(.grid-list) {
+      list-style: disc;
+      padding-left: 1.5em;
+
+      > li::before {
+        content: none;
+      }
+
+      @at-root .theme--light.is-rtl .v-main .contents ul:not(.tabset-tabs):not(.contains-task-list):not(.links-list):not(.grid-list) {
+        padding-left: 0;
+        padding-right: 1.5em;
+      }
+    }
+
+    blockquote:not(.is-info):not(.is-warning):not(.is-danger):not(.is-success) {
+      margin: .75rem 0;
+      padding: .65rem 1rem;
+      border-left: 3px solid #327bb7;
+      border-radius: 0 6px 6px 0;
+      background: #f1f6fb;
+      color: #46535f;
+
+      &::before {
+        content: none;
+      }
+
+      > p:first-child {
+        padding-top: 0;
+      }
+
+      @at-root .theme--light.is-rtl .v-main .contents blockquote:not(.is-info):not(.is-warning):not(.is-danger):not(.is-success) {
+        border-left: 0;
+        border-right: 3px solid #327bb7;
+        border-radius: 6px 0 0 6px;
+      }
+    }
+
+    code:not([class^="language-"]) {
+      padding: .1em .3em;
+      border-radius: 3px;
+      background-color: #eaf2f9;
+      color: #27699f;
+      font-size: .85em;
+      overflow-wrap: anywhere;
+    }
+
+    .table-container,
+    figure.table {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
+    .table-container > table,
+    > div > table,
+    figure.table > table {
+      width: 100%;
+      margin: .5rem 0;
+      border: 1px solid #e6edf3;
+      border-collapse: separate;
+      border-spacing: 0;
+      border-radius: 6px;
+      box-shadow: none;
+
+      th, td,
+      &.dense th, &.dense td {
+        padding: .4rem .5rem;
+        border: 0;
+        border-bottom: 1px solid #e6edf3;
+        border-radius: 0;
+        box-shadow: none;
+        font-size: inherit;
+        vertical-align: top;
+      }
+
+      th {
+        min-width: 4em;
+        background: #f1f6fb;
+        color: #46535f;
+        font-weight: 500;
+        text-align: left;
+        word-break: normal;
+      }
+
+      th:not(:last-child),
+      td:not(:last-child) {
+        border-right: 1px solid #e6edf3;
+      }
+
+      tr td,
+      tr td:nth-child(even),
+      tr:nth-child(even) td,
+      tr:nth-child(even) td:nth-child(even) {
+        background: #fff;
+        overflow-wrap: anywhere;
+      }
+
+      tr:last-child td {
+        border-bottom: 0;
+      }
+    }
+
+    .prismjs {
+      background-color: #f4f7fa;
+      border-color: #e6edf3;
+
+      > code {
+        padding: 0;
+        background-color: transparent;
+        font-size: .85rem;
+        overflow-wrap: normal;
+      }
+
+      .token.property {
+        color: #0969da;
+      }
+
+      .token.string {
+        color: #1f4d7a;
+      }
+    }
+  }
+
 }
 
 // ---------------------------------
@@ -1401,7 +1599,7 @@
       max-height: none;
       overflow: visible;
 
-      @at-root .theme--dark & {
+      @at-root .theme--dark &, .theme--light & {
         background-color: #FFF;
       }
 

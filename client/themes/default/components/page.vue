@@ -62,41 +62,6 @@
             status-indicator.ml-3(negative, pulse)
         v-divider.page-breadcrumb-divider
       .page-scroll-area(ref='scrollArea', @scroll='upBtnScroll')
-        v-container.grey.pa-0(fluid, :class='$vuetify.theme.dark ? `darken-4-l3` : `lighten-4`')
-          v-row.page-header-section(no-gutters, align-content='center', style='height: 90px;')
-            v-col.page-col-content.is-page-header(
-              :offset-xl='tocPosition === `left` ? 2 : 0'
-              :offset-lg='tocPosition === `left` ? 3 : 0'
-              :xl='tocPosition === `right` ? 10 : false'
-              :lg='tocPosition === `right` ? 9 : false'
-              style='margin-top: auto; margin-bottom: auto;'
-              :class='$vuetify.rtl ? `pr-4` : `pl-4`'
-              )
-              .page-header-headings
-                .headline.grey--text(:class='$vuetify.theme.dark ? `text--lighten-2` : `text--darken-3`') {{viewPage.title}}
-                .caption.grey--text.text--darken-1 {{viewPage.description}}
-              .page-edit-shortcuts(
-                v-if='editShortcutsObj.editMenuBar'
-                :class='tocPosition === `right` ? `is-right` : ``'
-                )
-                v-btn(
-                  v-if='editShortcutsObj.editMenuBtn'
-                  @click='pageEdit'
-                  depressed
-                  small
-                  )
-                  v-icon.mr-2(small) mdi-pencil
-                  span.text-none {{$t(`common:actions.edit`)}}
-                v-btn(
-                  v-if='editShortcutsObj.editMenuExternalBtn'
-                  :href='editMenuExternalUrl'
-                  target='_blank'
-                  depressed
-                  small
-                  )
-                  v-icon.mr-2(small) {{ editShortcutsObj.editMenuExternalIcon }}
-                  span.text-none {{$t(`common:page.editExternal`, { name: editShortcutsObj.editMenuExternalName })}}
-        v-divider
         v-container.pl-5.pt-4(fluid, grid-list-xl)
           v-layout(row)
             v-flex.page-col-sd(
@@ -333,6 +298,24 @@
                     )
                     v-icon mdi-trash-can-outline
                 span {{$t('common:header.delete')}}
+              .page-edit-shortcuts(v-if='editShortcutsObj.editMenuBar && (editShortcutsObj.editMenuBtn || editShortcutsObj.editMenuExternalBtn)')
+                v-btn(
+                  v-if='editShortcutsObj.editMenuBtn'
+                  @click='pageEdit'
+                  depressed
+                  small
+                  )
+                  v-icon.mr-2(small) mdi-pencil
+                  span.text-none {{$t(`common:actions.edit`)}}
+                v-btn(
+                  v-if='editShortcutsObj.editMenuExternalBtn'
+                  :href='editMenuExternalUrl'
+                  target='_blank'
+                  depressed
+                  small
+                  )
+                  v-icon.mr-2(small) {{ editShortcutsObj.editMenuExternalIcon }}
+                  span.text-none {{$t(`common:page.editExternal`, { name: editShortcutsObj.editMenuExternalName })}}
               v-alert.mb-5(v-if='!viewPage.isPublished', color='red', outlined, icon='mdi-minus-circle', dense)
                 .caption {{$t('common:page.unpublishedWarning')}}
               .contents(ref='container', data-toolbar-order='label,wikijs-copy', @click='handleContentClick')
@@ -1197,52 +1180,38 @@ export default {
   }
 }
 
-.page-header-section {
-  position: relative;
+.page-edit-shortcuts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-bottom: 8px;
 
-  > .is-page-header {
-    position: relative;
-  }
+  .v-btn {
+    border-right: 1px solid #DDD !important;
+    border-bottom: 1px solid #DDD !important;
+    border-radius: 0;
+    color: #777;
+    background-color: #FFF !important;
 
-  .page-header-headings {
-    min-height: 52px;
-    display: flex;
-    justify-content: center;
-    flex-direction: column;
-  }
+    @at-root .theme--dark & {
+      background-color: #222 !important;
+      border-right-color: #444 !important;
+      border-bottom-color: #444 !important;
+      color: #CCC;
+    }
 
-  .page-edit-shortcuts {
-    position: absolute;
-    bottom: -33px;
-    right: 10px;
+    .v-icon {
+      color: mc('blue', '700');
+    }
 
-    .v-btn {
-      border-right: 1px solid #DDD !important;
-      border-bottom: 1px solid #DDD !important;
-      border-radius: 0;
-      color: #777;
-      background-color: #FFF !important;
+    &:first-child {
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+    }
 
-      @at-root .theme--dark & {
-        background-color: #222 !important;
-        border-right-color: #444 !important;
-        border-bottom-color: #444 !important;
-        color: #CCC;
-      }
-
-      .v-icon {
-        color: mc('blue', '700');
-      }
-
-      &:first-child {
-        border-top-left-radius: 5px;
-        border-bottom-left-radius: 5px;
-      }
-
-      &:last-child {
-        border-top-right-radius: 5px;
-        border-bottom-right-radius: 5px;
-      }
+    &:last-child {
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
     }
   }
 }
