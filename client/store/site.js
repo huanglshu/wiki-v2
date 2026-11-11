@@ -12,6 +12,7 @@ const state = {
   title: siteConfig.title,
   logoUrl: siteConfig.logoUrl,
   search: '',
+  searchScope: 'global',
   searchIsFocused: false,
   searchIsLoading: false,
   searchRestrictLocale: false,

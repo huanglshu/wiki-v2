@@ -5,6 +5,33 @@ const path = require('path')
 const sass = require('sass')
 
 describe('default theme code blocks', () => {
+  it('hides heading anchor symbols without removing heading targets', () => {
+    const clientPath = path.resolve(__dirname, '../../../..')
+    const scssPath = path.join(clientPath, 'scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const theme = fs.readFileSync(path.join(clientPath, 'themes/default/scss/app.scss'), 'utf8')
+    const style = document.createElement('style')
+    style.textContent = sass.renderSync({
+      data: `${globals}\n${theme}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    document.head.appendChild(style)
+
+    const root = document.createElement('div')
+    root.innerHTML = '<main class="v-main"><div class="contents"><h3 id="heading"><a class="toc-anchor" href="#heading">¶</a>Heading</h3></div></main>'
+    document.body.appendChild(root)
+    try {
+      const heading = root.querySelector('h3')
+      const anchor = heading.querySelector('.toc-anchor')
+      expect(getComputedStyle(anchor).display).toBe('none')
+      expect(style.textContent).not.toMatch(/h3:hover\s+\.toc-anchor/)
+      expect(heading.id).toBe('heading')
+    } finally {
+      root.remove()
+      style.remove()
+    }
+  })
+
   it('scales Mermaid SVG height with its width', () => {
     const clientPath = path.resolve(__dirname, '../../../..')
     const scssPath = path.join(clientPath, 'scss')

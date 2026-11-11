@@ -41,6 +41,9 @@ const localRequire = name => {
     }
   }
   if (name === '../../helpers/client-cache' || name.startsWith('gql/')) return {}
+  if (name === '../../../data/sideload/zh.json' || name === '../../../data/sideload/en.json') {
+    return require(path.join(__dirname, '../../../../', name.slice('../../../'.length)))
+  }
   return require(name)
 }
 runInThisContext(`(function (require, module, exports, siteConfig, siteLangs) {\n${code}\n})`)(
@@ -126,6 +129,93 @@ describe('navigation header theme', () => {
   it('uses the same color for the front page mobile search bar', () => {
     expect(component.computed.mobileSearchColor.call({ siteHeader: true, headerColor: '#3360a0' })).toBe('#3360a0')
     expect(component.computed.mobileSearchColor.call({ siteHeader: false })).toBe('deep-purple')
+  })
+
+  it('centers the development badge and registers its Chinese translation', () => {
+    const badge = document.createElement('div')
+    badge.className = 'nav-header-dev'
+    document.body.appendChild(badge)
+    const style = window.getComputedStyle(badge)
+    expect(style.top).toBe('50%')
+    expect(style.transform).toBe('translateY(-50%)')
+    expect(style.padding).toBe('5px 10px')
+    expect(style.borderRadius).toBe('999px')
+    badge.remove()
+
+    const addResource = jest.fn()
+    component.created.call({
+      $i18n: { i18next: { addResource } },
+      $vuetify: { breakpoint: { smAndDown: false } }
+    })
+    expect(addResource).toHaveBeenCalledWith('zh', 'common', 'header.developmentVersion', '开发模式')
+  })
+
+  it('offers only global and folder search, and resets the removed page scope', () => {
+    const context = { path: 'docs/page', $t: key => key }
+    const scopes = component.computed.searchScopes.call(context)
+    expect(scopes.map(scope => scope.value)).toEqual(['global', 'folder'])
+    expect(scopes[1].disabled).toBe(false)
+    expect(component.computed.searchScopes.call({ ...context, path: '' })[1].disabled).toBe(true)
+
+    const vm = { searchScope: 'page', $vuetify: { breakpoint: { smAndDown: false } } }
+    component.created.call(vm)
+    expect(vm.searchScope).toBe('global')
+  })
+
+  it('places both search scope menus above the search results overlay', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const selects = root.querySelectorAll('v-select.nav-header-search-scope')
+
+    expect(selects).toHaveLength(2)
+    selects.forEach(select => {
+      expect(select.getAttribute(':menu-props')).toContain('zIndex: 101')
+      expect(select.getAttribute(':menu-props')).toContain('minWidth: `92`')
+    })
+    const results = fs.readFileSync(path.join(__dirname, '../../../components/common/search-results.vue'), 'utf8')
+    expect(results).toMatch(/\.search-results\s*\{[^}]*z-index:\s*100;/)
+  })
+
+  it('uses compact search fields and scope options', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const fields = root.querySelectorAll('.nav-header-search-scope, .nav-header-search-input')
+    expect(fields).toHaveLength(4)
+    fields.forEach(field => expect(field.hasAttribute('dense')).toBe(true))
+
+    const menu = document.createElement('div')
+    menu.className = 'nav-header-search-scope-menu'
+    menu.innerHTML = '<div class="v-list-item"><div class="v-list-item__content"><div class="v-list-item__title">Example</div></div></div>'
+    document.body.appendChild(menu)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope-menu\s*\{\s*width:\s*max-content;/)
+    expect(window.getComputedStyle(menu.firstElementChild).minHeight).toBe('32px')
+    expect(window.getComputedStyle(menu.firstElementChild).paddingInline).toBe('10px')
+    expect(window.getComputedStyle(menu.querySelector('.v-list-item__content')).padding).toBe('6px 0px')
+    expect(window.getComputedStyle(menu.querySelector('.v-list-item__title')).fontSize).toBe('14px')
+    expect(window.getComputedStyle(menu.querySelector('.v-list-item__title')).textAlign).toBe('center')
+    menu.remove()
+  })
+
+  it('widens the search input while keeping the toolbar width constrained', () => {
+    const search = document.createElement('div')
+    search.className = 'nav-header-search'
+    document.body.appendChild(search)
+    const style = window.getComputedStyle(search)
+    expect(style.width).toBe('calc(62.5% + 130px)')
+    expect(style.maxWidth).toBe('100%')
+    expect(style.marginInline).toBe('auto')
+    search.remove()
+  })
+
+  it('keeps the scope compact and the search field flexible', () => {
+    const scope = document.createElement('div')
+    scope.className = 'nav-header-search-scope v-input'
+    document.body.appendChild(scope)
+    expect(window.getComputedStyle(scope).flex).toBe('0 0 120px')
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-input::after\s*\{[^}]*border-inline-end:\s*1px solid/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-text-field\.v-text-field--enclosed[^}]*padding:\s*0 6px/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-input\.v-text-field\.v-text-field--enclosed[^}]*padding-inline-start:\s*8px/)
+    scope.remove()
   })
 
   it('enables the blue header for the front page, administration, editor and profile', () => {

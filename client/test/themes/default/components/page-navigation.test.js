@@ -22,7 +22,8 @@ const browser = {
     pathname: '/zh/folder/old',
     search: '',
     hash: '',
-    assign: jest.fn()
+    assign: jest.fn(),
+    reload: jest.fn()
   },
   history: {
     pushState: jest.fn((state, title, href) => {
@@ -55,6 +56,8 @@ const localRequire = name => {
   if (name === 'vuex-pathify') return { get: () => () => {}, sync: () => ({}) }
   if (name === 'vue') return { component: () => {} }
   if (name === '../../../helpers/prism-copy') return { registerPrismCopyButton: () => {} }
+  if (name === '../../../helpers/search-location') return require('../../../../helpers/search-location')
+  if (name === '../../../helpers/page-find') return require('../../../../helpers/page-find')
   if (name === '../../../../data/sideload/zh.json' || name === '../../../../data/sideload/en.json') {
     return require(path.join(__dirname, '../../../../../', name.slice('../../../../'.length)))
   }
@@ -105,7 +108,8 @@ describe('document navigation', () => {
       viewPage: { id: 1, locale: 'zh' },
       scrollPositions: {},
       scrollOpts: {},
-      $store: { set: jest.fn() },
+      $store: { set: jest.fn(), commit: jest.fn() },
+      $t: key => key,
       $vuetify: { breakpoint: { smAndDown: false }, goTo: jest.fn() },
       $refs: {
         container: { querySelectorAll: () => [] },
@@ -116,7 +120,56 @@ describe('document navigation', () => {
     }
     vm.applyPage = component.methods.applyPage.bind(vm)
     vm.loadPage = component.methods.loadPage.bind(vm)
+    vm.onPageRefreshError = component.methods.onPageRefreshError.bind(vm)
   })
+
+  it('offers a localized refresh button beside the current page copy button', () => {
+    expect(sfc.template.content).toMatch(/v-icon\(small\) mdi-content-copy\s+v-btn\.page-breadcrumb-refresh\(/)
+    expect(sfc.template.content).toMatch(/v-btn\.page-breadcrumb-refresh\([\s\S]*?v-if='props\.item\.pagePath === viewPage\.path'[\s\S]*?:aria-label='\$t\("common:page\.refresh"\)'[\s\S]*?:title='\$t\("common:page\.refresh"\)'[\s\S]*?@click='refreshPage'[\s\S]*?mdi-refresh/)
+    expect(require('../../../../../data/sideload/zh.json')['common:page.refresh']).toBe('刷新当前页面')
+    expect(require('../../../../../data/sideload/en.json')['common:page.refresh']).toBe('Refresh current page')
+  })
+
+  it('refreshes current content without changing history, scroll or reloading the browser', async () => {
+    response.url = browser.location.href
+    const data = await response.json()
+    data.page.id = 1
+    data.page.path = 'folder/old'
+    response.json.mockResolvedValue(data)
+    vm.pageFindQuery = 'needle'
+    vm.updatePageFind = jest.fn()
+    vm.clearPageFind = jest.fn()
+    await component.methods.refreshPage.call(vm)
+
+    expect(fetchPage).toHaveBeenCalledWith(browser.location.href, expect.objectContaining({
+      cache: 'no-store',
+      headers: { 'X-Wiki-Page-Navigation': '1' }
+    }))
+    expect(vm.viewPage.render).toBe('<p>New content</p>')
+    expect(vm.$refs.scrollArea.scrollTop).toBe(100)
+    expect(vm.updatePageFind).toHaveBeenCalledTimes(1)
+    expect(vm.clearPageFind).not.toHaveBeenCalled()
+    expect(browser.history.pushState).not.toHaveBeenCalled()
+    expect(browser.history.replaceState).not.toHaveBeenCalled()
+    expect(browser.location.reload).not.toHaveBeenCalled()
+    expect(browser.location.assign).not.toHaveBeenCalled()
+  })
+
+  it.each(['unsupported page', 'unsupported response', 'network error', 'redirect'])(
+    'does not reload the browser when refresh fails: %s', async failure => {
+      if (failure === 'unsupported page') vm.softNavigation = false
+      if (failure === 'unsupported response') response.json.mockResolvedValue({ softNavigation: false })
+      if (failure === 'network error') fetchPage.mockRejectedValue(new Error('offline'))
+      if (failure === 'redirect') response.url = 'http://localhost:3000/zh/folder/other'
+
+      await component.methods.refreshPage.call(vm)
+      expect(browser.location.assign).not.toHaveBeenCalled()
+      expect(browser.location.reload).not.toHaveBeenCalled()
+      expect(vm.$store.commit).toHaveBeenCalledWith('showNotification', expect.objectContaining({
+        message: 'common:page.refreshFailed'
+      }))
+    }
+  )
 
   it('shows more actions only when the shortcut is enabled and an action is permitted', () => {
     const permissions = {
@@ -157,6 +210,15 @@ describe('document navigation', () => {
     expect(vm.$refs.scrollArea.scrollTop).toBe(0)
     expect(browser.location.assign).not.toHaveBeenCalled()
     expect(vm.navigationLoading).toBe(false)
+  })
+
+  it('clears document search before replacing the current page', async () => {
+    vm.pageFindQuery = 'needle'
+    vm.clearPageFind = jest.fn()
+    await vm.loadPage(new URL('http://localhost:3000/zh/folder/new'), false)
+
+    expect(vm.clearPageFind).toHaveBeenCalledTimes(1)
+    expect(vm.viewPage.id).toBe(2)
   })
 
   it('restores the scroll position on history navigation', async () => {

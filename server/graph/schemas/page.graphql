@@ -30,6 +30,7 @@ type PageQuery {
     query: String!
     path: String
     locale: String
+    scope: String
   ): PageSearchResponse! @auth(requires: ["manage:system", "read:pages"])
 
   list(

@@ -24,19 +24,22 @@ const localRequire = name => {
   if (name === 'vuex-pathify') return { get: () => () => {}, sync: () => ({}) }
   if (name === 'vue') return { component: () => {} }
   if (name === '../../../helpers/prism-copy') return { registerPrismCopyButton: () => {} }
+  if (name === '../../../helpers/search-location') return require('../../../../helpers/search-location')
+  if (name === '../../../helpers/page-find') return require('../../../../helpers/page-find')
   if (name === '../../../../data/sideload/zh.json' || name === '../../../../data/sideload/en.json') {
     return require(path.join(__dirname, '../../../../../', name.slice('../../../../'.length)))
   }
   return require(name)
 }
-runInThisContext(`(function (require, module, exports, siteLangs, document) {\n${code}\n})`)(
-  localRequire, componentModule, componentModule.exports, [], document
+runInThisContext(`(function (require, module, exports, siteLangs, document, window) {\n${code}\n})`)(
+  localRequire, componentModule, componentModule.exports, [], document, window
 )
 const component = componentModule.exports.default
 
 describe('document scrolling', () => {
   afterEach(() => {
     document.documentElement.classList.remove('page-view-scroll')
+    window.history.replaceState(null, '', '/')
   })
 
   it('keeps the breadcrumb outside the scroll area and the footer inside it', () => {
@@ -47,6 +50,45 @@ describe('document scrolling', () => {
     expect(scrollArea.querySelector('nav-footer')).not.toBeNull()
     expect(scrollArea.querySelector('.breadcrumbs-nav')).toBeNull()
     expect(root.querySelector('template').content.querySelector('.breadcrumbs-nav')).not.toBeNull()
+  })
+
+  it('hides the sidebar tag card while preserving its tag data', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const card = root.querySelector('.page-tags-card')
+    expect(card.getAttribute('v-show')).toBe('false')
+    expect(card.getAttribute('v-if')).toBe('viewPage.tags.length > 0')
+    expect(card.querySelector('[v-for]')).not.toBeNull()
+  })
+
+  it('uses the updated Chinese label for the page table of contents', () => {
+    const translations = require('../../../../../data/sideload/zh.json')
+    expect(translations['common:page.toc']).toBe('页面目录')
+    expect(sfc.template.content).toContain("$t('common:page.toc')")
+    expect(sfc.script.content).toContain("'page.toc'")
+  })
+
+  it('keeps the page directory compact and allows long headings to wrap', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const card = root.querySelector('.page-toc-card')
+    const parentTemplate = card.querySelector('template')
+    const parentItem = parentTemplate.content.querySelector('.page-toc-card__item')
+    const childItem = parentTemplate.content.querySelector('template').content.querySelector('.page-toc-card__item')
+    expect(card.querySelector('.page-toc-card__heading')).not.toBeNull()
+    expect(parentItem.getAttribute('@click')).toBe('$vuetify.goTo(tocItem.anchor, scrollOpts)')
+    expect(childItem.getAttribute('@click')).toBe('$vuetify.goTo(tocSubItem.anchor, scrollOpts)')
+    expect(childItem.classList.contains('page-toc-card__item--child')).toBe(true)
+
+    const scssPath = path.resolve(__dirname, '../../../../scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const css = sass.renderSync({
+      data: `${globals}\n${sfc.styles[0].content}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    expect(css).toMatch(/\.page-toc-card__item--child\s*\{[^}]*padding-inline-start:\s*24px/)
+    expect(css).toMatch(/\.v-list-item \.page-toc-card__text\s*\{[^}]*white-space:\s*normal;[^}]*overflow-wrap:\s*anywhere/)
+    expect(compiler.compile(pug.render(sfc.template.content)).errors).toEqual([])
   })
 
   it('omits the page title section while keeping configured edit shortcuts in the content area', () => {
@@ -96,6 +138,17 @@ describe('document scrolling', () => {
     expect(copyButton.getAttribute('v-clipboard')).toBe('currentPagePathCopyText')
   })
 
+  it('places document search after the breadcrumbs with navigation controls', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const toolbar = root.querySelector('template').content.querySelector('.page-breadcrumb-toolbar')
+    const search = toolbar.querySelector('.page-find')
+    expect(search.previousElementSibling.classList.contains('breadcrumbs-nav')).toBe(true)
+    expect(search.querySelector('input').getAttribute('v-model')).toBe('pageFindQuery')
+    expect(search.querySelectorAll('.page-find__button')).toHaveLength(3)
+    expect(compiler.compile(pug.render(sfc.template.content)).errors).toEqual([])
+  })
+
   it('copies the decoded page path with a leading slash', () => {
     const vm = { viewPage: { path: '业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-openapi' } }
     expect(component.computed.currentPagePathCopyText.call(vm)).toBe('/业务中台（ACDP）/微服务启动参数/yunxi-dg-base-center-openapi')
@@ -134,13 +187,84 @@ describe('document scrolling', () => {
     expect(component.data().scrollOpts.appOffset).toBe(false)
   })
 
+  it('highlights the selected search result and scrolls to it', () => {
+    const container = document.createElement('div')
+    container.innerHTML = '<p>first target</p><p>second target</p>'
+    const scrollArea = { scrollTop: 100, getBoundingClientRect: () => ({ top: 50 }) }
+    const vm = { $refs: { container, scrollArea } }
+    const rect = jest.spyOn(window.HTMLElement.prototype, 'getBoundingClientRect')
+      .mockReturnValue({ top: 200 })
+    const params = new URLSearchParams({ text: 'target', query: 'target', occurrence: '1' })
+    window.history.replaceState(null, '', `/#search-${params.toString()}`)
+
+    component.methods.scrollToSearchResult.call(vm)
+
+    const mark = container.querySelector('mark')
+    expect(mark.textContent).toBe('target')
+    expect(mark.parentElement.textContent).toBe('second target')
+    expect(scrollArea.scrollTop).toBe(226)
+    rect.mockRestore()
+
+    window.history.replaceState(null, '', '/#other')
+    component.methods.scrollToSearchResult.call(vm)
+    expect(container.querySelector('mark')).toBeNull()
+  })
+
+  it('highlights all document matches, cycles and clears them', () => {
+    const container = document.createElement('div')
+    container.innerHTML = '<p>Login and <strong>LOGIN</strong></p>'
+    const scrollArea = { scrollTop: 0, getBoundingClientRect: () => ({ top: 0 }) }
+    const vm = {
+      $refs: { container, scrollArea },
+      pageFindQuery: 'login',
+      pageFindCount: 0,
+      pageFindIndex: -1
+    }
+    vm.movePageFind = component.methods.movePageFind.bind(vm)
+    component.methods.updatePageFind.call(vm)
+
+    expect(vm.pageFindCount).toBe(2)
+    expect(vm.pageFindIndex).toBe(0)
+    expect(container.querySelectorAll('.page-find-highlight--current')).toHaveLength(1)
+    vm.movePageFind(1)
+    expect(vm.pageFindIndex).toBe(1)
+    expect(container.querySelector('.page-find-highlight--current').textContent).toBe('LOGIN')
+    vm.movePageFind(1)
+    expect(vm.pageFindIndex).toBe(0)
+    vm.movePageFind(-1)
+    expect(vm.pageFindIndex).toBe(1)
+
+    component.methods.clearPageFind.call(vm)
+    expect(vm.pageFindQuery).toBe('')
+    expect(container.querySelectorAll('mark')).toHaveLength(0)
+    expect(container.textContent).toBe('Login and LOGIN')
+  })
+
+  it('clears document highlights before applying a search-result location', () => {
+    const container = document.createElement('div')
+    container.innerHTML = '<p>first target</p><p>second target</p>'
+    const scrollArea = { scrollTop: 0, getBoundingClientRect: () => ({ top: 0 }) }
+    const vm = { $refs: { container, scrollArea }, pageFindQuery: 'target', pageFindCount: 0, pageFindIndex: -1 }
+    vm.movePageFind = component.methods.movePageFind.bind(vm)
+    vm.clearPageFind = component.methods.clearPageFind.bind(vm)
+    component.methods.updatePageFind.call(vm)
+    const params = new URLSearchParams({ text: 'target', query: 'target', occurrence: '1' })
+    window.history.replaceState(null, '', `/#search-${params.toString()}`)
+
+    component.methods.scrollToSearchResult.call(vm)
+
+    expect(vm.pageFindQuery).toBe('')
+    expect(container.querySelectorAll('[data-page-find]')).toHaveLength(0)
+    expect(container.querySelector('mark[data-search-result-highlight]').parentElement.textContent).toBe('second target')
+  })
+
   it('restores document scrolling for print view and on destruction', () => {
     component.watch.printView(false)
     expect(document.documentElement.classList.contains('page-view-scroll')).toBe(true)
     component.watch.printView(true)
     expect(document.documentElement.classList.contains('page-view-scroll')).toBe(false)
     component.watch.printView(false)
-    component.beforeDestroy.call({ $root: { $off: jest.fn() } })
+    component.beforeDestroy.call({ $root: { $off: jest.fn() }, $refs: { container: document.createElement('div') } })
     expect(document.documentElement.classList.contains('page-view-scroll')).toBe(false)
   })
 })

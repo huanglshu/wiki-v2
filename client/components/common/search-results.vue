@@ -1,9 +1,9 @@
 <template lang="pug">
-  .search-results(v-if='searchIsFocused || (search && search.length > 1)')
-    .search-results-container
+  .search-results(v-if='searchIsFocused || (search && search.length > 1)', @click.self='closeSearch')
+    .search-results-container(@click.self='closeSearch')
       .search-results-help(v-if='!search || (search && search.length < 2)')
-        img(src='/_assets/svg/icon-search-alt.svg')
-        .mt-4 {{$t('common:header.searchHint')}}
+        v-icon(size='18', aria-hidden='true') mdi-magnify
+        span {{$t('common:header.searchHint')}}
       .search-results-loader(v-else-if='searchIsLoading && (!results || results.length < 1)')
         orbit-spinner(
           :animation-duration='1000'
@@ -11,9 +11,9 @@
           color='#FFF'
         )
         .headline.mt-5 {{$t('common:header.searchLoading')}}
-      .search-results-none(v-else-if='!searchIsLoading && (!results || results.length < 1)')
-        img(src='/_assets/svg/icon-no-results.svg', alt='No Results')
-        .subheading {{$t('common:header.searchNoResult')}}
+      .search-results-none(v-else-if='!searchIsLoading && (!results || results.length < 1)', role='status')
+        v-icon(size='18', aria-hidden='true') mdi-magnify
+        span {{$t('common:header.searchNoResult')}}
       template(v-if='search && search.length >= 2 && results && results.length > 0')
         v-subheader.white--text {{$t('common:header.searchResultsCount', { total: response.totalHits })}}
         .search-results-items.radius-7(role='listbox')
@@ -52,18 +52,11 @@
               v-list-item-content
                 v-list-item-title(v-text='term')
             v-divider(v-if='idx < suggestions.length - 1')
-      .text-xs-center.pt-5(v-if='search && search.length > 1')
-        //- v-btn.mx-2(outlined, color='orange', @click='search = ``', v-if='results.length > 0')
-        //-   v-icon(left) mdi-content-save
-        //-   span {{$t('common:header.searchCopyLink')}}
-        v-btn.mx-2(outlined, color='pink', @click='search = ``')
-          v-icon(left) mdi-close
-          span {{$t('common:header.searchClose')}}
 </template>
 
 <script>
 import _ from 'lodash'
-import { sync } from 'vuex-pathify'
+import { get, sync } from 'vuex-pathify'
 import { OrbitSpinner } from 'epic-spinners'
 
 import searchPagesQuery from 'gql/common/common-pages-query-search.gql'
@@ -86,6 +79,9 @@ export default {
   },
   computed: {
     search: sync('site/search'),
+    searchScope: sync('site/searchScope'),
+    pagePath: get('page/path'),
+    pageLocale: get('page/locale'),
     searchIsFocused: sync('site/searchIsFocused'),
     searchIsLoading: sync('site/searchIsLoading'),
     searchRestrictLocale: sync('site/searchRestrictLocale'),
@@ -139,6 +135,10 @@ export default {
     })
   },
   methods: {
+    closeSearch() {
+      this.search = ''
+      this.searchIsFocused = false
+    },
     getLineNumber(item) {
       if (!item || !item.id) {
         return ''
@@ -213,18 +213,45 @@ export default {
       this.search = term
     },
     goToPage(item) {
-      window.location.assign(`/${item.locale}/${item.path}`)
+      const url = this.getResultUrl(item)
+      this.search = ''
+      this.searchIsFocused = false
+      const sameUrl = new URL(url, window.location.href).href === window.location.href
+      window.location.assign(url)
+      if (sameUrl) {
+        window.dispatchEvent(new Event('hashchange'))
+      }
     },
     goToPageInNewTab(item) {
-      window.open(`/${item.locale}/${item.path}`, '_blank')
+      window.open(this.getResultUrl(item), '_blank', 'noopener')
+    },
+    getResultUrl(item) {
+      const base = `/${item.locale}/${item.path}`
+      const line = this.getLineNumber(item)
+      const previousMatches = line ? this.response.results.filter(result =>
+        result.locale === item.locale && result.path === item.path &&
+        result.description === item.description && Number(this.getLineNumber(result)) < Number(line)
+      ).length : 0
+      const params = new URLSearchParams()
+      if (line) {
+        params.set('line', line)
+      }
+      params.set('text', item.description || '')
+      params.set('query', this.search)
+      params.set('occurrence', String(previousMatches))
+      return `${base}#search-${params.toString()}`
     }
   },
   apollo: {
     response: {
       query: searchPagesQuery,
       variables() {
+        const scope = this.pagePath ? this.searchScope : 'global'
         return {
-          query: this.search
+          query: this.search,
+          scope,
+          locale: scope === 'global' ? null : this.pageLocale,
+          path: scope === 'page' ? this.pagePath : (scope === 'folder' ? this.pagePath.split('/').slice(0, -1).join('/') : null)
         }
       },
       fetchPolicy: 'network-only',
@@ -268,15 +295,20 @@ export default {
     max-width: 1024px;
   }
 
-  &-help {
-    text-align: center;
-    padding: 32px 0;
-    font-size: 18px;
-    font-weight: 300;
-    color: #FFF;
+  &-help,
+  &-none {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    max-width: 100%;
+    padding: 12px 16px;
+    color: #c5c9cf;
+    font-size: 14px;
+    line-height: 20px;
+    text-align: left;
 
-    img {
-      width: 104px;
+    .v-icon {
+      color: inherit;
     }
   }
 
@@ -287,14 +319,6 @@ export default {
     flex-direction: column;
     padding: 32px 0;
     color: #FFF;
-  }
-
-  &-none {
-    color: #FFF;
-
-    img {
-      width: 200px;
-    }
   }
 
   &-items {

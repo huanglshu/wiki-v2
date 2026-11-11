@@ -1,8 +1,51 @@
 const _ = require('lodash')
+const cheerio = require('cheerio')
 const striptags = require('striptags')
 const he = require('he')
+const markdown = require('markdown-it')({ html: true })
 
 /* global WIKI */
+
+const resourceExtensions = 'png|jpe?g|gif|webp|svg|bmp|ico|avif|tiff?|pdf|docx?|xlsx?|pptx?|odt|ods|odp|zip|rar|7z|tar|gz|mp3|mp4|wav|webm|mov|woff2?|ttf|otf'
+const resourcePathPattern = new RegExp(`(?:https?:\\/\\/|\\/|\\.\\.?\\/)?[^\\s<>"'\\[\\]()|]*\\.(?:${resourceExtensions})(?:[?#][^\\s<>"'\\[\\]()|]*)?(?=$|[\\s<>"'\\[\\]()|,;])`, 'gi')
+const resourceDirectoryPattern = /(?:https?:\/\/[^\s/]+)?\/(?:_assets|uploads)\/[^\s<>"'[\]()|]*/gi
+const resourceTargetPattern = new RegExp(`\\.(?:${resourceExtensions})(?:[?#].*)?$`, 'i')
+
+function isResourceTarget(target) {
+  return resourceTargetPattern.test(target) || /^(?:https?:\/\/[^/]+)?\/(?:_assets|uploads)\//i.test(target)
+}
+
+function removeResourcePaths(text) {
+  return String(text || '').replace(resourceDirectoryPattern, ' ').replace(resourcePathPattern, ' ')
+}
+
+function searchableLine(rawLine, env) {
+  const tokens = markdown.parseInline(rawLine, env)[0].children || []
+  const parts = []
+  tokens.forEach(token => {
+    if (token.type === 'link_open') {
+      const target = token.attrGet('href') || ''
+      if (!isResourceTarget(target)) {
+        parts.push(target)
+      }
+    } else if (token.type === 'image') {
+      parts.push(token.content)
+    } else if (token.type === 'html_inline') {
+      const $ = cheerio.load(token.content, null, false)
+      $('a[href]').each((index, element) => {
+        const target = $(element).attr('href')
+        if (!isResourceTarget(target)) {
+          parts.push(target)
+        }
+      })
+      $('img[alt]').each((index, element) => parts.push($(element).attr('alt')))
+      parts.push(striptags(token.content))
+    } else if (token.type === 'text' || token.type === 'code_inline') {
+      parts.push(token.content)
+    }
+  })
+  return he.decode(removeResourcePaths(parts.join(' ')))
+}
 
 /**
  * Split a search query into non-empty literal terms.
@@ -82,12 +125,14 @@ function extractPageLineMatches(page, queryOrTerms) {
   const matches = []
   if (sourceText) {
     const lines = sourceText.split(/\r?\n/)
+    const env = {}
+    markdown.parse(sourceText, env)
     lines.forEach((rawLine, idx) => {
       const lineText = _.trim(rawLine)
       if (!lineText) {
         return
       }
-      if (matchesAllTerms(lineText, lowerTerms)) {
+      if (matchesAllTerms(searchableLine(lineText, env), lowerTerms)) {
         matches.push({
           id: `${page.id}:${idx + 1}`,
           title: page.title,
@@ -110,7 +155,7 @@ function extractPageLineMatches(page, queryOrTerms) {
         _.trim(page.description) :
         (titleMatched ? _.trim(page.title) : _.trim(page.path))
       matches.push({
-        id: `${page.id}:1`,
+        id: String(page.id),
         title: page.title,
         description: fallbackLine,
         path: page.path,
@@ -154,7 +199,11 @@ async function queryPageLineMatches(q, opts = {}) {
       if (opts && opts.locale) {
         builder.andWhere('pages.localeCode', opts.locale)
       }
-      if (opts && opts.path) {
+      if (opts.scope === 'page') {
+        builder.andWhere('pages.path', opts.path || '')
+      } else if (opts.scope === 'folder' && opts.path) {
+        builder.andWhere('pages.path', 'like', `${opts.path}/%`)
+      } else if (!opts.scope && opts.path) {
         builder.andWhere('pages.path', 'like', `${opts.path}%`)
       }
       terms.forEach(term => {
@@ -176,6 +225,12 @@ async function queryPageLineMatches(q, opts = {}) {
 
   const results = []
   sortedPages.forEach(page => {
+    if (opts.scope === 'page' && page.path !== opts.path) {
+      return
+    }
+    if (opts.scope === 'folder' && opts.path && !page.path.startsWith(`${opts.path}/`)) {
+      return
+    }
     const pageMatches = extractPageLineMatches(page, terms)
     if (pageMatches.length) {
       results.push(...pageMatches)

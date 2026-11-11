@@ -32,8 +32,8 @@
 
     v-main(ref='content')
       v-progress-linear(v-if='navigationLoading', indeterminate, absolute, color='primary', height='2')
-      template(v-if='viewPage.path !== `home`')
-        v-toolbar.page-breadcrumb-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-d3` : `white`', flat, dense, v-if='$vuetify.breakpoint.smAndUp')
+      template(v-if='!printView')
+        v-toolbar.page-breadcrumb-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-d3` : `white`', flat, dense)
           //- v-btn.pl-0(v-if='$vuetify.breakpoint.xsOnly', flat, @click='toggleNavigation')
           //-   v-icon(color='grey darken-2', left) menu
           //-   span Navigation
@@ -56,6 +56,34 @@
                   @error='onPagePathCopyError'
                   )
                   v-icon(small) mdi-content-copy
+                v-btn.page-breadcrumb-refresh(
+                  v-if='props.item.pagePath === viewPage.path'
+                  icon
+                  small
+                  :aria-label='$t("common:page.refresh")'
+                  :title='$t("common:page.refresh")'
+                  @click='refreshPage'
+                  )
+                  v-icon(small) mdi-refresh
+          .page-find
+            v-icon.page-find__icon(size='18') mdi-magnify
+            input.page-find__input(
+              v-model='pageFindQuery'
+              type='text'
+              autocomplete='off'
+              :aria-label='$t("common:page.findInPage")'
+              :placeholder='$t("common:page.findInPage")'
+              @keydown.enter.exact.prevent='movePageFind(1)'
+              @keydown.enter.shift.prevent='movePageFind(-1)'
+              @keydown.esc.prevent='clearPageFind'
+            )
+            span.page-find__count(v-if='pageFindQuery', aria-live='polite', :aria-label='$t("common:page.findCount", { current: pageFindIndex + 1, total: pageFindCount })') {{pageFindIndex + 1}}/{{pageFindCount}}
+            v-btn.page-find__button(icon, x-small, :disabled='!pageFindCount', :title='$t("common:page.findPrevious")', :aria-label='$t("common:page.findPrevious")', @click='movePageFind(-1)')
+              v-icon(size='18') mdi-chevron-up
+            v-btn.page-find__button(icon, x-small, :disabled='!pageFindCount', :title='$t("common:page.findNext")', :aria-label='$t("common:page.findNext")', @click='movePageFind(1)')
+              v-icon(size='18') mdi-chevron-down
+            v-btn.page-find__button(icon, x-small, :disabled='!pageFindQuery', :title='$t("common:page.findClear")', :aria-label='$t("common:page.findClear")', @click='clearPageFind')
+              v-icon(size='18') mdi-close
           template(v-if='!viewPage.isPublished')
             v-spacer
             .caption.red--text {{$t('common:page.unpublished')}}
@@ -72,20 +100,20 @@
               xl2
               )
               v-card.page-toc-card.mb-5(v-if='tocDecoded.length')
-                .overline.pa-5.pb-0(:class='$vuetify.theme.dark ? `blue--text text--lighten-2` : `primary--text`') {{$t('common:page.toc')}}
-                v-list.pb-3(dense, nav, :class='$vuetify.theme.dark ? `darken-3-d3` : ``')
+                .page-toc-card__heading(:class='$vuetify.theme.dark ? `blue--text text--lighten-2` : `primary--text`') {{$t('common:page.toc')}}
+                v-list.page-toc-card__list(dense, nav, :class='$vuetify.theme.dark ? `darken-3-d3` : ``')
                   template(v-for='(tocItem, tocIdx) in tocDecoded')
-                    v-list-item(@click='$vuetify.goTo(tocItem.anchor, scrollOpts)')
-                      v-icon(color='grey', small) {{ $vuetify.rtl ? `mdi-chevron-left` : `mdi-chevron-right` }}
-                      v-list-item-title.px-3 {{tocItem.title}}
+                    v-list-item.page-toc-card__item(:title='tocItem.title', @click='$vuetify.goTo(tocItem.anchor, scrollOpts)')
+                      v-icon.page-toc-card__icon(color='grey', small) {{ $vuetify.rtl ? `mdi-chevron-left` : `mdi-chevron-right` }}
+                      v-list-item-title.page-toc-card__text {{tocItem.title}}
                     //- v-divider(v-if='tocIdx < toc.length - 1 || tocItem.children.length')
                     template(v-for='tocSubItem in tocItem.children')
-                      v-list-item(@click='$vuetify.goTo(tocSubItem.anchor, scrollOpts)')
-                        v-icon.px-3(color='grey lighten-1', small) {{ $vuetify.rtl ? `mdi-chevron-left` : `mdi-chevron-right` }}
-                        v-list-item-title.px-3.caption.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-1`') {{tocSubItem.title}}
+                      v-list-item.page-toc-card__item.page-toc-card__item--child(:title='tocSubItem.title', @click='$vuetify.goTo(tocSubItem.anchor, scrollOpts)')
+                        v-icon.page-toc-card__icon(color='grey lighten-1', small) {{ $vuetify.rtl ? `mdi-chevron-left` : `mdi-chevron-right` }}
+                        v-list-item-title.page-toc-card__text.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-1`') {{tocSubItem.title}}
                       //- v-divider(inset, v-if='tocIdx < toc.length - 1')
 
-              v-card.page-tags-card.mb-5(v-if='viewPage.tags.length > 0')
+              v-card.page-tags-card.mb-5(v-if='viewPage.tags.length > 0', v-show='false')
                 .pa-5
                   .overline.teal--text.pb-2(:class='$vuetify.theme.dark ? `text--lighten-3` : ``') {{$t('common:page.tags')}}
                   v-chip.mr-1.mb-1(
@@ -142,8 +170,8 @@
                       span {{$t('common:comments.newComment')}}
 
               v-card.page-author-card.mb-5
-                .pa-5
-                  .overline.indigo--text.d-flex(:class='$vuetify.theme.dark ? `text--lighten-3` : ``')
+                .page-author-card__content
+                  .page-author-card__heading.indigo--text(:class='$vuetify.theme.dark ? `text--lighten-3` : ``')
                     span {{$t('common:page.lastEditedBy')}}
                     v-spacer
                     v-tooltip(right, v-if='isAuthenticated')
@@ -158,8 +186,8 @@
                           )
                           v-icon(color='indigo', dense) mdi-history
                       span {{$t('common:header.history')}}
-                  .page-author-card-name.body-2.grey--text(:class='$vuetify.theme.dark ? `` : `text--darken-3`') {{ viewPage.authorName }}
-                  .page-author-card-date.caption.grey--text.text--darken-1 {{ viewPage.updatedAt | moment('YYYY-MM-DD HH:mm:ss') }}
+                  .page-author-card-name.grey--text(:class='$vuetify.theme.dark ? `` : `text--darken-3`') {{ viewPage.authorName }}
+                  .page-author-card-date.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-1`') {{ viewPage.updatedAt | moment('YYYY-MM-DD HH:mm:ss') }}
 
               //- v-card.mb-5
               //-   .pa-5
@@ -360,6 +388,8 @@ import { get, sync } from 'vuex-pathify'
 import _ from 'lodash'
 import Vue from 'vue'
 import { registerPrismCopyButton } from '../../../helpers/prism-copy'
+import { clearSearchHighlights, findSearchLocation, highlightSearchLocation } from '../../../helpers/search-location'
+import { clearPageFindHighlights, highlightPageFind } from '../../../helpers/page-find'
 import zhTranslations from '../../../../data/sideload/zh.json'
 import enTranslations from '../../../../data/sideload/en.json'
 
@@ -494,6 +524,9 @@ export default {
       navigationController: null,
       currentViewUrl: '',
       scrollPositions: {},
+      pageFindQuery: '',
+      pageFindCount: 0,
+      pageFindIndex: -1,
       navShown: false,
       navExpanded: false,
       upBtnShown: false,
@@ -606,7 +639,7 @@ export default {
   created() {
     if (this.$i18n && this.$i18n.i18next) {
       for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
-        for (const key of ['page.moreActions', 'page.newPageTooltip', 'page.copyCurrentPath', 'page.currentPathCopied', 'page.currentPathCopyFailed']) {
+        for (const key of ['page.toc', 'page.moreActions', 'page.newPageTooltip', 'page.copyCurrentPath', 'page.refresh', 'page.refreshFailed', 'page.currentPathCopied', 'page.currentPathCopyFailed', 'page.findInPage', 'page.findPrevious', 'page.findNext', 'page.findClear', 'page.findCount']) {
           this.$i18n.i18next.addResource(locale, 'common', key, translations[`common:${key}`])
         }
       }
@@ -642,7 +675,9 @@ export default {
       const current = new URL(this.currentViewUrl)
       if (url.pathname === current.pathname && url.search === current.search) {
         this.currentViewUrl = url.href
-        if (url.hash) {
+        if (url.hash.startsWith('#search-')) {
+          this.scrollToSearchResult()
+        } else if (url.hash) {
           this.$vuetify.goTo(decodeURIComponent(url.hash), this.scrollOpts)
         } else {
           this.$refs.scrollArea.scrollTop = this.scrollPositions[url.href] || 0
@@ -652,6 +687,8 @@ export default {
       }
     }
     window.addEventListener('popstate', this._onPagePopState)
+    this._onSearchHashChange = () => this.scrollToSearchResult()
+    window.addEventListener('hashchange', this._onSearchHashChange)
 
     if (this.$vuetify.theme.dark) {
       this.scrollStyle.bar.background = '#424242'
@@ -674,7 +711,9 @@ export default {
 
     // -> Handle anchor scrolling
     if (window.location.hash && window.location.hash.length > 1) {
-      if (document.readyState === 'complete') {
+      if (window.location.hash.startsWith('#search-')) {
+        this.$nextTick(() => this.scrollToSearchResult())
+      } else if (document.readyState === 'complete') {
         this.$nextTick(() => {
           this.$vuetify.goTo(decodeURIComponent(window.location.hash), this.scrollOpts)
         })
@@ -699,21 +738,92 @@ export default {
     })
   },
   beforeDestroy () {
+    clearSearchHighlights(this.$refs.container)
+    clearPageFindHighlights(this.$refs.container)
     document.documentElement.classList.remove('page-view-scroll')
     this.$root.$off('page-deleted', this.handlePageDeleted)
     if (this._onPagePopState) {
       window.removeEventListener('popstate', this._onPagePopState)
     }
+    window.removeEventListener('hashchange', this._onSearchHashChange)
     if (this.navigationController) {
       this.navigationController.abort()
     }
   },
   watch: {
+    pageFindQuery () {
+      this.updatePageFind()
+    },
     printView (value) {
       document.documentElement.classList.toggle('page-view-scroll', !value)
     }
   },
   methods: {
+    refreshPage() {
+      return this.loadPage(new URL(window.location.href), true, { refresh: true })
+    },
+    onPageRefreshError() {
+      this.$store.commit('showNotification', {
+        style: 'red',
+        message: this.$t('common:page.refreshFailed'),
+        icon: 'alert'
+      })
+    },
+    updatePageFind () {
+      const container = this.$refs.container
+      clearPageFindHighlights(container)
+      this._pageFindMatches = []
+      this.pageFindIndex = -1
+      this.pageFindCount = 0
+      if (!this.pageFindQuery || !container) {
+        return
+      }
+      clearSearchHighlights(container)
+      this._pageFindMatches = highlightPageFind(container, this.pageFindQuery)
+      this.pageFindCount = this._pageFindMatches.length
+      if (this.pageFindCount) {
+        this.movePageFind(1)
+      }
+    },
+    movePageFind (direction) {
+      if (!this.pageFindCount || !this._pageFindMatches) {
+        return
+      }
+      if (this.pageFindIndex >= 0) {
+        this._pageFindMatches[this.pageFindIndex].forEach(mark => mark.classList.remove('page-find-highlight--current'))
+      }
+      this.pageFindIndex = (this.pageFindIndex + direction + this.pageFindCount) % this.pageFindCount
+      const marks = this._pageFindMatches[this.pageFindIndex]
+      marks.forEach(mark => mark.classList.add('page-find-highlight--current'))
+      if (this.$refs.scrollArea && marks[0]) {
+        const offset = marks[0].getBoundingClientRect().top - this.$refs.scrollArea.getBoundingClientRect().top
+        this.$refs.scrollArea.scrollTop += offset - 24
+      }
+    },
+    clearPageFind () {
+      this.pageFindQuery = ''
+      clearPageFindHighlights(this.$refs.container)
+      this._pageFindMatches = []
+      this.pageFindCount = 0
+      this.pageFindIndex = -1
+    },
+    scrollToSearchResult () {
+      clearSearchHighlights(this.$refs.container)
+      if (!window.location.hash.startsWith('#search-') || !this.$refs.scrollArea) {
+        return
+      }
+      if (this.pageFindQuery) {
+        this.clearPageFind()
+      }
+      const params = new URLSearchParams(window.location.hash.slice('#search-'.length))
+      const range = findSearchLocation(this.$refs.container, params)
+      if (range) {
+        const highlight = highlightSearchLocation(this.$refs.container, range, params.get('query'))
+        const target = highlight || range
+        const offset = target.getBoundingClientRect().top - this.$refs.scrollArea.getBoundingClientRect().top
+        this.$refs.scrollArea.scrollTop += offset - 24
+      }
+    },
     decodePathSegments (path) {
       return path.split('/').map(segment => {
         try {
@@ -783,7 +893,11 @@ export default {
     },
     async loadPage (url, fromHistory, options = {}) {
       if (!this.softNavigation || url.origin !== window.location.origin) {
-        window.location.assign(url.href)
+        if (options.refresh) {
+          this.onPageRefreshError()
+        } else {
+          window.location.assign(url.href)
+        }
         return
       }
       const sequence = ++this.navigationSequence
@@ -804,6 +918,9 @@ export default {
           return
         }
         if (!response.ok || !(response.headers.get('content-type') || '').includes('application/json')) {
+          if (options.refresh) {
+            throw new Error('Unable to refresh page content')
+          }
           window.location.assign(url.href)
           return
         }
@@ -813,7 +930,11 @@ export default {
         }
         const finalUrl = new URL(response.url || url.href)
         if (!data.softNavigation || !data.page || !data.effectivePermissions ||
-          data.page.locale !== this.viewPage.locale || finalUrl.origin !== window.location.origin) {
+          data.page.locale !== this.viewPage.locale || finalUrl.origin !== window.location.origin ||
+          (options.refresh && (finalUrl.pathname !== url.pathname || finalUrl.search !== url.search))) {
+          if (options.refresh) {
+            throw new Error('Unable to refresh page content')
+          }
           window.location.assign(url.href)
           return
         }
@@ -824,6 +945,10 @@ export default {
           } else {
             window.history.pushState(null, '', finalUrl.href)
           }
+        }
+        const refreshScrollTop = options.refresh && this.$refs.scrollArea ? this.$refs.scrollArea.scrollTop : 0
+        if (this.pageFindQuery && !options.refresh) {
+          this.clearPageFind()
         }
         this.applyPage(data.page, data.effectivePermissions)
         this.currentViewUrl = window.location.href
@@ -836,10 +961,17 @@ export default {
         if (diagrams.length) {
           mermaid.init(undefined, diagrams)
         }
-        if (window.location.hash) {
+        if (options.refresh && this.pageFindQuery) {
+          this.updatePageFind()
+        } else if (window.location.hash.startsWith('#search-')) {
+          this.scrollToSearchResult()
+        } else if (window.location.hash) {
           this.$vuetify.goTo(decodeURIComponent(window.location.hash), this.scrollOpts)
         } else {
           this.$refs.scrollArea.scrollTop = fromHistory ? (this.scrollPositions[this.currentViewUrl] || 0) : 0
+        }
+        if (options.refresh && this.$refs.scrollArea) {
+          this.$refs.scrollArea.scrollTop = refreshScrollTop
         }
         const sidebar = this.$refs.navSidebar
         if (sidebar && sidebar.currentMode === 'browse' &&
@@ -847,12 +979,16 @@ export default {
           sidebar.currentParent.pageId !== data.page.id))) {
           sidebar.loadFromCurrentPath(Boolean(options.refreshSidebar)).catch(err => console.warn(err))
         }
-        if (this.$vuetify.breakpoint.smAndDown) {
+        if (!options.refresh && this.$vuetify.breakpoint.smAndDown) {
           this.navShown = false
         }
       } catch (err) {
         if (err.name !== 'AbortError' && sequence === this.navigationSequence) {
-          window.location.assign(url.href)
+          if (options.refresh) {
+            this.onPageRefreshError()
+          } else {
+            window.location.assign(url.href)
+          }
         }
       } finally {
         if (sequence === this.navigationSequence) {
@@ -1003,6 +1139,21 @@ export default {
 
 <style lang="scss">
 
+.page-view .contents .page-search-result-highlight {
+  background-color: #ffe082;
+  color: #242424;
+}
+
+.page-view .contents .page-find-highlight {
+  background-color: #ffe082;
+  color: #242424;
+}
+
+.page-view .contents .page-find-highlight--current {
+  background-color: #ff9f43;
+  color: #1f1f1f;
+}
+
 @media screen {
   html.page-view-scroll {
     overflow-y: hidden !important;
@@ -1103,7 +1254,8 @@ export default {
       text-indent: 0;
     }
 
-    &.page-breadcrumb-copy {
+    &.page-breadcrumb-copy,
+    &.page-breadcrumb-refresh {
       flex: 0 0 32px;
       height: 32px;
       width: 32px;
@@ -1128,6 +1280,53 @@ export default {
   }
 }
 
+.page-find {
+  display: flex;
+  align-items: center;
+  flex: 0 1 300px;
+  min-width: 170px;
+  max-width: 300px;
+  height: 32px;
+  padding: 0 4px 0 8px;
+  border-radius: 4px;
+  background: #edf4f8;
+
+  @at-root .theme--light & {
+    background: #e3eefa;
+  }
+
+  &:focus-within {
+    outline: 2px solid #607d8b;
+    outline-offset: 1px;
+  }
+
+  &__icon {
+    flex: 0 0 18px;
+    color: #607d8b !important;
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 32px;
+    padding: 0 6px;
+    outline: none;
+    font-size: 14px;
+    color: #263238;
+  }
+
+  &__count {
+    flex: 0 0 auto;
+    font-size: 12px;
+    color: #546e7a;
+    white-space: nowrap;
+  }
+
+  &__button {
+    flex: 0 0 24px;
+  }
+}
+
 .page-col-sd {
   margin-top: -90px;
   align-self: flex-start;
@@ -1142,13 +1341,72 @@ export default {
   display: none;
 }
 
-.page-toc-card .v-list--nav.v-list--dense {
-  .v-list-item {
-    min-height: 32px;
+.page-toc-card {
+  &__heading {
+    padding: 14px 16px 6px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
   }
 
-  .v-list-item:not(:last-child):not(:only-child) {
-    margin-bottom: 2px;
+  .v-list--nav.v-list--dense {
+    padding: 0 8px 10px;
+  }
+
+  .v-list--nav.v-list--dense &__item {
+    min-height: 32px;
+    padding: 4px 8px;
+
+    &::after {
+      min-height: 24px;
+    }
+  }
+
+  .v-list--nav.v-list--dense &__item--child {
+    padding-inline-start: 24px;
+  }
+
+  &__icon {
+    flex: 0 0 16px;
+    margin-inline-end: 6px;
+    align-self: flex-start;
+    margin-top: 4px;
+  }
+
+  .v-list-item &__text {
+    min-width: 0;
+    font-size: 13px;
+    line-height: 20px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+}
+
+.page-author-card {
+  &__content {
+    padding: 10px 16px 14px;
+  }
+
+  &__heading {
+    display: flex;
+    align-items: center;
+    min-height: 28px;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 18px;
+  }
+
+  &-name {
+    margin-top: 2px;
+    font-size: 13px;
+    line-height: 20px;
+    overflow-wrap: anywhere;
+  }
+
+  &-date {
+    font-size: 12px;
+    line-height: 18px;
+    overflow-wrap: anywhere;
   }
 }
 

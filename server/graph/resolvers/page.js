@@ -1,5 +1,6 @@
 const _ = require('lodash')
 const graphHelper = require('../../helpers/graph')
+const { queryPageLineMatches } = require('../../helpers/search-lines')
 
 /* global WIKI */
 
@@ -51,7 +52,10 @@ module.exports = {
      */
     async search (obj, args, context) {
       if (WIKI.data.searchEngine) {
-        const resp = await WIKI.data.searchEngine.query(args.query, args)
+        const scoped = ['folder', 'page'].includes(args.scope)
+        const resp = scoped ?
+          await queryPageLineMatches(args.query, args) :
+          await WIKI.data.searchEngine.query(args.query, args)
         const filteredResults = _.filter(resp && resp.results, r => {
           return WIKI.auth.checkAccess(context.req.user, ['read:pages'], {
             path: r.path,

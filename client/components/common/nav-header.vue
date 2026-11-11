@@ -1,22 +1,33 @@
 <template lang='pug'>
   v-app-bar.nav-header(:color='headerColor', :class='{ "nav-header--site": siteHeader }', dark, app, :clipped-left='!$vuetify.rtl', :clipped-right='$vuetify.rtl', fixed, flat, :extended='searchIsShown && $vuetify.breakpoint.smAndDown')
     v-toolbar(:color='mobileSearchColor', flat, slot='extension', v-if='searchIsShown && $vuetify.breakpoint.smAndDown')
-      v-text-field(
-        ref='searchFieldMobile'
-        v-model='search'
-        clearable
-        :background-color='mobileSearchColor'
-        color='white'
-        :label='$t(`common:header.search`)'
-        single-line
-        solo
-        flat
-        hide-details
-        prepend-inner-icon='mdi-magnify'
-        :loading='searchIsLoading'
-        @keyup.enter='searchEnter'
-        autocomplete='off'
-      )
+      .nav-header-search
+        v-select.nav-header-search-scope(
+          v-model='searchScope'
+          :items='searchScopes'
+          :aria-label='$t(`common:header.searchScope`, { defaultValue: `Search scope` })'
+          :menu-props='{ bottom: true, offsetY: true, minWidth: `92`, zIndex: 101, contentClass: `nav-header-search-scope-menu` }'
+          solo
+          flat
+          dense
+          hide-details
+        )
+        v-text-field.nav-header-search-input(
+          ref='searchFieldMobile'
+          v-model='search'
+          clearable
+          color='white'
+          :label='$t(`common:header.search`)'
+          single-line
+          solo
+          flat
+          dense
+          hide-details
+          prepend-inner-icon='mdi-magnify'
+          :loading='searchIsLoading'
+          @keyup.enter='searchEnter'
+          autocomplete='off'
+        )
     v-layout(row)
       v-flex(xs5, md4)
         v-toolbar.nav-header-inner(:color='headerColor', dark, flat, :class='$vuetify.rtl ? `pr-3` : `pl-3`')
@@ -49,29 +60,36 @@
         v-toolbar.nav-header-inner(:color='headerColor', dark, flat)
           slot(name='mid')
             transition(name='navHeaderSearch', v-if='searchIsShown')
-              v-text-field(
-                ref='searchField',
-                v-if='searchIsShown && $vuetify.breakpoint.mdAndUp',
-                v-model='search',
-                color='white',
-                :label='$t(`common:header.search`)',
-                single-line,
-                solo
-                flat
-                rounded
-                hide-details,
-                prepend-inner-icon='mdi-magnify',
-                :loading='searchIsLoading',
-                @keyup.enter='searchEnter'
-                @keyup.esc='searchClose'
-                @focus='searchFocus'
-                @blur='searchBlur'
-                @keyup.down='searchMove(`down`)'
-                @keyup.up='searchMove(`up`)'
-                autocomplete='off'
-              )
-            v-btn.ml-2.mr-0(icon, href='/t', :aria-label='$t(`common:header.browseTags`)')
-              v-icon(color='grey') mdi-tag-multiple
+              .nav-header-search(v-if='searchIsShown && $vuetify.breakpoint.mdAndUp')
+                v-select.nav-header-search-scope(
+                  v-model='searchScope'
+                  :items='searchScopes'
+                  :aria-label='$t(`common:header.searchScope`, { defaultValue: `Search scope` })'
+                  :menu-props='{ bottom: true, offsetY: true, minWidth: `92`, zIndex: 101, contentClass: `nav-header-search-scope-menu` }'
+                  solo
+                  flat
+                  dense
+                  hide-details
+                )
+                v-text-field.nav-header-search-input(
+                  ref='searchField',
+                  v-model='search',
+                  color='white',
+                  :label='$t(`common:header.search`)',
+                  single-line,
+                  solo
+                  flat
+                  dense
+                  hide-details,
+                  :loading='searchIsLoading',
+                  @keyup.enter='searchEnter'
+                  @keyup.esc='searchClose'
+                  @focus='searchFocus'
+                  @blur='searchBlur'
+                  @keyup.down='searchMove(`down`)'
+                  @keyup.up='searchMove(`up`)'
+                  autocomplete='off'
+                )
       v-flex(xs7, md4)
         v-toolbar.nav-header-inner.pr-4(:color='headerColor', dark, flat)
           v-spacer
@@ -222,10 +240,8 @@
     page-convert(v-model='convertPageModal', v-if='path && path.length')
 
     .nav-header-dev(v-if='isDevMode')
-      v-icon mdi-alert
       div
         .overline {{$t('common:header.developmentVersion', { defaultValue: 'DEVELOPMENT VERSION' })}}
-        .overline {{$t('common:header.developmentWarning', { defaultValue: 'This code base is NOT for production use!' })}}
 </template>
 
 <script>
@@ -234,6 +250,8 @@ import _ from 'lodash'
 
 import movePageMutation from 'gql/common/common-pages-mutation-move.gql'
 import clearClientCache from '../../helpers/client-cache'
+import zhTranslations from '../../../data/sideload/zh.json'
+import enTranslations from '../../../data/sideload/en.json'
 
 /* global siteConfig, siteLangs */
 
@@ -282,6 +300,13 @@ export default {
       return this.siteHeader ? this.headerColor : 'deep-purple'
     },
     search: sync('site/search'),
+    searchScope: sync('site/searchScope'),
+    searchScopes () {
+      return [
+        { text: this.$t('common:header.searchScopeGlobal', { defaultValue: 'Global search' }), value: 'global' },
+        { text: this.$t('common:header.searchScopeFolder', { defaultValue: 'Current folder' }), value: 'folder', disabled: !this.path }
+      ]
+    },
     searchIsFocused: sync('site/searchIsFocused'),
     searchIsLoading: sync('site/searchIsLoading'),
     searchRestrictLocale: sync('site/searchRestrictLocale'),
@@ -333,6 +358,17 @@ export default {
     }
   },
   created () {
+    if (this.$i18n && this.$i18n.i18next) {
+      for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
+        for (const key of ['header.searchScope', 'header.searchScopeGlobal', 'header.searchScopeFolder']) {
+          this.$i18n.i18next.addResource(locale, 'common', key, translations[`common:${key}`])
+        }
+      }
+      this.$i18n.i18next.addResource('zh', 'common', 'header.developmentVersion', zhTranslations['common:header.developmentVersion'])
+    }
+    if (this.searchScope === 'page') {
+      this.searchScope = 'global'
+    }
     if (this.hideSearch || this.dense || this.$vuetify.breakpoint.smAndDown) {
       this.searchIsShown = false
     }
@@ -482,6 +518,91 @@ export default {
 
 <style lang='scss'>
 
+.nav-header-search-scope-menu {
+  width: max-content;
+
+  .v-list {
+    padding: 0;
+  }
+
+  .v-list-item {
+    min-height: 32px;
+    padding-inline: 10px;
+  }
+
+  .v-list-item__content {
+    padding: 6px 0;
+  }
+
+  .v-list-item .v-list-item__title {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 20px;
+    text-align: center;
+  }
+}
+
+.nav-header-search {
+  display: flex;
+  align-items: center;
+  width: calc(62.5% + 130px);
+  max-width: 100%;
+  min-width: 0;
+  margin-inline: auto;
+  border-radius: 6px;
+  background-color: #1e1e1e;
+}
+
+.nav-header-search-scope.v-input {
+  flex: 0 0 120px;
+  min-width: 0;
+  font-size: 14px;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset-inline-end: 0;
+    top: 50%;
+    height: 20px;
+    border-inline-end: 1px solid rgba(255, 255, 255, .25);
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+}
+
+.nav-header-search-scope.v-text-field.v-text-field--enclosed > .v-input__control > .v-input__slot {
+  padding: 0 6px;
+}
+
+.nav-header-search-scope .v-select__selection {
+  max-width: 100%;
+  margin-inline: 0;
+}
+
+.nav-header-search-scope .v-select__selections {
+  justify-content: center;
+}
+
+.nav-header-search-scope .v-select__selections input {
+  flex: 0 0 0;
+  width: 0;
+}
+
+.nav-header-search-input.v-input {
+  flex: 1 1 0;
+  min-width: 80px;
+}
+
+.nav-header-search-input.v-text-field.v-text-field--enclosed > .v-input__control > .v-input__slot {
+  padding-inline-start: 8px;
+}
+
+.nav-header-search-scope .v-input__slot,
+.nav-header-search-input .v-input__slot {
+  background-color: transparent !important;
+  border-radius: 0;
+}
+
 .nav-header {
   //z-index: 1000;
 
@@ -494,7 +615,7 @@ export default {
       border-color: rgba(255, 255, 255, .2);
     }
 
-    .nav-header-inner .v-text-field .v-input__slot {
+    .nav-header-search {
       background-color: rgba(255, 255, 255, .14) !important;
     }
   }
@@ -559,19 +680,12 @@ export default {
   &-dev {
     background-color: mc('red', '600');
     position: absolute;
-    top: 11px;
+    top: 50%;
     left: 255px;
-    padding: 5px 15px;
-    border-radius: 5px;
+    padding: 5px 10px;
+    border-radius: 999px;
     display: flex;
-
-    .v-icon {
-      margin-right: 15px;
-    }
-
-    .overline:nth-child(2) {
-      text-transform: none;
-    }
+    transform: translateY(-50%);
   }
 }
 
