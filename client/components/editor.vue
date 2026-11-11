@@ -605,6 +605,17 @@ export default {
     &-title-input input {
       text-align: center;
     }
+
+    &-title-input .v-input__slot {
+      background-color: rgba(255, 255, 255, .12) !important;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .16);
+      transition: background-color .2s ease, box-shadow .2s ease;
+    }
+
+    &-title-input.v-input--is-focused .v-input__slot {
+      background-color: rgba(255, 255, 255, .18) !important;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .32);
+    }
   }
 
   .editor.theme--light {

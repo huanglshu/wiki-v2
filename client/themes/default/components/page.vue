@@ -93,7 +93,7 @@
         v-container.pl-5.pt-4(fluid, grid-list-xl)
           v-layout(row)
             v-flex.page-col-sd(
-              v-if='tocPosition !== `off` && $vuetify.breakpoint.lgAndUp'
+              v-if='showPageSidebar'
               :order-xs1='tocPosition !== `right`'
               :order-xs2='tocPosition === `right`'
               lg3
@@ -169,26 +169,6 @@
                           v-icon(:color='$vuetify.theme.dark ? `blue-grey lighten-1` : `blue-grey darken-2`', dense) mdi-comment-plus
                       span {{$t('common:comments.newComment')}}
 
-              v-card.page-author-card.mb-5
-                .page-author-card__content
-                  .page-author-card__heading.indigo--text(:class='$vuetify.theme.dark ? `text--lighten-3` : ``')
-                    span {{$t('common:page.lastEditedBy')}}
-                    v-spacer
-                    v-tooltip(right, v-if='isAuthenticated')
-                      template(v-slot:activator='{ on }')
-                        v-btn.btn-animate-edit(
-                          icon
-                          :href='"/h/" + viewPage.locale + "/" + viewPage.path'
-                          v-on='on'
-                          x-small
-                          v-if='hasReadHistoryPermission'
-                          :aria-label='$t(`common:header.history`)'
-                          )
-                          v-icon(color='indigo', dense) mdi-history
-                      span {{$t('common:header.history')}}
-                  .page-author-card-name.grey--text(:class='$vuetify.theme.dark ? `` : `text--darken-3`') {{ viewPage.authorName }}
-                  .page-author-card-date.grey--text(:class='$vuetify.theme.dark ? `text--lighten-1` : `text--darken-1`') {{ viewPage.updatedAt | moment('YYYY-MM-DD HH:mm:ss') }}
-
               //- v-card.mb-5
               //-   .pa-5
               //-     .overline.pb-2.yellow--text(:class='$vuetify.theme.dark ? `text--darken-3` : `text--darken-4`') Rating
@@ -202,18 +182,38 @@
               //-       )
               //-       .caption.grey--text 5 votes
 
-              v-card.page-shortcuts-card(flat)
-                v-toolbar(:color='$vuetify.theme.dark ? `grey darken-4-d3` : `grey lighten-3`', flat, dense)
-                  v-spacer
-                  //- v-tooltip(bottom)
-                  //-   template(v-slot:activator='{ on }')
-                  //-     v-btn(icon, tile, v-on='on', :aria-label='$t(`common:page.bookmark`)'): v-icon(color='grey') mdi-bookmark
-                  //-   span {{$t('common:page.bookmark')}}
+            v-flex.page-col-content(
+              xs12
+              :lg9='showPageSidebar && tocPosition !== `right`'
+              :xl10='showPageSidebar && tocPosition !== `right`'
+              :lg8='showPageSidebar && tocPosition === `right`'
+              :xl9='showPageSidebar && tocPosition === `right`'
+              :order-xs1='tocPosition === `right`'
+              :order-xs2='tocPosition !== `right`'
+              )
+              .page-meta-bar
+                .page-meta-bar__author
+                  span.page-meta-bar__label {{$t('common:page.lastEditedBy')}}
+                  span.page-meta-bar__value {{ viewPage.authorName }}
+                  span.page-meta-bar__date {{ viewPage.updatedAt | moment('YYYY-MM-DD HH:mm:ss') }}
+                .page-meta-bar__actions
+                  v-tooltip(right, v-if='isAuthenticated && hasReadHistoryPermission')
+                    template(v-slot:activator='{ on }')
+                      v-btn(
+                        icon
+                        :href='"/h/" + viewPage.locale + "/" + viewPage.path'
+                        v-on='on'
+                        x-small
+                        :aria-label='$t(`common:header.history`)'
+                        )
+                        v-icon(color='indigo', dense) mdi-history
+                    span {{$t('common:header.history')}}
                   v-menu(offset-y, bottom, min-width='300')
                     template(v-slot:activator='{ on: menu }')
                       v-tooltip(bottom)
                         template(v-slot:activator='{ on: tooltip }')
-                          v-btn(icon, tile, v-on='{ ...menu, ...tooltip }', :aria-label='$t(`common:page.share`)'): v-icon(color='grey') mdi-share-variant
+                          v-btn(icon, v-on='{ ...menu, ...tooltip }', x-small, :aria-label='$t(`common:page.share`)')
+                            v-icon(color='grey', dense) mdi-share-variant
                         span {{$t('common:page.share')}}
                     social-sharing(
                       :url='pageUrl'
@@ -222,18 +222,9 @@
                     )
                   v-tooltip(bottom)
                     template(v-slot:activator='{ on }')
-                      v-btn(icon, tile, v-on='on', @click='print', :aria-label='$t(`common:page.printFormat`)')
-                        v-icon(:color='printView ? `primary` : `grey`') mdi-printer
+                      v-btn(icon, v-on='on', @click='print', x-small, :aria-label='$t(`common:page.printFormat`)')
+                        v-icon(:color='printView ? `primary` : `grey`', dense) mdi-printer
                     span {{$t('common:page.printFormat')}}
-                  v-spacer
-
-            v-flex.page-col-content(
-              xs12
-              :lg9='tocPosition !== `off`'
-              :xl10='tocPosition !== `off`'
-              :order-xs1='tocPosition === `right`'
-              :order-xs2='tocPosition !== `right`'
-              )
               v-tooltip(:right='$vuetify.rtl', :left='!$vuetify.rtl', v-if='hasNewPagePermission')
                 template(v-slot:activator='{ on }')
                   v-btn.page-new-fab(
@@ -607,6 +598,10 @@ export default {
       return this.viewPage.toc
     },
     tocPosition: get('site/tocPosition'),
+    showPageSidebar () {
+      return this.$vuetify.breakpoint.lgAndUp &&
+        (this.tocDecoded.length > 0 || (this.commentsEnabled && this.commentsPerms.read))
+    },
     hasAdminPermission: get('page/effectivePermissions@system.manage'),
     hasWritePagesPermission: get('page/effectivePermissions@pages.write'),
     hasManagePagesPermission: get('page/effectivePermissions@pages.manage'),
@@ -1284,6 +1279,7 @@ export default {
   display: flex;
   align-items: center;
   flex: 0 1 300px;
+  margin-left: auto;
   min-width: 170px;
   max-width: 300px;
   height: 32px;
@@ -1339,6 +1335,52 @@ export default {
 
 .page-col-sd::-webkit-scrollbar {
   display: none;
+}
+
+.page-meta-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 40px;
+  margin-bottom: 12px;
+  padding: 4px 8px 4px 12px;
+  border: 1px solid #e0e6ed;
+  border-radius: 4px;
+  background: #f7f9fc;
+
+  @at-root .theme--dark & {
+    border-color: #424242;
+    background: #272727;
+  }
+
+  &__author {
+    display: flex;
+    align-items: baseline;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-width: 0;
+  }
+
+  &__label,
+  &__date {
+    font-size: 12px;
+    color: #78909c;
+  }
+
+  &__value {
+    min-width: 0;
+    font-size: 13px;
+    overflow-wrap: anywhere;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+    gap: 8px;
+  }
 }
 
 .page-toc-card {

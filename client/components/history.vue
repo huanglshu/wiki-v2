@@ -1,17 +1,17 @@
 <template lang='pug'>
   v-app(:dark='$vuetify.theme.dark').history
-    nav-header
+    nav-header(site-header)
     v-content
-      v-toolbar(color='primary', dark)
+      v-toolbar.history-toolbar(color='white', light)
         i18next.subheading.history-title.text-truncate(path='history:ui.viewing', tag='div', :options='{ defaultValue: `Viewing history of {{path}}` }')
           strong(place='path') /{{path}}
         template(v-if='$vuetify.breakpoint.mdAndUp')
           v-spacer
-          i18next.caption.blue--text.text--lighten-3.mr-4(path='history:ui.trailLength', tag='div', :options='{ defaultValue: `Trail Length: {{total}}` }')
-            span(place='total') {{ total }}
-          i18next.caption.blue--text.text--lighten-3(path='history:ui.pageId', tag='div', :options='{ defaultValue: `ID: {{id}}` }')
-            span(place='id') {{ pageId }}
-          v-btn.ml-4(depressed, color='blue darken-1', @click='goLive') {{ $t('history:ui.returnLive', { defaultValue: 'Return to Live Version' }) }}
+          i18next.caption.grey--text.text--darken-2.mr-4(path='history:ui.trailLength', tag='div', :options='{ defaultValue: `Trail Length: {{total}}` }')
+            span.history-meta-value(place='total') {{ total }}
+          i18next.caption.grey--text.text--darken-2(path='history:ui.pageId', tag='div', :options='{ defaultValue: `ID: {{id}}` }')
+            span.history-meta-value(place='id') {{ pageId }}
+          v-btn.ml-4.history-return(outlined, color='blue darken-1', @click='goLive') {{ $t('history:ui.returnLive', { defaultValue: 'Return to Live Version' }) }}
       v-container(fluid, grid-list-xl)
         v-layout(row, wrap)
           v-flex(xs12, md4)
@@ -109,16 +109,19 @@
           v-flex(xs12, md8)
             v-card.radius-7(:class='$vuetify.breakpoint.mdAndUp ? `mt-8` : ``')
               v-card-text
-                v-card.grey.radius-7(flat, :class='$vuetify.theme.dark ? `darken-2` : `lighten-4`')
-                  v-row(no-gutters, align='center')
-                    v-col
-                      v-card-text
-                        .subheading {{target.title}}
-                        .caption {{target.description}}
-                    v-col.text-right.py-3(cols='2', v-if='$vuetify.breakpoint.mdAndUp')
-                      v-btn.mr-3(:color='$vuetify.theme.dark ? `white` : `grey darken-3`', small, dark, outlined, @click='toggleViewMode')
-                        v-icon(left) mdi-eye
-                        .overline {{ $t('history:ui.viewMode', { defaultValue: 'View Mode' }) }}
+                .history-target-summary
+                  .history-target-summary__identity
+                    .history-target-summary__title {{target.title}}
+                    .history-target-summary__description {{target.description}}
+                  v-btn.history-target-summary__view(
+                    v-if='$vuetify.breakpoint.mdAndUp'
+                    color='blue darken-1'
+                    small
+                    outlined
+                    @click='toggleViewMode'
+                    )
+                    v-icon(left, small) mdi-eye
+                    span {{ $t('history:ui.viewMode', { defaultValue: 'View Mode' }) }}
                 v-card.mt-3(light, v-html='diffHTML', flat)
 
     v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
@@ -582,9 +585,100 @@ export default {
 <style lang='scss'>
 
 .history {
+  .history-toolbar {
+    background-color: #fff !important;
+    color: rgba(0, 0, 0, .87) !important;
+
+    .history-title strong {
+      color: #1976d2;
+    }
+
+    i18next .caption,
+    .history-meta-value {
+      color: #1976d2 !important;
+    }
+
+    .history-meta-value {
+      display: inline-block;
+      padding: 0 6px;
+      border: 1px solid #90caf9;
+      border-radius: 3px;
+      background-color: #fff;
+      line-height: 18px;
+    }
+
+    .history-return {
+      background-color: #fff !important;
+      border-color: #1976d2 !important;
+      color: #1976d2 !important;
+
+      .v-btn__content {
+        color: #1976d2 !important;
+      }
+    }
+  }
+
   &-title,
   &-action {
     min-width: 0;
+  }
+
+  &-target-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 16px;
+    border-radius: 7px;
+    background-color: mc('grey', '200');
+
+    @at-root .theme--dark & {
+      background-color: mc('grey', '800');
+    }
+
+    @media (max-width: 599px) {
+      align-items: stretch;
+      flex-direction: column;
+    }
+
+    &__identity {
+      display: flex;
+      flex: 1 1 auto;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    &__title {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 24px;
+      overflow-wrap: anywhere;
+    }
+
+    &__description {
+      font-size: 12px;
+      line-height: 18px;
+      color: mc('grey', '700');
+      overflow-wrap: anywhere;
+
+      @at-root .theme--dark & {
+        color: mc('grey', '400');
+      }
+    }
+
+    &__view {
+      flex: 0 0 auto;
+      align-self: flex-end;
+      background-color: #fff !important;
+      border-color: #1976d2 !important;
+      color: #1976d2 !important;
+
+      .v-btn__content {
+        text-transform: none;
+        letter-spacing: 0;
+      }
+    }
   }
 
   &-promptmenu {

@@ -61,6 +61,45 @@ describe('document scrolling', () => {
     expect(card.querySelector('[v-for]')).not.toBeNull()
   })
 
+  it('uses the full content width when there is no table of contents or comments', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const sidebar = root.querySelector('.page-col-sd')
+    const content = root.querySelector('.page-col-content')
+    expect(sidebar.getAttribute('v-if')).toBe('showPageSidebar')
+    expect(content.getAttribute(':lg9')).toBe('showPageSidebar && tocPosition !== `right`')
+    expect(content.getAttribute(':xl10')).toBe('showPageSidebar && tocPosition !== `right`')
+
+    const context = {
+      tocDecoded: [],
+      commentsEnabled: false,
+      commentsPerms: { read: false },
+      $vuetify: { breakpoint: { lgAndUp: true } }
+    }
+    expect(component.computed.showPageSidebar.call(context)).toBe(false)
+  })
+
+  it('keeps author, history, share and print controls above the page content', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const content = root.querySelector('.page-col-content')
+    const metaBar = content.querySelector('.page-meta-bar')
+    expect(metaBar.querySelector('.page-meta-bar__author')).not.toBeNull()
+    expect(metaBar.querySelector('.page-meta-bar__actions')).not.toBeNull()
+    expect(sfc.template.content).toContain("@click='print'")
+    expect(metaBar.querySelector('social-sharing')).not.toBeNull()
+    expect(content.querySelector('.page-author-card')).toBeNull()
+    expect(content.querySelector('.page-shortcuts-card')).toBeNull()
+
+    const scssPath = path.resolve(__dirname, '../../../../scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const css = sass.renderSync({
+      data: `${globals}\n${sfc.styles[0].content}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    expect(css).toMatch(/\.page-meta-bar__actions\s*\{[^}]*gap:\s*8px;/)
+  })
+
   it('uses the updated Chinese label for the page table of contents', () => {
     const translations = require('../../../../../data/sideload/zh.json')
     expect(translations['common:page.toc']).toBe('页面目录')
@@ -147,6 +186,14 @@ describe('document scrolling', () => {
     expect(search.querySelector('input').getAttribute('v-model')).toBe('pageFindQuery')
     expect(search.querySelectorAll('.page-find__button')).toHaveLength(3)
     expect(compiler.compile(pug.render(sfc.template.content)).errors).toEqual([])
+
+    const scssPath = path.resolve(__dirname, '../../../../scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const css = sass.renderSync({
+      data: `${globals}\n${sfc.styles[0].content}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    expect(css).toMatch(/\.page-find\s*\{[^}]*margin-left:\s*auto/)
   })
 
   it('copies the decoded page path with a leading slash', () => {
