@@ -1,4 +1,9 @@
 {
+  "admin:ui.api.boundUser": "Bound user",
+  "admin:ui.api.boundUserHint": "The key uses this user's current group permissions and records actions under their account.",
+  "admin:ui.api.boundUserError": "Select a user.",
+  "admin:ui.api.userUnavailable": "User unavailable",
+  "admin:ui.api.unboundKey": "Unbound, recreate this key",
   "admin:adminArea": "Administration Area",
   "admin:analytics.providerConfiguration": "Provider Configuration",
   "admin:analytics.providerNoConfiguration": "This provider has no configuration options you can modify.",
@@ -48,7 +53,7 @@
   "admin:api.revokeSuccess": "The key has been revoked successfully.",
   "admin:api.delete": "Delete",
   "admin:api.deleteConfirm": "Delete API Key?",
-  "admin:api.deleteConfirmText": "Are you sure you want to permanently delete key {{name}}? This action cannot be undone!",
+  "admin:api.deleteConfirmText": "Permanently delete key {{name}}? The key will stop working and applications using it will lose access. This action cannot be undone.",
   "admin:api.deleteSuccess": "The API key has been deleted successfully.",
   "admin:api.subtitle": "Manage keys to access the API",
   "admin:api.title": "API Access",

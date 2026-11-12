@@ -162,6 +162,34 @@ describe('navigation header theme', () => {
     expect(vm.searchScope).toBe('global')
   })
 
+  it('uses the selected sidebar folder or falls back to the current page parent', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    const selector = root.querySelector('page-selector[v-model="newPageModal"]')
+    expect(selector.getAttribute(':initial-folder')).toBe('newPageFolder')
+    expect(component.computed.newPageFolder.call({ path: 'docs/guides/page' })).toBe('docs/guides')
+    expect(component.computed.newPageFolder.call({ path: '文档/指南/页面' })).toBe('文档/指南')
+    expect(component.computed.newPageFolder.call({ path: '首页' })).toBe('')
+    expect(component.computed.newPageFolder.call({ path: '' })).toBe('')
+
+    const context = {
+      path: '业务中台（ACDP）/环境配置/SIT环境配置',
+      getCurrentFolder: jest.fn().mockReturnValue('业务中台（ACDP）/微服务启动参数'),
+      newPageModal: false
+    }
+    component.methods.pageNew.call(context)
+    expect(context.newPageModal).toBe(true)
+    expect(component.computed.newPageFolder.call(context)).toBe('业务中台（ACDP）/微服务启动参数')
+
+    context.getCurrentFolder.mockReturnValue('')
+    component.methods.pageNew.call(context)
+    expect(component.computed.newPageFolder.call(context)).toBe('')
+
+    context.getCurrentFolder.mockReturnValue(null)
+    component.methods.pageNew.call(context)
+    expect(component.computed.newPageFolder.call(context)).toBe('业务中台（ACDP）/环境配置')
+  })
+
   it('places both search scope menus above the search results overlay', () => {
     const root = document.createElement('div')
     root.innerHTML = pug.render(sfc.template.content)
@@ -213,7 +241,10 @@ describe('navigation header theme', () => {
     document.body.appendChild(scope)
     expect(window.getComputedStyle(scope).flex).toBe('0 0 120px')
     expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-input::after\s*\{[^}]*border-inline-end:\s*1px solid/)
-    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-text-field\.v-text-field--enclosed[^}]*padding:\s*0 6px/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-text-field\.v-text-field--enclosed:not\(\.v-text-field--rounded\)[^}]*padding:\s*0 6px/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-select\.v-input--dense \.v-select__selection\s*\{[^}]*margin-inline:\s*0/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope\.v-select\.v-text-field \.v-select__selections input\s*\{[^}]*flex:\s*0 0 0/)
+    expect(styleElement.textContent).toMatch(/\.nav-header-search-scope \.v-select__selections\s*\{[^}]*justify-content:\s*center/)
     expect(styleElement.textContent).toMatch(/\.nav-header-search-input\.v-text-field\.v-text-field--enclosed[^}]*padding-inline-start:\s*8px/)
     scope.remove()
   })
@@ -223,7 +254,7 @@ describe('navigation header theme', () => {
     const adminPage = fs.readFileSync(path.join(__dirname, '../../../components/admin.vue'), 'utf8')
     const editorPage = fs.readFileSync(path.join(__dirname, '../../../components/editor.vue'), 'utf8')
     const profilePage = fs.readFileSync(path.join(__dirname, '../../../components/profile.vue'), 'utf8')
-    expect(frontPage).toContain("nav-header(v-if='!printView', site-header)")
+    expect(frontPage).toContain("nav-header(v-if='!printView', site-header, :get-current-folder='getCurrentFolder')")
     expect(adminPage).toContain('nav-header(hide-search, site-header)')
     expect(editorPage).toContain('nav-header(dense, site-header)')
     expect(profilePage).toContain('nav-header(site-header)')

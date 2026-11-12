@@ -88,13 +88,12 @@
           clearable
           style='border-radius: 0 4px 4px 0;'
         )
-      v-card-chin
-        v-spacer
-        v-btn.page-selector-action.px-4(outlined, color='black', @click='close')
-          v-icon(left) mdi-close
+      v-card-chin.page-selector-footer
+        v-btn.page-selector-action.page-selector-action--cancel(outlined, :color='$vuetify.theme.dark ? `grey lighten-1` : `grey darken-2`', @click='close')
+          v-icon(size='18') mdi-close
           span {{$t('common:actions.cancel')}}
-        v-btn.page-selector-action.px-4(color='primary', @click='open', :disabled='!isValidPath')
-          v-icon(left) mdi-check
+        v-btn.page-selector-action(depressed, color='primary', @click='open', :disabled='!isValidPath')
+          v-icon(size='18') mdi-check
           span {{$t('common:actions.select')}}
 </template>
 
@@ -113,6 +112,10 @@ export default {
       default: false
     },
     path: {
+      type: String,
+      default: ''
+    },
+    initialFolder: {
       type: String,
       default: ''
     },
@@ -143,6 +146,7 @@ export default {
       currentPage: null,
       currentNode: [0],
       openNodes: [0],
+      folderSelectionRequest: 0,
       tree: [
         {
           id: 0,
@@ -205,28 +209,46 @@ export default {
   },
   watch: {
     async isShown (newValue, oldValue) {
+      const requestId = ++this.folderSelectionRequest
       if (newValue && !oldValue) {
         const useDefaultPath = this.mode === 'create' && !this.path
-        this.currentPath = useDefaultPath ?
-          this.$t('common:pageSelector.newPagePath', { defaultValue: 'new-page' }) :
-          this.path
+        const localeChanged = this.currentLocale !== this.locale
         this.currentLocale = this.locale
+        const resetFolder = useDefaultPath && (_.head(this.currentNode) || 0) !== 0
+        if (resetFolder) {
+          this.currentNode = [0]
+        }
+        if (localeChanged || resetFolder) {
+          await this.$nextTick()
+          if (!this.isShown || requestId !== this.folderSelectionRequest) { return }
+        }
+        this.currentPath = useDefaultPath ?
+          _.compact([this.initialFolder, this.$t('common:pageSelector.newPagePath', { defaultValue: 'new-page' })]).join('/') :
+          this.path
+        let initialPath = this.currentPath
         _.delay(() => {
           this.$refs.pathIpt.focus()
         })
         const i18next = this.$i18n.i18next
         if (useDefaultPath && siteConfig.lang.toLowerCase() === 'zh' && !i18next.getResource('zh', 'common', 'pageSelector.newPagePath')) {
-          const initialPath = this.currentPath
           try {
             const translations = await import('../../../data/sideload/zh.json')
             if (!i18next.getResource('zh', 'common', 'pageSelector.newPagePath')) {
               i18next.addResource('zh', 'common', 'pageSelector.newPagePath', translations.default['common:pageSelector.newPagePath'])
             }
-            if (this.isShown && !this.path && this.currentPath === initialPath) {
-              this.currentPath = this.$t('common:pageSelector.newPagePath')
+            if (this.isShown && requestId === this.folderSelectionRequest && !this.path && this.currentPath === initialPath) {
+              this.currentPath = _.compact([this.initialFolder, this.$t('common:pageSelector.newPagePath')]).join('/')
+              initialPath = this.currentPath
             }
           } catch (err) {
             console.warn('Unable to load new page path translation.', err)
+          }
+        }
+        if (useDefaultPath && this.initialFolder && this.currentPath === initialPath) {
+          try {
+            await this.selectInitialFolder(this.initialFolder, initialPath, requestId)
+          } catch (err) {
+            console.warn('Unable to select the initial page folder.', err)
           }
         }
       }
@@ -278,6 +300,36 @@ export default {
     }
   },
   methods: {
+    async selectInitialFolder (folderPath, initialPath, requestId) {
+      const locale = this.currentLocale
+      const isCurrent = () => this.isShown &&
+        this.folderSelectionRequest === requestId &&
+        this.currentLocale === locale &&
+        this.currentPath === initialPath &&
+        (_.head(this.currentNode) || 0) === 0
+      let folder = this.tree[0]
+      const ancestors = [0]
+      let path = ''
+
+      for (const segment of folderPath.split('/')) {
+        if (!isCurrent()) { return }
+        if (!folder.children || folder.children.length === 0) {
+          await this.fetchFolders(folder, isCurrent)
+        }
+        if (!isCurrent()) { return }
+        path = _.compact([path, segment]).join('/')
+        folder = _.find(folder.children, ['path', path])
+        if (!folder) { return }
+        ancestors.push(folder.id)
+      }
+      if (!folder.children || folder.children.length === 0) {
+        await this.fetchFolders(folder, isCurrent)
+      }
+      if (isCurrent()) {
+        this.openNodes = _.uniq([...this.openNodes, ...ancestors])
+        this.currentNode = [folder.id]
+      }
+    },
     close() {
       this.isShown = false
     },
@@ -291,42 +343,46 @@ export default {
         this.close()
       }
     },
-    async fetchFolders (item) {
+    async fetchFolders (item, isCurrent = () => true) {
       this.searchLoading = true
-      const resp = await this.$apollo.query({
-        query: gql`
-          query ($parent: Int!, $mode: PageTreeMode!, $locale: String!) {
-            pages {
-              tree(parent: $parent, mode: $mode, locale: $locale) {
-                id
-                path
-                title
-                isFolder
-                pageId
-                parent
+      const locale = this.currentLocale
+      try {
+        const resp = await this.$apollo.query({
+          query: gql`
+            query ($parent: Int!, $mode: PageTreeMode!, $locale: String!) {
+              pages {
+                tree(parent: $parent, mode: $mode, locale: $locale) {
+                  id
+                  path
+                  title
+                  isFolder
+                  pageId
+                  parent
+                }
               }
             }
+          `,
+          fetchPolicy: 'network-only',
+          variables: {
+            parent: item.id,
+            mode: 'ALL',
+            locale
           }
-        `,
-        fetchPolicy: 'network-only',
-        variables: {
-          parent: item.id,
-          mode: 'ALL',
-          locale: this.currentLocale
+        })
+        if (!isCurrent() || this.currentLocale !== locale) { return }
+        const items = _.get(resp, 'data.pages.tree', [])
+        const itemFolders = _.filter(items, ['isFolder', true]).map(f => ({...f, children: []}))
+        const itemPages = _.filter(items, i => i.pageId > 0)
+        if (itemFolders.length > 0) {
+          item.children = itemFolders
+        } else {
+          item.children = undefined
         }
-      })
-      const items = _.get(resp, 'data.pages.tree', [])
-      const itemFolders = _.filter(items, ['isFolder', true]).map(f => ({...f, children: []}))
-      const itemPages = _.filter(items, i => i.pageId > 0)
-      if (itemFolders.length > 0) {
-        item.children = itemFolders
-      } else {
-        item.children = undefined
+        this.pages = _.unionBy(this.pages, itemPages, 'id')
+        this.all = _.unionBy(this.all, items, 'id')
+      } finally {
+        this.searchLoading = false
       }
-      this.pages = _.unionBy(this.pages, itemPages, 'id')
-      this.all = _.unionBy(this.all, items, 'id')
-
-      this.searchLoading = false
     }
   }
 }
@@ -339,14 +395,38 @@ export default {
     border-left: 1px solid #bdbdbd;
   }
 
+  .page-selector-footer {
+    .v-card__actions {
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: flex-end;
+      padding: 12px 16px;
+
+      > .page-selector-action.v-btn {
+        min-width: 96px;
+        margin: 0;
+        padding: 0 16px;
+        letter-spacing: 0;
+        text-indent: 0;
+      }
+    }
+  }
+
   .page-selector-action {
     .v-btn__content {
       align-items: center;
+      gap: 6px;
     }
 
-    .v-icon,
-    .v-btn__content > span {
+    .v-icon {
       line-height: 1;
+    }
+    .v-btn__content > span {
+      line-height: 20px;
+    }
+
+    &--cancel .v-btn__content > span {
+      transform: translateY(1px);
     }
   }
 

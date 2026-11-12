@@ -1,6 +1,6 @@
 <template lang="pug">
   v-app.page-view(:dark='$vuetify.theme.dark', :class='$vuetify.rtl ? `is-rtl` : `is-ltr`')
-    nav-header(v-if='!printView', site-header)
+    nav-header(v-if='!printView', site-header, :get-current-folder='getCurrentFolder')
     v-navigation-drawer.page-nav-drawer(
       v-if='navMode !== `NONE` && !printView'
       :class='$vuetify.theme.dark ? `grey darken-4-d4` : `page-nav-drawer--light`'
@@ -1091,6 +1091,16 @@ export default {
     },
     pageEdit () {
       this.$root.$emit('pageEdit')
+    },
+    getCurrentFolder () {
+      const sidebar = this.$refs.navSidebar
+      if (!sidebar || sidebar.currentMode !== 'browse' || !sidebar.currentParent) {
+        return null
+      }
+      if (sidebar.currentParent.id === 0) {
+        return ''
+      }
+      return typeof sidebar.currentParent.path === 'string' ? sidebar.currentParent.path : null
     },
     pageNew () {
       this.$root.$emit('pageNew')

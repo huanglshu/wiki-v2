@@ -33,6 +33,9 @@ const localRequire = name => {
   if (name === 'vue-status-indicator') {
     return { StatusIndicator: { render: h => h('span') } }
   }
+  if (name === '../../../data/sideload/zh.json' || name === '../../../data/sideload/en.json') {
+    return require(path.join(__dirname, '../../../../', name.slice('../../../'.length)))
+  }
   return require(name)
 }
 runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(localRequire, componentModule, componentModule.exports)
@@ -56,6 +59,8 @@ describe('admin API key list', () => {
     const key = {
       id: 1,
       name: 'Example',
+      userId: 7,
+      userName: 'Editor',
       keyShort: '...example',
       expiration: '2027-01-01T20:10:00.000Z',
       createdAt: '2026-01-01T20:05:07.000Z',
@@ -73,7 +78,10 @@ describe('admin API key list', () => {
     try {
       await Vue.nextTick()
       const cells = [...app.$el.querySelectorAll('tbody tr td')].map(cell => cell.textContent.trim())
-      expect(cells.slice(1, 4)).toEqual(['2027-01-02 04-10-00', '2026-01-02 04-05-07', '2026-02-16 02-30-09'])
+      const headings = [...app.$el.querySelectorAll('thead th')].map(cell => cell.textContent.trim())
+      expect(headings.slice(0, 2)).toEqual(['名称', '绑定用户'])
+      expect(cells.slice(0, 2)).toEqual(['Example', 'Editor'])
+      expect(cells.slice(2, 5)).toEqual(['2027-01-02 04-10-00', '2026-01-02 04-05-07', '2026-02-16 02-30-09'])
       expect(app.$el.textContent).not.toContain(key.keyShort)
       expect(app.$children[0].keys[0]).toMatchObject(key)
       expect(app.$children[0].formatApiDate(null)).toBeNull()
@@ -95,7 +103,15 @@ describe('admin API key list', () => {
     expect(fields).not.toContain('key')
   })
 
-  it('only opens deletion for revoked keys and deletes through GraphQL', async () => {
+  it('registers the user-binding translations independently of the cached language pack', () => {
+    const addResource = jest.fn()
+    component.created.call({ $i18n: { i18next: { addResource } } })
+    expect(addResource).toHaveBeenCalledWith('zh', 'admin', 'ui.api.boundUser', chinese['admin:ui.api.boundUser'])
+    expect(addResource).toHaveBeenCalledWith('en', 'admin', 'ui.api.unboundKey', expect.any(String))
+    expect(addResource).toHaveBeenCalledWith('zh', 'admin', 'api.deleteConfirmText', chinese['admin:api.deleteConfirmText'])
+  })
+
+  it.each([false, true])('deletes a key through GraphQL when revoked is %s', async isRevoked => {
     const api = {
       ...component.methods,
       current: {},
@@ -117,12 +133,9 @@ describe('admin API key list', () => {
       }
     }
 
-    api.deleteKey({ id: 1, name: 'Active', isRevoked: false })
-    expect(api.isDeleteConfirmDialogShown).toBe(false)
-
-    api.deleteKey({ id: 2, name: 'Revoked', isRevoked: true })
+    api.deleteKey({ id: 2, name: 'Example', isRevoked })
     expect(api.isDeleteConfirmDialogShown).toBe(true)
-    expect(api.current).toMatchObject({ id: 2, isRevoked: true })
+    expect(api.current).toMatchObject({ id: 2, isRevoked })
     expect(api.$apollo.mutate).not.toHaveBeenCalled()
 
     await api.deleteConfirm()
@@ -138,7 +151,7 @@ describe('admin API key list', () => {
     expect(api.deleteLoading).toBe(false)
   })
 
-  it('renders a delete action that is enabled only for revoked keys', async () => {
+  it('renders deletion for both active and revoked keys without a revoke column', async () => {
     const activeKey = { id: 1, name: 'Active', expiration: null, createdAt: null, updatedAt: null, isRevoked: false }
     const revokedKey = { id: 2, name: 'Revoked', expiration: null, createdAt: null, updatedAt: null, isRevoked: true }
     const testComponent = {
@@ -153,8 +166,10 @@ describe('admin API key list', () => {
       await Vue.nextTick()
       const deleteButtons = [...app.$el.querySelectorAll('button[aria-label="删除"]')]
       expect(deleteButtons).toHaveLength(2)
-      expect(deleteButtons[0].disabled).toBe(true)
+      expect(deleteButtons[0].disabled).toBe(false)
       expect(deleteButtons[1].disabled).toBe(false)
+      const headings = [...app.$el.querySelectorAll('thead th')].map(cell => cell.textContent.trim())
+      expect(headings).not.toContain('撤销')
     } finally {
       app.$destroy()
     }

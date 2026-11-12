@@ -26,38 +26,18 @@
             persistent-hint
             )
           v-divider.mt-4
-          v-subheader.pl-2: strong.indigo--text {{$t('admin:api.newKeyPermissionScopes')}}
-          v-list.pl-8(nav)
-            v-list-item-group(v-model='fullAccess')
-              v-list-item(
-                :value='true'
-                active-class='indigo--text'
-                )
-                template(v-slot:default='{ active, toggle }')
-                  v-list-item-action
-                    v-checkbox(
-                      :input-value='active'
-                      :true-value='true'
-                      color='indigo'
-                      @click='toggle'
-                    )
-                  v-list-item-content
-                    v-list-item-title {{$t('admin:api.newKeyFullAccess')}}
-            v-divider.mt-3
-            v-subheader.caption.indigo--text {{$t('admin:api.newKeyGroupPermissions')}}
-            v-list-item
-              v-select(
-                :disabled='fullAccess'
-                :items='groups'
-                item-text='name'
-                item-value='id'
-                outlined
-                color='indigo'
-                v-model='group'
-                :label='$t(`admin:api.newKeyGroup`)'
-                :hint='$t(`admin:api.newKeyGroupHint`)'
-                persistent-hint
-                )
+          v-autocomplete.mt-4(
+            :items='users'
+            :item-text='userText'
+            item-value='id'
+            outlined
+            prepend-icon='mdi-account'
+            color='indigo'
+            v-model='userId'
+            :label='$t(`admin:ui.api.boundUser`)'
+            :hint='$t(`admin:ui.api.boundUserHint`)'
+            persistent-hint
+            )
         v-card-chin
           v-spacer
           v-btn(text, @click='isShown = false', :disabled='loading') {{$t('common:actions.cancel')}}
@@ -94,8 +74,6 @@
 import _ from 'lodash'
 import gql from 'graphql-tag'
 
-import groupsQuery from 'gql/admin/users/users-query-groups.gql'
-
 export default {
   props: {
     value: {
@@ -108,9 +86,8 @@ export default {
       loading: false,
       name: '',
       expiration: '1y',
-      fullAccess: true,
-      groups: [],
-      group: null,
+      users: [],
+      userId: null,
       isCopyKeyDialogShown: false,
       key: ''
     }
@@ -140,14 +117,15 @@ export default {
     }
   },
   methods: {
+    userText (user) {
+      return `${user.name} (${user.email})`
+    },
     async generate () {
       try {
         if (_.trim(this.name).length < 2 || this.name.length > 255) {
           throw new Error(this.$t('admin:api.newKeyNameError'))
-        } else if (!this.fullAccess && !this.group) {
-          throw new Error(this.$t('admin:api.newKeyGroupError'))
-        } else if (!this.fullAccess && this.group === 2) {
-          throw new Error(this.$t('admin:api.newKeyGuestGroupError'))
+        } else if (!this.userId) {
+          throw new Error(this.$t('admin:ui.api.boundUserError'))
         }
       } catch (err) {
         return this.$store.commit('showNotification', {
@@ -162,9 +140,9 @@ export default {
       try {
         const resp = await this.$apollo.mutate({
           mutation: gql`
-            mutation ($name: String!, $expiration: String!, $fullAccess: Boolean!, $group: Int) {
+            mutation ($name: String!, $expiration: String!, $userId: Int!) {
               authentication {
-                createApiKey (name: $name, expiration: $expiration, fullAccess: $fullAccess, group: $group) {
+                createApiKey (name: $name, expiration: $expiration, userId: $userId) {
                   key
                   responseResult {
                     succeeded
@@ -179,8 +157,7 @@ export default {
           variables: {
             name: this.name,
             expiration: this.expiration,
-            fullAccess: (this.fullAccess === true),
-            group: this.group
+            userId: this.userId
           },
           watchLoading (isLoading) {
             this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-api-create')
@@ -195,8 +172,7 @@ export default {
 
           this.name = ''
           this.expiration = '1y'
-          this.fullAccess = true
-          this.group = null
+          this.userId = null
           this.isShown = false
           this.$emit('refresh')
 
@@ -221,12 +197,22 @@ export default {
     }
   },
   apollo: {
-    groups: {
-      query: groupsQuery,
+    users: {
+      query: gql`
+        {
+          authentication {
+            apiKeyUsers {
+              id
+              name
+              email
+            }
+          }
+        }
+      `,
       fetchPolicy: 'network-only',
-      update: (data) => data.groups.list,
+      update: (data) => data.authentication.apiKeyUsers,
       watchLoading (isLoading) {
-        this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-api-groups-refresh')
+        this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-api-users-refresh')
       }
     }
   }

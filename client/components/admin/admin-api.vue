@@ -30,17 +30,18 @@
               thead
                 tr.grey(:class='$vuetify.theme.dark ? `darken-4-d5` : `lighten-5`')
                   th {{$t('admin:api.headerName')}}
+                  th {{$t('admin:ui.api.boundUser')}}
                   th {{$t('admin:api.headerExpiration')}}
                   th {{$t('admin:api.headerCreated')}}
                   th {{$t('admin:api.headerLastUpdated')}}
                   th(width='120') {{$t('admin:ui.api.viewKey', { defaultValue: 'View Key' })}}
-                  th(width='100') {{$t('admin:api.headerRevoke')}}
                   th(width='100') {{$t('admin:api.headerDelete')}}
               tbody
                 tr(v-for='key of keys', :key='`key-` + key.id')
                   td
                     strong(:class='key.isRevoked ? `red--text` : ``') {{ key.name }}
                     em.caption.ml-1.red--text(v-if='key.isRevoked') ({{ $t('admin:ui.api.revoked', { defaultValue: 'revoked' }) }})
+                  td {{ key.userName || (key.userId ? $t('admin:ui.api.userUnavailable') : $t('admin:ui.api.unboundKey')) }}
                   td(:style='key.isRevoked ? `text-decoration: line-through;` : ``') {{ formatApiDate(key.expiration) }}
                   td {{ formatApiDate(key.createdAt) }}
                   td {{ formatApiDate(key.updatedAt) }}
@@ -57,7 +58,6 @@
                         )
                           v-icon mdi-eye
                       span {{ $t('admin:ui.api.viewKey', { defaultValue: 'View Key' }) }}
-                  td: v-btn(icon, @click='revoke(key)', :disabled='key.isRevoked'): v-icon(color='error') mdi-cancel
                   td
                     v-tooltip(bottom)
                       template(v-slot:activator='{ on }')
@@ -65,7 +65,7 @@
                           icon
                           v-on='on'
                           @click='deleteKey(key)'
-                          :disabled='!key.isRevoked || deleteLoading'
+                          :disabled='deleteLoading'
                           :aria-label='$t("admin:api.delete")'
                         )
                           v-icon(color='error') mdi-delete
@@ -103,17 +103,6 @@
           )
             span {{$t('common:actions.copy')}}
 
-    v-dialog(v-model='isRevokeConfirmDialogShown', max-width='500', persistent)
-      v-card
-        .dialog-header.is-red {{$t('admin:api.revokeConfirm')}}
-        v-card-text.pa-4
-          i18next(tag='span', path='admin:api.revokeConfirmText')
-            strong(place='name') {{ current.name }}
-        v-card-actions
-          v-spacer
-          v-btn(text, @click='isRevokeConfirmDialogShown = false', :disabled='revokeLoading') {{$t('common:actions.cancel')}}
-          v-btn(color='red', dark, @click='revokeConfirm', :loading='revokeLoading') {{$t('admin:api.revoke')}}
-
     v-dialog(v-model='isDeleteConfirmDialogShown', max-width='500', persistent)
       v-card
         .dialog-header.is-red {{ $t('admin:api.deleteConfirm') }}
@@ -130,6 +119,8 @@
 import _ from 'lodash'
 import gql from 'graphql-tag'
 import { StatusIndicator } from 'vue-status-indicator'
+import zhTranslations from '../../../data/sideload/zh.json'
+import enTranslations from '../../../data/sideload/en.json'
 
 import CreateApiKey from './admin-api-create.vue'
 
@@ -148,11 +139,20 @@ export default {
       viewKeyLoadingId: null,
       viewedKeyName: '',
       revealedKey: '',
-      isRevokeConfirmDialogShown: false,
-      revokeLoading: false,
       isDeleteConfirmDialogShown: false,
       deleteLoading: false,
       current: {}
+    }
+  },
+  created() {
+    const i18next = this.$i18n && this.$i18n.i18next
+    if (i18next) {
+      for (const [locale, translations] of [['zh', zhTranslations], ['en', enTranslations]]) {
+        for (const key of ['boundUser', 'boundUserHint', 'boundUserError', 'userUnavailable', 'unboundKey']) {
+          i18next.addResource(locale, 'admin', `ui.api.${key}`, translations[`admin:ui.api.${key}`])
+        }
+        i18next.addResource(locale, 'admin', 'api.deleteConfirmText', translations['admin:api.deleteConfirmText'])
+      }
     }
   },
   watch: {
@@ -290,66 +290,11 @@ export default {
     async newKey () {
       this.isCreateDialogShown = true
     },
-    revoke (key) {
-      this.current = key
-      this.isRevokeConfirmDialogShown = true
-    },
     deleteKey (key) {
-      if (!key.isRevoked) {
-        return
-      }
       this.current = key
       this.isDeleteConfirmDialogShown = true
     },
-    async revokeConfirm () {
-      this.revokeLoading = true
-      try {
-        const resp = await this.$apollo.mutate({
-          mutation: gql`
-            mutation ($id: Int!) {
-              authentication {
-                revokeApiKey (id: $id) {
-                  responseResult {
-                    succeeded
-                    errorCode
-                    slug
-                    message
-                  }
-                }
-              }
-            }
-          `,
-          variables: {
-            id: this.current.id
-          },
-          watchLoading (isLoading) {
-            this.$store.commit(`loading${isLoading ? 'Start' : 'Stop'}`, 'admin-api-revoke')
-          }
-        })
-        if (_.get(resp, 'data.authentication.revokeApiKey.responseResult.succeeded', false)) {
-          this.$store.commit('showNotification', {
-            style: 'success',
-            message: this.$t('admin:api.revokeSuccess'),
-            icon: 'check'
-          })
-          this.refresh(false)
-        } else {
-          this.$store.commit('showNotification', {
-            style: 'red',
-            message: _.get(resp, 'data.authentication.revokeApiKey.responseResult.message', 'An unexpected error occurred.'),
-            icon: 'alert'
-          })
-        }
-      } catch (err) {
-        this.$store.commit('pushGraphError', err)
-      }
-      this.isRevokeConfirmDialogShown = false
-      this.revokeLoading = false
-    },
     async deleteConfirm () {
-      if (!this.current.isRevoked) {
-        return
-      }
       this.deleteLoading = true
       try {
         const resp = await this.$apollo.mutate({
@@ -418,6 +363,8 @@ export default {
               isRevoked
               createdAt
               updatedAt
+              userId
+              userName
             }
           }
         }

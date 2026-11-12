@@ -117,6 +117,10 @@ module.exports = {
 
       // Expired but still valid within N days, just renew
       if (info instanceof Error && info.name === 'TokenExpiredError') {
+        const expiredPayload = jwt.decode(securityHelper.extractJWT(req))
+        if (expiredPayload && _.has(expiredPayload, 'api')) {
+          return next(new Error('API Key has expired.'))
+        }
         const expiredDate = (info.expiredAt instanceof Date) ? info.expiredAt.toISOString() : info.expiredAt
         if (DateTime.utc().minus(ms(WIKI.config.auth.tokenRenewal)) < DateTime.fromISO(expiredDate)) {
           mustRevalidate = true
@@ -185,23 +189,36 @@ module.exports = {
         if (!WIKI.config.api.isEnabled) {
           return next(new Error('API is disabled. You must enable it from the Administration Area first.'))
         } else if (_.includes(WIKI.auth.validApiKeys, user.api)) {
-          req.user = {
-            id: 1,
-            email: 'api@localhost',
-            name: 'API',
-            pictureUrl: null,
-            timezone: 'America/New_York',
-            localeCode: 'en',
-            permissions: _.get(WIKI.auth.groups, `${user.grp}.permissions`, []),
-            groups: [user.grp],
-            getGlobalPermissions () {
-              return req.user.permissions
-            },
-            getGroups () {
-              return req.user.groups
-            }
+          if (!Number.isInteger(user.uid) || user.uid < 1 || user.uid === 2) {
+            return next(new Error('API Key is not bound to a user.'))
           }
-          return next()
+          try {
+            const account = await WIKI.models.users.query().findById(user.uid).withGraphFetched('groups').modifyGraph('groups', builder => {
+              builder.select('groups.id', 'permissions')
+            })
+            if (!account || !account.isActive || !account.isVerified) {
+              return next(new Error('API Key user is unavailable.'))
+            }
+            const permissions = account.getGlobalPermissions()
+            const groups = account.getGroups()
+            req.user = {
+              id: account.id,
+              email: account.email,
+              name: account.name,
+              av: account.pictureUrl,
+              tz: account.timezone,
+              lc: account.localeCode,
+              df: account.dateFormat,
+              ap: account.appearance,
+              permissions,
+              groups,
+              getGlobalPermissions: () => permissions,
+              getGroups: () => groups
+            }
+            return next()
+          } catch (errc) {
+            return next(errc)
+          }
         } else {
           return next(new Error('API Key is invalid or was revoked.'))
         }

@@ -130,6 +130,21 @@ describe('document navigation', () => {
     expect(require('../../../../../data/sideload/en.json')['common:page.refresh']).toBe('Refresh current page')
   })
 
+  it('uses the actively browsed sidebar folder when creating a page', () => {
+    const sidebar = vm.$refs.navSidebar
+    sidebar.currentParent = { id: 5, path: '业务中台（ACDP）/微服务启动参数' }
+    expect(component.methods.getCurrentFolder.call(vm)).toBe('业务中台（ACDP）/微服务启动参数')
+
+    sidebar.currentParent = { id: 0 }
+    expect(component.methods.getCurrentFolder.call(vm)).toBe('')
+
+    sidebar.currentMode = 'custom'
+    expect(component.methods.getCurrentFolder.call(vm)).toBeNull()
+
+    vm.$refs.navSidebar = undefined
+    expect(component.methods.getCurrentFolder.call(vm)).toBeNull()
+  })
+
   it('refreshes current content without changing history, scroll or reloading the browser', async () => {
     response.url = browser.location.href
     const data = await response.json()

@@ -40,7 +40,7 @@ module.exports = class ApiKey extends Model {
     this.updatedAt = moment.utc().toISOString()
   }
 
-  static async createNewKey ({ name, expiration, fullAccess, group }) {
+  static async createNewKey ({ name, expiration, userId }) {
     const entry = await WIKI.models.apiKeys.query().insert({
       name,
       key: 'pending',
@@ -50,7 +50,7 @@ module.exports = class ApiKey extends Model {
 
     const key = jwt.sign({
       api: entry.id,
-      grp: fullAccess ? 1 : group
+      uid: userId
     }, {
       key: WIKI.config.certs.private,
       passphrase: WIKI.config.sessionSecret

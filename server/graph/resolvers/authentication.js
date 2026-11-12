@@ -1,9 +1,18 @@
 const _ = require('lodash')
 const fs = require('fs-extra')
 const path = require('path')
+const jwt = require('jsonwebtoken')
 const graphHelper = require('../../helpers/graph')
 
 /* global WIKI */
+
+const apiKeyUserId = key => {
+  const payload = jwt.decode(key || '')
+  return payload && Number.isInteger(payload.uid) && payload.uid > 0 && payload.uid !== 2 ? payload.uid : null
+}
+
+const canManageApiKey = (user, key) =>
+  user.permissions.includes('manage:system') || apiKeyUserId(key.key) === user.id
 
 module.exports = {
   Query: {
@@ -17,7 +26,13 @@ module.exports = {
      * List of API Keys
      */
     async apiKeys (obj, args, context) {
-      const keys = await WIKI.models.apiKeys.query().orderBy(['isRevoked', 'name'])
+      const allKeys = await WIKI.models.apiKeys.query().orderBy(['isRevoked', 'name'])
+      const keys = allKeys.filter(key => canManageApiKey(context.req.user, key))
+      const userIds = _.uniq(keys.map(key => apiKeyUserId(key.key)).filter(Boolean))
+      const users = userIds.length ?
+        await WIKI.models.users.query().select('id', 'name').whereIn('id', userIds) :
+        []
+      const usersById = _.keyBy(users, 'id')
       return keys.map(k => ({
         id: k.id,
         name: k.name,
@@ -25,7 +40,9 @@ module.exports = {
         isRevoked: k.isRevoked,
         expiration: k.expiration,
         createdAt: k.createdAt,
-        updatedAt: k.updatedAt
+        updatedAt: k.updatedAt,
+        userId: apiKeyUserId(k.key),
+        userName: _.get(usersById, `${apiKeyUserId(k.key)}.name`, null)
       }))
     },
     async apiKey (obj, args, context) {
@@ -33,7 +50,18 @@ module.exports = {
         context.res.setHeader('Cache-Control', 'no-store')
       }
       const key = await WIKI.models.apiKeys.query().select('key').findById(args.id)
-      return key && key.key !== 'pending' ? key.key : null
+      return key && key.key !== 'pending' && canManageApiKey(context.req.user, key) ? key.key : null
+    },
+    async apiKeyUsers (obj, args, context) {
+      const query = WIKI.models.users.query()
+        .select('id', 'name', 'email')
+        .where({ isActive: true, isVerified: true })
+        .whereNot('id', 2)
+        .orderBy('name')
+      if (!context.req.user.permissions.includes('manage:system')) {
+        query.where('id', context.req.user.id)
+      }
+      return query
     },
     /**
      * Current API State
@@ -86,6 +114,14 @@ module.exports = {
      */
     async createApiKey (obj, args, context) {
       try {
+        if (args.userId === 2 || args.userId < 1 ||
+          (!context.req.user.permissions.includes('manage:system') && args.userId !== context.req.user.id)) {
+          throw new Error('You are not authorized to create a key for this user.')
+        }
+        const user = await WIKI.models.users.query().findById(args.userId)
+        if (!user || !user.isActive || !user.isVerified) {
+          throw new Error('API key user is unavailable.')
+        }
         const key = await WIKI.models.apiKeys.createNewKey(args)
         await WIKI.auth.reloadApiKeys()
         WIKI.events.outbound.emit('reloadApiKeys')
@@ -189,6 +225,10 @@ module.exports = {
      */
     async revokeApiKey (obj, args, context) {
       try {
+        const key = await WIKI.models.apiKeys.query().findById(args.id)
+        if (!key || !canManageApiKey(context.req.user, key)) {
+          throw new Error('API key not found or access denied.')
+        }
         await WIKI.models.apiKeys.query().findById(args.id).patch({
           isRevoked: true
         })
@@ -202,7 +242,7 @@ module.exports = {
       }
     },
     /**
-     * Delete a revoked API key
+     * Delete an API key
      */
     async deleteApiKey (obj, args, context) {
       try {
@@ -210,8 +250,8 @@ module.exports = {
         if (!apiKey) {
           throw new Error('API key not found.')
         }
-        if (!apiKey.isRevoked) {
-          throw new Error('Only revoked API keys can be deleted.')
+        if (!canManageApiKey(context.req.user, apiKey)) {
+          throw new Error('API key not found or access denied.')
         }
         await WIKI.models.apiKeys.query().deleteById(args.id)
         await WIKI.auth.reloadApiKeys()

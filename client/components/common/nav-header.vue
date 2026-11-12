@@ -233,7 +233,7 @@
           v-btn(v-else, icon, color='grey darken-3', href='/login', :aria-label='$t(`common:header.login`)')
             v-icon(color='grey') mdi-account-circle
 
-    page-selector(mode='create', v-model='newPageModal', :open-handler='pageNewCreate', :locale='locale')
+    page-selector(mode='create', v-model='newPageModal', :open-handler='pageNewCreate', :initial-folder='newPageFolder', :locale='locale')
     page-selector(mode='move', v-model='movePageModal', :open-handler='pageMoveRename', :path='path', :locale='locale')
     page-selector(mode='create', v-model='duplicateOpts.modal', :open-handler='pageDuplicateHandle', :path='duplicateOpts.path', :locale='duplicateOpts.locale')
     page-delete(v-model='deletePageModal', v-if='path && path.length')
@@ -272,6 +272,10 @@ export default {
     siteHeader: {
       type: Boolean,
       default: false
+    },
+    getCurrentFolder: {
+      type: Function,
+      default: null
     }
   },
   data() {
@@ -280,6 +284,7 @@ export default {
       searchIsShown: true,
       searchAdvMenuShown: false,
       newPageModal: false,
+      newPageFolderOverride: null,
       movePageModal: false,
       convertPageModal: false,
       deletePageModal: false,
@@ -315,6 +320,12 @@ export default {
     title: get('site/title'),
     logoUrl: get('site/logoUrl'),
     path: get('page/path'),
+    newPageFolder () {
+      if (typeof this.newPageFolderOverride === 'string') {
+        return this.newPageFolderOverride
+      }
+      return _.initial(_.compact((this.path || '').split('/'))).join('/')
+    },
     locale: get('page/locale'),
     mode: get('page/mode'),
     name: get('user/name'),
@@ -426,6 +437,7 @@ export default {
       this.$root.$emit('searchMove', dir)
     },
     pageNew () {
+      this.newPageFolderOverride = this.getCurrentFolder ? this.getCurrentFolder() : null
       this.newPageModal = true
     },
     pageNewCreate ({ path, locale }) {
@@ -570,11 +582,11 @@ export default {
   }
 }
 
-.nav-header-search-scope.v-text-field.v-text-field--enclosed > .v-input__control > .v-input__slot {
+.nav-header-search-scope.v-text-field.v-text-field--enclosed:not(.v-text-field--rounded) > .v-input__control > .v-input__slot {
   padding: 0 6px;
 }
 
-.nav-header-search-scope .v-select__selection {
+.nav-header-search-scope.v-select.v-input--dense .v-select__selection {
   max-width: 100%;
   margin-inline: 0;
 }
@@ -583,7 +595,7 @@ export default {
   justify-content: center;
 }
 
-.nav-header-search-scope .v-select__selections input {
+.nav-header-search-scope.v-select.v-text-field .v-select__selections input {
   flex: 0 0 0;
   width: 0;
 }

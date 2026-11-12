@@ -19,6 +19,8 @@ type AuthenticationQuery {
 
   apiKey(id: Int!): String @auth(requires: ["manage:system", "manage:api"])
 
+  apiKeyUsers: [AuthenticationApiKeyUser!]! @auth(requires: ["manage:system", "manage:api"])
+
   apiState: Boolean! @auth(requires: ["manage:system", "manage:api"])
 
   strategies: [AuthenticationStrategy] @auth(requires: ["manage:system"])
@@ -36,8 +38,7 @@ type AuthenticationMutation {
   createApiKey(
     name: String!
     expiration: String!
-    fullAccess: Boolean!
-    group: Int
+    userId: Int!
   ): AuthenticationCreateApiKeyResponse @auth(requires: ["manage:system", "manage:api"])
 
   login(
@@ -154,6 +155,14 @@ type AuthenticationApiKey {
   createdAt: Date!
   updatedAt: Date!
   isRevoked: Boolean!
+  userId: Int
+  userName: String
+}
+
+type AuthenticationApiKeyUser {
+  id: Int!
+  name: String!
+  email: String!
 }
 
 type AuthenticationCreateApiKeyResponse {
