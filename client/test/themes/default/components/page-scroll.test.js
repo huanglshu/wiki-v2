@@ -194,6 +194,13 @@ describe('document scrolling', () => {
       includePaths: [scssPath]
     }).css.toString()
     expect(css).toMatch(/\.page-find\s*\{[^}]*margin-left:\s*auto/)
+    expect(css).toMatch(/\.page-find\s*\{[^}]*border:\s*1px solid rgba\(0, 0, 0, 0\.38\);/)
+    expect(css).toMatch(/\.page-find\s*\{[^}]*background:\s*transparent;/)
+    expect(css).toMatch(/\.page-find__input\s*\{[^}]*font-size:\s*13px;/)
+    expect(css).toMatch(/\.page-find__input::placeholder\s*\{[^}]*color:\s*rgba\(0, 0, 0, 0\.38\);/)
+    expect(css).toMatch(/\.theme--dark \.page-find\s*\{[^}]*border-color:\s*rgba\(255, 255, 255, 0\.24\);/)
+    expect(css).toMatch(/\.theme--dark \.page-find \.page-find__input::placeholder\s*\{[^}]*color:\s*rgba\(255, 255, 255, 0\.5\);/)
+    expect(css).toMatch(/\.page-find:focus-within\s*\{[^}]*border-color:\s*var\(--v-primary-base, #1976d2\);/)
   })
 
   it('copies the decoded page path with a leading slash', () => {

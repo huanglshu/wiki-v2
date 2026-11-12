@@ -15,7 +15,6 @@
         v-text-field.nav-header-search-input(
           ref='searchFieldMobile'
           v-model='search'
-          clearable
           color='white'
           :label='$t(`common:header.search`)'
           single-line
@@ -28,6 +27,17 @@
           @keyup.enter='searchEnter'
           autocomplete='off'
         )
+          template(slot='append')
+            v-btn.nav-header-search-clear(
+              v-if='search'
+              icon
+              x-small
+              :aria-label='$t("common:header.searchClear")'
+              :title='$t("common:header.searchClear")'
+              @mousedown='$event.preventDefault()'
+              @click.stop='clearSearch'
+            )
+              v-icon(size='16') mdi-close-circle
     v-layout(row)
       v-flex(xs5, md4)
         v-toolbar.nav-header-inner(:color='headerColor', dark, flat, :class='$vuetify.rtl ? `pr-3` : `pl-3`')
@@ -90,6 +100,17 @@
                   @keyup.up='searchMove(`up`)'
                   autocomplete='off'
                 )
+                  template(slot='append')
+                    v-btn.nav-header-search-clear(
+                      v-if='search'
+                      icon
+                      x-small
+                      :aria-label='$t("common:header.searchClear")'
+                      :title='$t("common:header.searchClear")'
+                      @mousedown='$event.preventDefault()'
+                      @click.stop='clearSearch'
+                    )
+                      v-icon(size='16') mdi-close-circle
       v-flex(xs7, md4)
         v-toolbar.nav-header-inner.pr-4(:color='headerColor', dark, flat)
           v-spacer
@@ -372,7 +393,7 @@ export default {
   created () {
     if (this.$i18n && this.$i18n.i18next) {
       for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
-        for (const key of ['header.searchScope', 'header.searchScopeGlobal', 'header.searchScopeFolder']) {
+        for (const key of ['header.searchScope', 'header.searchScopeGlobal', 'header.searchScopeFolder', 'header.searchClear']) {
           this.$i18n.i18next.addResource(locale, 'common', key, translations[`common:${key}`])
         }
       }
@@ -422,6 +443,13 @@ export default {
     searchClose () {
       this.search = ''
       this.searchBlur()
+    },
+    clearSearch () {
+      this.search = ''
+      const field = this.$refs.searchField || this.$refs.searchFieldMobile
+      if (field) {
+        field.focus()
+      }
     },
     searchToggle () {
       this.searchIsShown = !this.searchIsShown

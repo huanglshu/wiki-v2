@@ -148,6 +148,60 @@ describe('navigation header theme', () => {
       $vuetify: { breakpoint: { smAndDown: false } }
     })
     expect(addResource).toHaveBeenCalledWith('zh', 'common', 'header.developmentVersion', '开发模式')
+    expect(addResource).toHaveBeenCalledWith('zh', 'common', 'header.searchClear', '清除搜索')
+  })
+
+  it.each([['desktop', 1280], ['mobile', 390]])('shows a clear icon only when the %s search has content', async (mode, width) => {
+    const originalWidth = window.innerWidth
+    Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: width })
+    const testComponent = {
+      ...component,
+      data() {
+        return { ...component.data.call(this), searchText: '' }
+      },
+      computed: {
+        ...component.computed,
+        search: {
+          get() { return this.searchText },
+          set(value) { this.searchText = value }
+        }
+      }
+    }
+    delete testComponent._Ctor
+    const app = new Vue({
+      vuetify: new Vuetify(),
+      render: h => h(testComponent, { props: { siteHeader: true } })
+    }).$mount()
+    document.body.appendChild(app.$el)
+
+    try {
+      const header = app.$children[0]
+      header.searchIsShown = true
+      await Vue.nextTick()
+      const input = app.$el.querySelector('.nav-header-search-input input')
+      expect(input).not.toBeNull()
+      expect(Boolean(header.$refs.searchFieldMobile)).toBe(mode === 'mobile')
+      expect(app.$el.querySelector('.nav-header-search-clear')).toBeNull()
+
+      input.value = 'CAS'
+      input.dispatchEvent(new Event('input'))
+      await Vue.nextTick()
+      await Vue.nextTick()
+      expect(header.searchText).toBe('CAS')
+      const clear = app.$el.querySelector('.nav-header-search-clear')
+      expect(clear).not.toBeNull()
+      expect(clear.getAttribute('aria-label')).toBe('common:header.searchClear')
+      expect(clear.getAttribute('title')).toBe('common:header.searchClear')
+      clear.click()
+      await Vue.nextTick()
+      expect(header.searchText).toBe('')
+      expect(input.value).toBe('')
+      expect(app.$el.querySelector('.nav-header-search-clear')).toBeNull()
+    } finally {
+      app.$destroy()
+      app.$el.remove()
+      Object.defineProperty(window, 'innerWidth', { configurable: true, writable: true, value: originalWidth })
+    }
   })
 
   it('offers only global and folder search, and resets the removed page scope', () => {

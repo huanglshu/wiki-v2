@@ -1294,42 +1294,76 @@ export default {
   max-width: 300px;
   height: 32px;
   padding: 0 4px 0 8px;
+  border: 1px solid rgba(0, 0, 0, .38);
   border-radius: 4px;
-  background: #edf4f8;
+  background: transparent;
 
-  @at-root .theme--light & {
-    background: #e3eefa;
+  &:hover {
+    border-color: rgba(0, 0, 0, .86);
   }
 
   &:focus-within {
-    outline: 2px solid #607d8b;
-    outline-offset: 1px;
+    border-color: var(--v-primary-base, #1976d2);
+    box-shadow: inset 0 0 0 1px var(--v-primary-base, #1976d2);
   }
 
   &__icon {
     flex: 0 0 18px;
-    color: #607d8b !important;
+    color: rgba(0, 0, 0, .54) !important;
   }
 
   &__input {
     flex: 1 1 auto;
     min-width: 0;
-    height: 32px;
+    height: 100%;
     padding: 0 6px;
     outline: none;
-    font-size: 14px;
-    color: #263238;
+    font-size: 13px;
+    color: rgba(0, 0, 0, .87);
+
+    &::placeholder {
+      color: rgba(0, 0, 0, .38);
+      opacity: 1;
+    }
   }
 
   &__count {
     flex: 0 0 auto;
     font-size: 12px;
-    color: #546e7a;
+    color: rgba(0, 0, 0, .54);
     white-space: nowrap;
   }
 
   &__button {
     flex: 0 0 24px;
+  }
+
+  @at-root .theme--dark & {
+    border-color: rgba(255, 255, 255, .24);
+
+    &:hover {
+      border-color: #fff;
+    }
+
+    &:focus-within {
+      border-color: var(--v-primary-base, #1976d2);
+    }
+
+    .page-find__icon {
+      color: #fff !important;
+    }
+
+    .page-find__input {
+      color: #fff;
+
+      &::placeholder {
+        color: rgba(255, 255, 255, .5);
+      }
+    }
+
+    .page-find__count {
+      color: rgba(255, 255, 255, .7);
+    }
   }
 }
 

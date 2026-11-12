@@ -1923,6 +1923,7 @@
   "common:header.searchCopyLink": "Copy Search Link",
   "common:header.searchDidYouMean": "Did you mean...",
   "common:header.searchHint": "Type at least 2 characters to start searching...",
+  "common:header.searchClear": "Clear search",
   "common:header.searchLoading": "Searching...",
   "common:header.searchNoResult": "No pages matching your query.",
   "common:header.searchSelectFolder": "Select a folder in the directory sidebar first.",

@@ -484,6 +484,7 @@
   "common:header.assets": "资料",
   "common:header.imagesFiles": "图像和文件",
   "common:header.search": "搜索...",
+  "common:header.searchClear": "清除搜索",
   "common:header.searchScope": "搜索范围",
   "common:header.searchScopeGlobal": "全站",
   "common:header.searchScopeFolder": "当前文件夹",

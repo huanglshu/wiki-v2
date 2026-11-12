@@ -22,9 +22,10 @@
         span {{$t('common:header.searchNoResult')}}
       template(v-if='!folderScopeUnavailable && search && search.length >= 2 && results && results.length > 0')
         v-subheader.white--text {{$t('common:header.searchResultsCount', { total: response.totalHits })}}
-        .search-results-items.radius-7(role='listbox')
+        .search-results-items.radius-7(ref='resultsList', role='listbox', tabindex='0')
           .search-result-line(
             v-for='(item, idx) of results'
+            ref='resultRows'
             :key='item.id'
             role='option'
             :aria-selected='idx === cursor ? `true` : `false`'
@@ -38,9 +39,7 @@
               template(v-for='(seg, segIdx) of getHighlightedSegments(item.description || item.title, search)')
                 mark.search-highlight(v-if='seg.match', :key='segIdx', v-text='seg.text')
                 span(v-else, :key='segIdx', v-text='seg.text')
-            .search-result-line__meta
-              span.search-result-line__doc(v-text='item.title || item.path')
-              span.search-result-line__lineno(v-if='getLineNumber(item)', v-text='getLineNumber(item)')
+            span.search-result-line__doc(v-text='getResultPath(item)')
         v-pagination.mt-3(
           v-if='paginationLength > 1'
           dark
@@ -77,7 +76,7 @@ export default {
     return {
       cursor: 0,
       pagination: 1,
-      perPage: 20,
+      perPage: 50,
       searchFailed: false,
       response: {
         results: [],
@@ -133,6 +132,11 @@ export default {
     },
     results() {
       this.cursor = 0
+      this.$nextTick(() => {
+        if (this.$refs.resultsList) {
+          this.$refs.resultsList.scrollTop = 0
+        }
+      })
     }
   },
   created() {
@@ -153,6 +157,7 @@ export default {
       } else if (this.cursor > this.results.length + this.suggestions.length - 1) {
         this.cursor = this.results.length + this.suggestions.length - 1
       }
+      this.$nextTick(() => this.scrollResultIntoView())
     })
     this.$root.$on('searchEnter', () => {
       if (!this.results) {
@@ -167,6 +172,21 @@ export default {
     })
   },
   methods: {
+    scrollResultIntoView() {
+      const list = this.$refs.resultsList
+      const rows = this.$refs.resultRows
+      const row = rows && rows[this.cursor]
+      if (!list || !row) {
+        return
+      }
+      const listBounds = list.getBoundingClientRect()
+      const rowBounds = row.getBoundingClientRect()
+      if (rowBounds.top < listBounds.top) {
+        list.scrollTop -= listBounds.top - rowBounds.top
+      } else if (rowBounds.bottom > listBounds.bottom) {
+        list.scrollTop += rowBounds.bottom - listBounds.bottom
+      }
+    },
     resetScopeResults() {
       this.response = { results: [], suggestions: [], totalHits: 0 }
       this.pagination = 1
@@ -187,11 +207,14 @@ export default {
       return /^\d+$/.test(candidate) ? candidate : ''
     },
     getItemTooltip(item) {
+      return this.getResultPath(item)
+    },
+    getResultPath(item) {
       if (!item) {
         return ''
       }
-      const lineNo = this.getLineNumber(item)
-      return lineNo ? `${item.path}:${lineNo}` : String(item.path || item.title || '')
+      const path = String(item.path || '').replace(/^\/+/, '')
+      return path ? `/${path}` : String(item.title || '')
     },
     getSearchTerms(rawQuery) {
       const trimmed = _.trim(String(rawQuery || ''))
@@ -367,23 +390,59 @@ export default {
   }
 
   &-items {
+    max-height: 570px;
+    max-height: min(570px, calc(100vh - 208px));
     background-color: #1e1f22;
     border: 1px solid #393b40;
     padding: 4px 0;
     text-align: left;
-    overflow: hidden;
+    overflow-x: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, .32) transparent;
+
+    &::-webkit-scrollbar {
+      width: 8px;
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, .32);
+      border-radius: 4px;
+    }
+
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, .5);
+    }
+
+    &::-webkit-scrollbar-button {
+      display: none;
+    }
+
+    @media #{map-get($display-breakpoints, 'sm-and-down')} {
+      max-height: min(570px, calc(100vh - 256px));
+    }
   }
 
   .search-result-line {
     display: flex;
-    align-items: center;
-    justify-content: space-between;
-    min-height: 28px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 2px;
+    min-height: 48px;
     padding: 3px 14px;
     cursor: pointer;
     user-select: none;
     font-family: 'JetBrains Mono', 'Cascadia Code', Consolas, 'Microsoft YaHei', sans-serif;
     transition: background-color .1s ease;
+
+    &:not(:first-child) {
+      border-top: 1px solid rgba(255, 255, 255, .16);
+    }
 
     &:hover {
       background-color: #2b2d30;
@@ -394,8 +453,8 @@ export default {
     }
 
     &__code {
-      flex: 1 1 auto;
       min-width: 0;
+      width: 100%;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -404,27 +463,20 @@ export default {
       line-height: 22px;
     }
 
-    &__meta {
-      flex: 0 0 auto;
-      max-width: 36%;
-      margin-left: 16px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      text-align: right;
-      color: #6f737a;
-      font-size: 12.5px;
-      line-height: 22px;
+    &__doc {
+      display: block;
+      width: 100%;
+      white-space: normal;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+      color: #89929f;
+      font-size: 11.5px;
+      line-height: 18px;
     }
 
-    &:hover .search-result-line__meta,
-    &.highlighted .search-result-line__meta {
-      color: #cfd6e6;
-    }
-
-    &__lineno {
-      margin-left: 5px;
-      font-variant-numeric: tabular-nums;
+    &:hover .search-result-line__doc,
+    &.highlighted .search-result-line__doc {
+      color: #aeb8c9;
     }
   }
 

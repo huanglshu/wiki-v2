@@ -6,6 +6,7 @@ const { runInThisContext } = require('vm')
 const babel = require('@babel/core')
 const compiler = require('vue-template-compiler')
 const pug = require('pug')
+const sass = require('sass')
 const Vue = require('vue')
 
 function loadSearchResultsComponent() {
@@ -149,6 +150,79 @@ describe('client/components/common/search-results.vue', () => {
   it('extracts line numbers from composite search result ids', () => {
     expect(component.methods.getLineNumber({ id: '21:51' })).toBe('51')
     expect(component.methods.getLineNumber({ id: 'abc-hash' })).toBe('')
+  })
+
+  it('paginates search results in groups of 50', () => {
+    const items = Array.from({ length: 121 }, (_, index) => ({ id: String(index + 1) }))
+    const ctx = {
+      ...component.data(),
+      response: { results: items, totalHits: items.length }
+    }
+    expect(ctx.perPage).toBe(50)
+    expect(component.computed.paginationLength.call(ctx)).toBe(3)
+    expect(component.computed.results.call(ctx)).toEqual(items.slice(0, 50))
+    ctx.pagination = 2
+    expect(component.computed.results.call(ctx)).toEqual(items.slice(50, 100))
+    ctx.pagination = 3
+    expect(component.computed.results.call(ctx)).toEqual(items.slice(100))
+  })
+
+  it('returns the result list to the top when the displayed results change', () => {
+    const list = { scrollTop: 200 }
+    const ctx = { cursor: 12, $refs: { resultsList: list }, $nextTick: callback => callback() }
+    component.watch.results.call(ctx)
+    expect(ctx.cursor).toBe(0)
+    expect(list.scrollTop).toBe(0)
+  })
+
+  it('keeps the selected result visible during keyboard navigation', () => {
+    const list = { scrollTop: 40, getBoundingClientRect: () => ({ top: 100, bottom: 400 }) }
+    const below = { getBoundingClientRect: () => ({ top: 390, bottom: 420 }) }
+    const above = { getBoundingClientRect: () => ({ top: 80, bottom: 110 }) }
+    const ctx = { cursor: 0, $refs: { resultsList: list, resultRows: [below, above] } }
+    component.methods.scrollResultIntoView.call(ctx)
+    expect(list.scrollTop).toBe(60)
+    ctx.cursor = 1
+    component.methods.scrollResultIntoView.call(ctx)
+    expect(list.scrollTop).toBe(40)
+    ctx.cursor = 2
+    expect(() => component.methods.scrollResultIntoView.call(ctx)).not.toThrow()
+  })
+
+  it('scrolls the selected result after handling keyboard navigation', () => {
+    const handlers = {}
+    const ctx = {
+      cursor: 0,
+      results: [{ id: '1' }, { id: '2' }],
+      suggestions: [],
+      $root: { $on: (event, handler) => { handlers[event] = handler } },
+      $nextTick: callback => callback(),
+      scrollResultIntoView: jest.fn()
+    }
+    component.mounted.call(ctx)
+    handlers.searchMove('down')
+    expect(ctx.cursor).toBe(1)
+    expect(ctx.scrollResultIntoView).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps the result frame bounded and scrollable at desktop and mobile sizes', () => {
+    const sfc = compiler.parseComponent(source)
+    const scssPath = path.join(__dirname, '../../../scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const css = sass.renderSync({
+      data: `${globals}\n${sfc.styles[0].content}`,
+      includePaths: [scssPath]
+    }).css.toString()
+    expect(css).toMatch(/\.search-results-items\s*\{[^}]*max-height:\s*570px;/)
+    expect(css).toMatch(/\.search-results-items\s*\{[^}]*overflow-y:\s*auto;/)
+    expect(css).toMatch(/\.search-results-items\s*\{[^}]*scrollbar-color:\s*rgba\(255, 255, 255, 0\.32\) transparent;/)
+    expect(css).toMatch(/\.search-results-items::-webkit-scrollbar-track\s*\{\s*background:\s*transparent;/)
+    expect(css).toMatch(/\.search-results-items::-webkit-scrollbar-thumb\s*\{[^}]*background:\s*rgba\(255, 255, 255, 0\.32\);/)
+    expect(css).toMatch(/\.search-results-items::-webkit-scrollbar-button\s*\{\s*display:\s*none;/)
+    expect(css).toContain('max-height: min(570px, calc(100vh - 208px));')
+    expect(css).toContain('max-height: min(570px, calc(100vh - 256px));')
+    expect(template).toContain("ref='resultsList'")
+    expect(template).toContain("tabindex='0'")
   })
 
   it('clears old results and exposes a search failure', () => {
@@ -337,10 +411,70 @@ describe('client/components/common/search-results.vue', () => {
     ])
   })
 
-  it('renders line-by-line IDE style search rows with highlight mark and right-aligned doc + line number', () => {
+  it('renders highlighted matches and the full path on a separate line without a visible line number', () => {
+    const result = {
+      id: '9:140',
+      title: '商品数据处理',
+      description: 'CAS match',
+      path: '业务中台（ACDP）/运维脚本/初始化-商品数据处理',
+      locale: 'zh'
+    }
+    const app = new Vue({
+      ...compiler.compileToFunctions(pug.render(template)),
+      components: {
+        'v-subheader': { render(h) { return h('div', this.$slots.default) } }
+      },
+      data: () => ({
+        search: 'CAS',
+        searchIsFocused: true,
+        searchIsLoading: false,
+        searchFailed: false,
+        folderScopeUnavailable: false,
+        results: [result],
+        suggestions: [],
+        response: { results: [result], totalHits: 1 },
+        paginationLength: 1,
+        cursor: 0
+      }),
+      methods: component.methods,
+      beforeCreate() {
+        this.$t = key => key
+      }
+    }).$mount()
+
+    try {
+      const row = app.$el.querySelector('.search-result-line')
+      const code = row.querySelector('.search-result-line__code')
+      const doc = row.querySelector('.search-result-line__doc')
+      expect(code.textContent).toBe('CAS match')
+      expect(doc.textContent).toBe('/业务中台（ACDP）/运维脚本/初始化-商品数据处理')
+      expect(code.nextElementSibling).toBe(doc)
+      expect(row.getAttribute('title')).toBe(doc.textContent)
+      expect(row.querySelector('.search-result-line__lineno')).toBeNull()
+      expect(component.methods.getLineNumber(result)).toBe('140')
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('retains a full readable document path without truncating long paths', () => {
+    const sfc = compiler.parseComponent(source)
+    const scssPath = path.join(__dirname, '../../../scss')
+    const globals = fs.readFileSync(path.join(scssPath, 'global.scss'), 'utf8')
+    const css = sass.renderSync({
+      data: `${globals}\n${sfc.styles[0].content}`,
+      includePaths: [scssPath]
+    }).css.toString()
     expect(source).toContain('.search-result-line(')
     expect(source).toContain('mark.search-highlight(')
     expect(source).toContain('span.search-result-line__doc(')
-    expect(source).toContain('span.search-result-line__lineno(')
+    expect(source).not.toContain('span.search-result-line__lineno(')
+    expect(css).toMatch(/\.search-result-line__doc\s*\{[^}]*white-space:\s*normal;/)
+    expect(css).toMatch(/\.search-result-line__doc\s*\{[^}]*overflow-wrap:\s*anywhere;/)
+    expect(css).toMatch(/\.search-result-line__doc\s*\{[^}]*color:\s*#89929f;/)
+    expect(css).toMatch(/\.search-result-line__doc\s*\{[^}]*font-size:\s*11\.5px;/)
+    expect(css).toMatch(/\.search-result-line\.highlighted \.search-result-line__doc\s*\{\s*color:\s*#aeb8c9;/)
+    expect(css).toMatch(/\.search-result-line:not\(:first-child\)\s*\{\s*border-top:\s*1px solid rgba\(255, 255, 255, 0\.16\);/)
+    expect(component.methods.getResultPath({ path: '/docs/guide' })).toBe('/docs/guide')
   })
 })
