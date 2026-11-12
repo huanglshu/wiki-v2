@@ -1,13 +1,16 @@
 extends master.pug
 
 block head
+  style.
+    #root[v-cloak] { display: none; }
 
 block body
-  #root
+  #root(v-cloak)
     page-source(
       :page-id=page.id
       locale=page.localeCode
       path=page.path
+      content-type=page.contentType
       :version-id=page.versionId
       version-date=page.versionDate
       effective-permissions=Buffer.from(JSON.stringify(effectivePermissions)).toString('base64')

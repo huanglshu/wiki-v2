@@ -12,9 +12,9 @@
           i18next.caption.grey--text.text--darken-2(path='history:ui.pageId', tag='div', :options='{ defaultValue: `ID: {{id}}` }')
             span.history-meta-value(place='id') {{ pageId }}
           v-btn.ml-4.history-return(outlined, color='blue darken-1', @click='goLive') {{ $t('history:ui.returnLive', { defaultValue: 'Return to Live Version' }) }}
-      v-container(fluid, grid-list-xl)
-        v-layout(row, wrap)
-          v-flex(xs12, md4)
+      v-container.history-body(fluid, grid-list-xl)
+        v-layout.history-layout(row, wrap)
+          v-flex.history-trail(xs12, md4, tabindex='0')
             v-chip.my-0.ml-6(
               label
               small
@@ -106,9 +106,9 @@
               :class='$vuetify.theme.dark ? `grey--text text--lighten-2` : `grey--text text--darken-2`'
               ) {{ $t('history:ui.endOfTrail', { defaultValue: 'End of history trail' }) }}
 
-          v-flex(xs12, md8)
-            v-card.radius-7(:class='$vuetify.breakpoint.mdAndUp ? `mt-8` : ``')
-              v-card-text
+          v-flex.history-diff(xs12, md8)
+            v-card.history-diff-card.radius-7(:class='$vuetify.breakpoint.mdAndUp ? `mt-8` : ``')
+              v-card-text.history-diff-card__body
                 .history-target-summary
                   .history-target-summary__identity
                     .history-target-summary__title {{target.title}}
@@ -122,7 +122,7 @@
                     )
                     v-icon(left, small) mdi-eye
                     span {{ $t('history:ui.viewMode', { defaultValue: 'View Mode' }) }}
-                v-card.mt-3(light, v-html='diffHTML', flat)
+                v-card.history-diff-content.mt-3(light, v-html='diffHTML', flat, tabindex='0')
 
     v-dialog(v-model='isRestoreConfirmDialogShown', max-width='650', persistent)
       v-card
@@ -585,7 +585,77 @@ export default {
 <style lang='scss'>
 
 .history {
+  > .v-application--wrap {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .v-main {
+    flex: 1 1 0%;
+    min-height: 0;
+  }
+
+  .v-main__wrap {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .history-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  .history-diff-content {
+    max-height: 50vh;
+    max-height: 50dvh;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  .v-card.history-diff-content {
+    border: 1px solid #ddd;
+  }
+
+  @media (min-width: 960px) {
+    .history-body {
+      overflow: hidden;
+    }
+
+    .layout.history-layout {
+      height: 100%;
+      flex-wrap: nowrap;
+    }
+
+    .history-trail {
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    .history-diff,
+    .history-diff-card,
+    .history-diff-card__body {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .history-diff-card,
+    .history-diff-card__body {
+      flex: 0 1 auto;
+    }
+
+    .history-diff-content {
+      flex: 0 1 auto;
+      min-height: 0;
+      max-height: none;
+    }
+  }
+
   .history-toolbar {
+    flex: 0 0 auto;
     background-color: #fff !important;
     color: rgba(0, 0, 0, .87) !important;
 

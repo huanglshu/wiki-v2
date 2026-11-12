@@ -20,7 +20,27 @@ describe('history layout', () => {
     expect(toolbar.getAttribute('color')).toBe('white')
     expect(toolbar.hasAttribute('light')).toBe(true)
     expect(toolbar.hasAttribute('dark')).toBe(false)
-    expect(sfc.styles[0].content).toMatch(/\.history\s*\{[^}]*\.history-toolbar\s*\{[^}]*background-color:\s*#fff !important;[^}]*color:\s*rgba\(0,\s*0,\s*0,\s*\.87\) !important;/)
+    expect(sfc.styles[0].content).toMatch(/\.history-toolbar\s*\{[^}]*background-color:\s*#fff !important;[^}]*color:\s*rgba\(0,\s*0,\s*0,\s*\.87\) !important;/)
+  })
+
+  it('keeps the summary outside the scrollable diff content', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    expect(root.querySelector('.history-trail').getAttribute('tabindex')).toBe('0')
+    const content = root.querySelector('.history-diff-content')
+    expect(content.getAttribute('tabindex')).toBe('0')
+    expect(content.parentElement.querySelector('.history-target-summary')).not.toBeNull()
+    expect(content.querySelector('.history-target-summary')).toBeNull()
+    expect(sfc.styles[0].content).toMatch(/\.history-trail\s*\{[^}]*overflow-y:\s*auto;/)
+    expect(sfc.styles[0].content).toMatch(/\.history-diff-content\s*\{[^}]*overflow-y:\s*auto;/)
+    expect(sfc.styles[0].content).toMatch(/\.v-card\.history-diff-content\s*\{[^}]*border:\s*1px solid #ddd;/)
+  })
+
+  it('prevents desktop history columns from wrapping regardless of Vuetify style order', () => {
+    const root = document.createElement('div')
+    root.innerHTML = pug.render(sfc.template.content)
+    expect(root.querySelector('.history-layout').hasAttribute('wrap')).toBe(true)
+    expect(sfc.styles[0].content).toMatch(/@media \(min-width:\s*960px\)\s*\{[\s\S]*?\.layout\.history-layout\s*\{[^}]*height:\s*100%;[^}]*flex-wrap:\s*nowrap;/)
   })
 
   it('keeps history metadata legible on the light toolbar', () => {

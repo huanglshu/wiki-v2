@@ -779,6 +779,8 @@
   "editor:markup.markdownFormattingHelp": "Markdown 用法帮助",
   "common:page.viewingSource": "查看页面 {{path}} 的源码",
   "common:page.returnNormalView": "返回普通视图",
+  "common:page.sourceLanguage": "源码",
+  "common:page.sourceLines": "{{count}} 行",
   "common:page.id": "ID {{id}}",
   "common:header.language": "语言",
   "admin:analytics.title": "网站分析",
