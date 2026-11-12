@@ -57,6 +57,38 @@ describe('navigation sidebar breadcrumb selection', () => {
     expect(addResource).toHaveBeenCalledWith('zh', 'common', 'sidebar.directoryPathCopyFailed', '复制目录路径失败。')
   })
 
+  it('shares the actively selected directory, root and unavailable state', async () => {
+    const store = { set: jest.fn() }
+    const nav = new Vue({
+      ...component,
+      render: h => h('div'),
+      beforeCreate() {
+        this.$store = store
+      },
+      mounted() {}
+    }).$mount()
+
+    try {
+      expect(store.set).toHaveBeenLastCalledWith('site/searchFolderPath', null)
+      nav.currentMode = 'browse'
+      nav.currentParent = { id: 5, path: 'selected/subfolder' }
+      nav.currentDirectoryReady = true
+      await Vue.nextTick()
+      expect(store.set).toHaveBeenLastCalledWith('site/searchFolderPath', 'selected/subfolder')
+
+      nav.currentParent = { id: 0 }
+      await Vue.nextTick()
+      expect(store.set).toHaveBeenLastCalledWith('site/searchFolderPath', '')
+
+      nav.currentMode = 'custom'
+      await Vue.nextTick()
+      expect(store.set).toHaveBeenLastCalledWith('site/searchFolderPath', null)
+    } finally {
+      nav.$destroy()
+      expect(store.set).toHaveBeenLastCalledWith('site/searchFolderPath', null)
+    }
+  })
+
   it('opens and selects a virtual directory', async () => {
     const parent = { id: 4, path: 'DB', title: 'DB', isFolder: true, pageId: null, parent: 0, locale: 'zh' }
     const directory = { id: 5, path: 'DB/MYSQL', title: 'MYSQL', isFolder: true, pageId: null, parent: 4, locale: 'zh' }

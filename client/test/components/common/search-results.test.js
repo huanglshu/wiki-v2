@@ -29,6 +29,9 @@ function loadSearchResultsComponent() {
     if (name === 'gql/common/common-pages-query-search.gql') {
       return {}
     }
+    if (name === '../../../data/sideload/zh.json' || name === '../../../data/sideload/en.json') {
+      return require(`../../../../data/sideload/${name.endsWith('zh.json') ? 'zh' : 'en'}.json`)
+    }
     return require(name)
   }
   runInThisContext(`(function (require, module, exports) {\n${code}\n})`)(
@@ -56,6 +59,8 @@ describe('client/components/common/search-results.vue', () => {
         search: '',
         searchIsFocused: true,
         searchIsLoading: false,
+        searchFailed: false,
+        folderScopeUnavailable: false,
         results: [],
         suggestions: []
       }),
@@ -99,6 +104,8 @@ describe('client/components/common/search-results.vue', () => {
         search: 'login',
         searchIsFocused: true,
         searchIsLoading: false,
+        searchFailed: false,
+        folderScopeUnavailable: false,
         results: [{ id: '1:2', title: 'Guide', description: 'login', path: 'guide' }],
         suggestions: [],
         response: { totalHits: 1 },
@@ -144,6 +151,85 @@ describe('client/components/common/search-results.vue', () => {
     expect(component.methods.getLineNumber({ id: 'abc-hash' })).toBe('')
   })
 
+  it('clears old results and exposes a search failure', () => {
+    const ctx = {
+      response: { results: [{ id: '1:2' }], suggestions: ['old'], totalHits: 1 },
+      searchIsLoading: true,
+      searchFailed: false
+    }
+    component.apollo.response.error.call(ctx)
+    expect(ctx.response).toEqual({ results: [], suggestions: [], totalHits: 0 })
+    expect(ctx.searchFailed).toBe(true)
+    expect(ctx.searchIsLoading).toBe(false)
+    expect(template).toContain("role='alert'")
+  })
+
+  it('renders an error instead of stale search results', async () => {
+    const app = new Vue({
+      ...compiler.compileToFunctions(pug.render(template)),
+      components: {
+        'v-icon': { render(h) { return h('i', this.$slots.default) } },
+        'v-subheader': { render(h) { return h('div', this.$slots.default) } }
+      },
+      data: () => ({
+        search: 'login',
+        searchIsFocused: true,
+        searchIsLoading: false,
+        searchFailed: false,
+        folderScopeUnavailable: false,
+        results: [],
+        suggestions: [],
+        response: { results: [{ id: '1:2' }], totalHits: 1 },
+        paginationLength: 1,
+        cursor: 0
+      }),
+      methods: component.methods,
+      beforeCreate() {
+        this.$t = key => key
+      }
+    }).$mount()
+
+    try {
+      component.apollo.response.error.call(app)
+      await Vue.nextTick()
+      expect(app.$el.querySelector('[role="alert"]').textContent).toContain('common:header.searchUnavailable')
+      expect(app.$el.querySelector('.search-results-none').textContent).not.toContain('common:header.searchNoResult')
+    } finally {
+      app.$destroy()
+    }
+  })
+
+  it('prompts for a sidebar directory and hides stale results when no folder is selected', () => {
+    const app = new Vue({
+      ...compiler.compileToFunctions(pug.render(template)),
+      components: {
+        'v-icon': { render(h) { return h('i', this.$slots.default) } }
+      },
+      data: () => ({
+        search: 'CAS',
+        searchIsFocused: true,
+        searchIsLoading: false,
+        searchFailed: false,
+        folderScopeUnavailable: true,
+        results: [{ id: 'old', title: 'Old result' }],
+        suggestions: ['old'],
+        response: { totalHits: 1 }
+      }),
+      methods: component.methods,
+      beforeCreate() {
+        this.$t = key => key
+      }
+    }).$mount()
+
+    try {
+      expect(app.$el.querySelector('[role="status"]').textContent).toContain('common:header.searchSelectFolder')
+      expect(app.$el.querySelector('.search-results-items')).toBeNull()
+      expect(app.$el.textContent).not.toContain('Old result')
+    } finally {
+      app.$destroy()
+    }
+  })
+
   it('includes the search terms for results with or without source line numbers', () => {
     const ctx = {
       search: 'login',
@@ -159,6 +245,69 @@ describe('client/components/common/search-results.vue', () => {
 
     expect(lineUrl).toContain('#search-line=51&')
     expect(new URLSearchParams(noLineUrl.split('#search-')[1]).get('query')).toBe('login')
+  })
+
+  it('searches the selected sidebar folder instead of the current page parent', () => {
+    const ctx = {
+      search: 'CAS',
+      searchScope: 'folder',
+      searchFolderPath: 'selected/subfolder',
+      folderScopeUnavailable: false,
+      pagePath: 'another/folder/page',
+      pageLocale: 'zh'
+    }
+    expect(component.apollo.response.variables.call(ctx)).toEqual({
+      query: 'CAS',
+      scope: 'folder',
+      locale: 'zh',
+      path: 'selected/subfolder'
+    })
+    expect(component.apollo.response.skip.call(ctx)).toBe(false)
+
+    ctx.searchFolderPath = ''
+    expect(component.apollo.response.variables.call(ctx).path).toBe('')
+    expect(component.apollo.response.skip.call(ctx)).toBe(false)
+
+    ctx.searchFolderPath = null
+    ctx.folderScopeUnavailable = true
+    expect(component.apollo.response.skip.call(ctx)).toBe(true)
+  })
+
+  it('keeps global searches independent of the selected folder', () => {
+    const ctx = {
+      search: 'CAS',
+      searchScope: 'global',
+      searchFolderPath: 'selected/folder',
+      pagePath: 'another/page',
+      pageLocale: 'zh'
+    }
+    expect(component.apollo.response.variables.call(ctx)).toEqual({
+      query: 'CAS',
+      scope: 'global',
+      locale: null,
+      path: null
+    })
+  })
+
+  it('clears old results when the selected folder changes', () => {
+    const ctx = {
+      search: 'CAS',
+      searchScope: 'folder',
+      folderScopeUnavailable: false,
+      response: { results: [{ id: 'old' }], suggestions: ['old'], totalHits: 1 },
+      pagination: 2,
+      cursor: 1,
+      searchFailed: true
+    }
+    ctx.resetScopeResults = component.methods.resetScopeResults.bind(ctx)
+    component.watch.searchFolderPath.call(ctx)
+    expect(ctx.response).toEqual({ results: [], suggestions: [], totalHits: 0 })
+    expect(ctx.pagination).toBe(1)
+    expect(ctx.searchIsLoading).toBe(true)
+
+    ctx.folderScopeUnavailable = true
+    component.watch.searchFolderPath.call(ctx)
+    expect(ctx.searchIsLoading).toBe(false)
   })
 
   it('splits matched line text into highlighted and plain segments without interpreting HTML', () => {

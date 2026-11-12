@@ -151,11 +151,12 @@ describe('navigation header theme', () => {
   })
 
   it('offers only global and folder search, and resets the removed page scope', () => {
-    const context = { path: 'docs/page', $t: key => key }
+    const context = { path: 'docs/page', searchFolderPath: 'other/folder', $t: key => key }
     const scopes = component.computed.searchScopes.call(context)
     expect(scopes.map(scope => scope.value)).toEqual(['global', 'folder'])
     expect(scopes[1].disabled).toBe(false)
-    expect(component.computed.searchScopes.call({ ...context, path: '' })[1].disabled).toBe(true)
+    expect(component.computed.searchScopes.call({ ...context, searchFolderPath: '' })[1].disabled).toBe(false)
+    expect(component.computed.searchScopes.call({ ...context, searchFolderPath: null })[1].disabled).toBe(true)
 
     const vm = { searchScope: 'page', $vuetify: { breakpoint: { smAndDown: false } } }
     component.created.call(vm)

@@ -1925,6 +1925,8 @@
   "common:header.searchHint": "Type at least 2 characters to start searching...",
   "common:header.searchLoading": "Searching...",
   "common:header.searchNoResult": "No pages matching your query.",
+  "common:header.searchSelectFolder": "Select a folder in the directory sidebar first.",
+  "common:header.searchUnavailable": "Search is temporarily unavailable. Please try again.",
   "common:header.searchResultsCount": "Found {{total}} results",
   "common:header.siteMap": "Site Map",
   "common:header.view": "View",

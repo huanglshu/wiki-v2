@@ -4,6 +4,9 @@
       .search-results-help(v-if='!search || (search && search.length < 2)')
         v-icon(size='18', aria-hidden='true') mdi-magnify
         span {{$t('common:header.searchHint')}}
+      .search-results-help(v-else-if='folderScopeUnavailable', role='status')
+        v-icon(size='18', aria-hidden='true') mdi-folder-open-outline
+        span {{$t('common:header.searchSelectFolder')}}
       .search-results-loader(v-else-if='searchIsLoading && (!results || results.length < 1)')
         orbit-spinner(
           :animation-duration='1000'
@@ -11,10 +14,13 @@
           color='#FFF'
         )
         .headline.mt-5 {{$t('common:header.searchLoading')}}
+      .search-results-none(v-else-if='searchFailed', role='alert')
+        v-icon(size='18', aria-hidden='true') mdi-alert-circle-outline
+        span {{$t('common:header.searchUnavailable')}}
       .search-results-none(v-else-if='!searchIsLoading && (!results || results.length < 1)', role='status')
         v-icon(size='18', aria-hidden='true') mdi-magnify
         span {{$t('common:header.searchNoResult')}}
-      template(v-if='search && search.length >= 2 && results && results.length > 0')
+      template(v-if='!folderScopeUnavailable && search && search.length >= 2 && results && results.length > 0')
         v-subheader.white--text {{$t('common:header.searchResultsCount', { total: response.totalHits })}}
         .search-results-items.radius-7(role='listbox')
           .search-result-line(
@@ -42,7 +48,7 @@
           :length='paginationLength'
           circle
         )
-      template(v-if='suggestions && suggestions.length > 0')
+      template(v-if='!folderScopeUnavailable && suggestions && suggestions.length > 0')
         v-subheader.white--text.mt-3 {{$t('common:header.searchDidYouMean')}}
         v-list.search-results-suggestions.radius-7(dense, dark)
           template(v-for='(term, idx) of suggestions')
@@ -60,6 +66,8 @@ import { get, sync } from 'vuex-pathify'
 import { OrbitSpinner } from 'epic-spinners'
 
 import searchPagesQuery from 'gql/common/common-pages-query-search.gql'
+import zhTranslations from '../../../data/sideload/zh.json'
+import enTranslations from '../../../data/sideload/en.json'
 
 export default {
   components: {
@@ -70,6 +78,7 @@ export default {
       cursor: 0,
       pagination: 1,
       perPage: 20,
+      searchFailed: false,
       response: {
         results: [],
         suggestions: [],
@@ -80,12 +89,16 @@ export default {
   computed: {
     search: sync('site/search'),
     searchScope: sync('site/searchScope'),
+    searchFolderPath: get('site/searchFolderPath'),
     pagePath: get('page/path'),
     pageLocale: get('page/locale'),
     searchIsFocused: sync('site/searchIsFocused'),
     searchIsLoading: sync('site/searchIsLoading'),
     searchRestrictLocale: sync('site/searchRestrictLocale'),
     searchRestrictPath: sync('site/searchRestrictPath'),
+    folderScopeUnavailable() {
+      return this.searchScope === 'folder' && typeof this.searchFolderPath !== 'string'
+    },
     results() {
       const currentIndex = (this.pagination - 1) * this.perPage
       return this.response.results ? _.slice(this.response.results, currentIndex, currentIndex + this.perPage) : []
@@ -103,14 +116,33 @@ export default {
   watch: {
     search(newValue, oldValue) {
       this.cursor = 0
-      if (!newValue || (newValue && newValue.length < 2)) {
+      this.searchFailed = false
+      if (!newValue || (newValue && newValue.length < 2) || this.folderScopeUnavailable) {
         this.searchIsLoading = false
       } else {
         this.searchIsLoading = true
       }
     },
+    searchScope() {
+      this.resetScopeResults()
+    },
+    searchFolderPath() {
+      if (this.searchScope === 'folder') {
+        this.resetScopeResults()
+      }
+    },
     results() {
       this.cursor = 0
+    }
+  },
+  created() {
+    const i18next = this.$i18n && this.$i18n.i18next
+    if (i18next) {
+      for (const [locale, translations] of Object.entries({ zh: zhTranslations, en: enTranslations })) {
+        for (const key of ['searchUnavailable', 'searchSelectFolder']) {
+          i18next.addResource(locale, 'common', `header.${key}`, translations[`common:header.${key}`])
+        }
+      }
     }
   },
   mounted() {
@@ -135,6 +167,13 @@ export default {
     })
   },
   methods: {
+    resetScopeResults() {
+      this.response = { results: [], suggestions: [], totalHits: 0 }
+      this.pagination = 1
+      this.cursor = 0
+      this.searchFailed = false
+      this.searchIsLoading = Boolean(this.search && this.search.length >= 2 && !this.folderScopeUnavailable)
+    },
     closeSearch() {
       this.search = ''
       this.searchIsFocused = false
@@ -246,22 +285,28 @@ export default {
     response: {
       query: searchPagesQuery,
       variables() {
-        const scope = this.pagePath ? this.searchScope : 'global'
+        const scope = this.searchScope === 'folder' ? 'folder' : (this.pagePath ? this.searchScope : 'global')
         return {
           query: this.search,
           scope,
           locale: scope === 'global' ? null : this.pageLocale,
-          path: scope === 'page' ? this.pagePath : (scope === 'folder' ? this.pagePath.split('/').slice(0, -1).join('/') : null)
+          path: scope === 'page' ? this.pagePath : (scope === 'folder' ? this.searchFolderPath : null)
         }
       },
       fetchPolicy: 'network-only',
       debounce: 300,
       throttle: 1000,
       skip() {
-        return !this.search || this.search.length < 2
+        return !this.search || this.search.length < 2 || this.folderScopeUnavailable
       },
       result() {
         this.pagination = 1
+        this.searchFailed = false
+      },
+      error() {
+        this.response = { results: [], suggestions: [], totalHits: 0 }
+        this.searchFailed = true
+        this.searchIsLoading = false
       },
       update: (data) => _.get(data, 'pages.search', {}),
       watchLoading (isLoading) {

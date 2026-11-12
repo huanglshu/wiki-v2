@@ -306,10 +306,11 @@ export default {
     },
     search: sync('site/search'),
     searchScope: sync('site/searchScope'),
+    searchFolderPath: get('site/searchFolderPath'),
     searchScopes () {
       return [
         { text: this.$t('common:header.searchScopeGlobal', { defaultValue: 'Global search' }), value: 'global' },
-        { text: this.$t('common:header.searchScopeFolder', { defaultValue: 'Current folder' }), value: 'folder', disabled: !this.path }
+        { text: this.$t('common:header.searchScopeFolder', { defaultValue: 'Current folder' }), value: 'folder', disabled: typeof this.searchFolderPath !== 'string' }
       ]
     },
     searchIsFocused: sync('site/searchIsFocused'),

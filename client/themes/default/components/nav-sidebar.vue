@@ -138,6 +138,7 @@ export default {
       currentMode: 'custom',
       currentItems: [],
       directorySearch: '',
+      currentDirectoryReady: false,
       currentParent: {
         id: 0,
         title: '/ (root)'
@@ -149,6 +150,15 @@ export default {
   computed: {
     path: get('page/path'),
     locale: get('page/locale'),
+    selectedDirectoryPath () {
+      if (this.currentMode !== 'browse' || !this.currentDirectoryReady || !this.currentParent) {
+        return null
+      }
+      if (this.currentParent.id === 0) {
+        return ''
+      }
+      return typeof this.currentParent.path === 'string' ? this.currentParent.path : null
+    },
     filteredCurrentItems () {
       const query = _.toLower(_.trim(this.directorySearch))
       if (!query) {
@@ -158,6 +168,14 @@ export default {
     }
   },
   watch: {
+    selectedDirectoryPath: {
+      immediate: true,
+      handler (path) {
+        if (this.$store && typeof this.$store.set === 'function') {
+          this.$store.set('site/searchFolderPath', path)
+        }
+      }
+    },
     currentParent (newParent, oldParent) {
       const newId = newParent && newParent.id
       const oldId = oldParent && oldParent.id
@@ -284,6 +302,7 @@ export default {
       }
 
       this.currentParent = item
+      this.currentDirectoryReady = true
 
       const resp = await this.$apollo.query({
         query: gql`
@@ -356,6 +375,7 @@ export default {
 
         this.parents = [{ id: 0, title: '/ (root)' }, ...invertedAncestors.reverse()]
         this.currentParent = _.last(this.parents)
+        this.currentDirectoryReady = true
 
         this.loadedCache = [curPage.parent]
         this.currentItems = _.filter(items, ['parent', curPage.parent])
@@ -381,6 +401,11 @@ export default {
     }
     if (this.currentMode === 'browse') {
       this.loadFromCurrentPath()
+    }
+  },
+  beforeDestroy () {
+    if (this.$store && typeof this.$store.set === 'function') {
+      this.$store.set('site/searchFolderPath', null)
     }
   }
 }

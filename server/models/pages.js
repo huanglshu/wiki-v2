@@ -12,6 +12,7 @@ const CleanCSS = require('clean-css')
 const TurndownService = require('turndown')
 const turndownPluginGfm = require('@joplin/turndown-plugin-gfm').gfm
 const cheerio = require('cheerio')
+const { withSearchIndexWrite, markSearchIndexDirty } = require('../helpers/search-index-write')
 
 /* global WIKI */
 
@@ -239,6 +240,10 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise of the Page Model Instance
    */
   static async createPage(opts) {
+    return withSearchIndexWrite(() => this.createPageWithIndexLock(opts))
+  }
+
+  static async createPageWithIndexLock(opts) {
     // -> Validate path
     if (opts.path.includes('.') || opts.path.includes(' ') || opts.path.includes('\\') || opts.path.includes('//')) {
       throw new WIKI.Error.PageIllegalPath()
@@ -296,6 +301,7 @@ module.exports = class Page extends Model {
     }
 
     // -> Create page
+    markSearchIndexDirty()
     await WIKI.models.pages.query().insert({
       authorId: opts.user.id,
       content: opts.content,
@@ -368,6 +374,10 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise of the Page Model Instance
    */
   static async updatePage(opts) {
+    return withSearchIndexWrite(() => this.updatePageWithIndexLock(opts))
+  }
+
+  static async updatePageWithIndexLock(opts) {
     // -> Fetch original page
     const ogPage = await WIKI.models.pages.query().findById(opts.id)
     if (!ogPage) {
@@ -423,6 +433,7 @@ module.exports = class Page extends Model {
     }
 
     // -> Update page
+    markSearchIndexDirty()
     await WIKI.models.pages.query().patch({
       authorId: opts.user.id,
       content: opts.content,
@@ -495,6 +506,10 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise of the Page Model Instance
    */
   static async convertPage(opts) {
+    return withSearchIndexWrite(() => this.convertPageWithIndexLock(opts))
+  }
+
+  static async convertPageWithIndexLock(opts) {
     // -> Fetch original page
     const ogPage = await WIKI.models.pages.query().findById(opts.id)
     if (!ogPage) {
@@ -639,12 +654,17 @@ module.exports = class Page extends Model {
     }
 
     // -> Update page
+    markSearchIndexDirty()
     await WIKI.models.pages.query().patch({
       contentType: targetContentType,
       editorKey: opts.editor,
       ...(convertedContent ? { content: convertedContent } : {})
     }).where('id', ogPage.id)
     const page = await WIKI.models.pages.getPageFromDb(ogPage.id)
+    if (WIKI.data.searchEngine.key === 'elasticsearch') {
+      page.safeContent = WIKI.models.pages.cleanHTML(page.render)
+      await WIKI.data.searchEngine.updated(page)
+    }
 
     await WIKI.models.pages.deletePageFromCache(page.hash)
     WIKI.events.outbound.emit('deletePageFromCache', page.hash)
@@ -663,6 +683,10 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise with no value
    */
   static async movePage(opts) {
+    return withSearchIndexWrite(() => this.movePageWithIndexLock(opts))
+  }
+
+  static async movePageWithIndexLock(opts) {
     let page
     if (_.has(opts, 'id')) {
       page = await WIKI.models.pages.query().findById(opts.id)
@@ -725,6 +749,7 @@ module.exports = class Page extends Model {
     const destinationHash = pageHelper.generateHash({ path: opts.destinationPath, locale: opts.destinationLocale, privateNS: opts.isPrivate ? 'TODO' : '' })
 
     // -> Move page
+    markSearchIndexDirty()
     const destinationTitle = (page.title === _.last(page.path.split('/')) ? _.last(opts.destinationPath.split('/')) : page.title)
     await WIKI.models.pages.query().patch({
       path: opts.destinationPath,
@@ -789,6 +814,10 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise with no value
    */
   static async deletePage(opts) {
+    return withSearchIndexWrite(() => this.deletePageWithIndexLock(opts))
+  }
+
+  static async deletePageWithIndexLock(opts) {
     const page = await WIKI.models.pages.getPageFromDb(_.has(opts, 'id') ? opts.id : opts)
     if (!page) {
       throw new WIKI.Error.PageNotFound()
@@ -810,6 +839,7 @@ module.exports = class Page extends Model {
     })
 
     // -> Delete page
+    markSearchIndexDirty()
     await WIKI.models.pages.query().delete().where('id', page.id)
     await WIKI.models.pages.deletePageFromCache(page.hash)
     WIKI.events.outbound.emit('deletePageFromCache', page.hash)
@@ -1133,16 +1163,23 @@ module.exports = class Page extends Model {
    * @returns {Promise} Promise with no value
    */
   static async migrateToLocale({ sourceLocale, targetLocale }) {
-    return WIKI.models.pages.query()
-      .patch({
-        localeCode: targetLocale
-      })
-      .where({
-        localeCode: sourceLocale
-      })
-      .whereNotExists(function() {
-        this.select('id').from('pages AS pagesm').where('pagesm.localeCode', targetLocale).andWhereRaw('pagesm.path = pages.path')
-      })
+    return withSearchIndexWrite(async () => {
+      markSearchIndexDirty()
+      const count = await WIKI.models.pages.query()
+        .patch({
+          localeCode: targetLocale
+        })
+        .where({
+          localeCode: sourceLocale
+        })
+        .whereNotExists(function() {
+          this.select('id').from('pages AS pagesm').where('pagesm.localeCode', targetLocale).andWhereRaw('pagesm.path = pages.path')
+        })
+      if (WIKI.data.searchEngine.key === 'elasticsearch') {
+        await WIKI.data.searchEngine.rebuild()
+      }
+      return count
+    })
   }
 
   /**

@@ -589,6 +589,8 @@
   "common:header.searchHint": "搜索词不能少于 2 个字符...",
   "common:header.searchLoading": "正在搜索...",
   "common:header.searchNoResult": "没有符合您查询的页面。",
+  "common:header.searchSelectFolder": "请先在目录栏中选择文件夹。",
+  "common:header.searchUnavailable": "搜索暂不可用，请稍后重试。",
   "common:header.searchResultsCount": "找到 {{total}} 条结果",
   "common:header.searchDidYouMean": "您是指...？",
   "common:header.searchClose": "关闭",

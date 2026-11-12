@@ -1,6 +1,7 @@
 const _ = require('lodash')
 const graphHelper = require('../../helpers/graph')
 const { queryPageLineMatches } = require('../../helpers/search-lines')
+const { withSearchIndexWrite, markSearchIndexDirty } = require('../../helpers/search-index-write')
 
 /* global WIKI */
 
@@ -52,7 +53,7 @@ module.exports = {
      */
     async search (obj, args, context) {
       if (WIKI.data.searchEngine) {
-        const scoped = ['folder', 'page'].includes(args.scope)
+        const scoped = ['folder', 'page'].includes(args.scope) && WIKI.data.searchEngine.key !== 'elasticsearch'
         const resp = scoped ?
           await queryPageLineMatches(args.query, args) :
           await WIKI.data.searchEngine.query(args.query, args)
@@ -179,8 +180,8 @@ module.exports = {
     async singleByPath(obj, args, context, info) {
       let page = await WIKI.models.pages.getPageFromDb({
         path: args.path,
-        locale: args.locale,
-      });
+        locale: args.locale
+      })
       if (page) {
         if (WIKI.auth.checkAccess(context.req.user, ['manage:pages', 'delete:pages'], {
           path: page.path,
@@ -483,13 +484,18 @@ module.exports = {
      */
     async deleteTag (obj, args, context) {
       try {
-        const tagToDel = await WIKI.models.tags.query().findById(args.id)
-        if (tagToDel) {
+        await withSearchIndexWrite(async () => {
+          const tagToDel = await WIKI.models.tags.query().findById(args.id)
+          if (!tagToDel) {
+            throw new Error('This tag does not exist.')
+          }
+          markSearchIndexDirty()
           await tagToDel.$relatedQuery('pages').unrelate()
           await WIKI.models.tags.query().deleteById(args.id)
-        } else {
-          throw new Error('This tag does not exist.')
-        }
+          if (WIKI.data.searchEngine.key === 'elasticsearch') {
+            await WIKI.data.searchEngine.rebuild()
+          }
+        })
         return {
           responseResult: graphHelper.generateSuccess('Tag has been deleted.')
         }
@@ -502,15 +508,21 @@ module.exports = {
      */
     async updateTag (obj, args, context) {
       try {
-        const affectedRows = await WIKI.models.tags.query()
-          .findById(args.id)
-          .patch({
-            tag: _.trim(args.tag).toLowerCase(),
-            title: _.trim(args.title)
-          })
-        if (affectedRows < 1) {
-          throw new Error('This tag does not exist.')
-        }
+        await withSearchIndexWrite(async () => {
+          markSearchIndexDirty()
+          const affectedRows = await WIKI.models.tags.query()
+            .findById(args.id)
+            .patch({
+              tag: _.trim(args.tag).toLowerCase(),
+              title: _.trim(args.title)
+            })
+          if (affectedRows < 1) {
+            throw new Error('This tag does not exist.')
+          }
+          if (WIKI.data.searchEngine.key === 'elasticsearch') {
+            await WIKI.data.searchEngine.rebuild()
+          }
+        })
         return {
           responseResult: graphHelper.generateSuccess('Tag has been updated successfully.')
         }
@@ -564,11 +576,19 @@ module.exports = {
      */
     async render (obj, args, context) {
       try {
-        const page = await WIKI.models.pages.query().findById(args.id)
-        if (!page) {
-          throw new WIKI.Error.PageNotFound()
-        }
-        await WIKI.models.pages.renderPage(page)
+        await withSearchIndexWrite(async () => {
+          const page = await WIKI.models.pages.query().findById(args.id)
+          if (!page) {
+            throw new WIKI.Error.PageNotFound()
+          }
+          markSearchIndexDirty()
+          await WIKI.models.pages.renderPage(page)
+          if (WIKI.data.searchEngine.key === 'elasticsearch') {
+            const updated = await WIKI.models.pages.getPageFromDb(page.id)
+            updated.safeContent = WIKI.models.pages.cleanHTML(updated.render)
+            await WIKI.data.searchEngine.updated(updated)
+          }
+        })
         return {
           responseResult: graphHelper.generateSuccess('Page rendered successfully.')
         }

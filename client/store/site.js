@@ -13,6 +13,7 @@ const state = {
   logoUrl: siteConfig.logoUrl,
   search: '',
   searchScope: 'global',
+  searchFolderPath: null,
   searchIsFocused: false,
   searchIsLoading: false,
   searchRestrictLocale: false,

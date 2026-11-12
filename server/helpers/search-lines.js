@@ -102,6 +102,27 @@ function matchesAllTerms(text, lowerTerms) {
   return lowerTerms.every(term => lowerText.includes(term))
 }
 
+function getPageSearchableLines(page) {
+  if (Array.isArray(page.searchLines)) {
+    return page.searchLines
+  }
+  const sourceText = (typeof page.content === 'string' && page.content.length > 0) ?
+    page.content :
+    htmlToLines(page.render)
+  if (!sourceText) {
+    return []
+  }
+  const env = {}
+  markdown.parse(sourceText, env)
+  return sourceText.split(/\r?\n/).map(rawLine => {
+    const lineText = _.trim(rawLine)
+    return {
+      raw: lineText,
+      searchable: lineText ? searchableLine(lineText, env) : ''
+    }
+  })
+}
+
 /**
  * Extract line-by-line matches from a single page.
  *
@@ -118,25 +139,18 @@ function extractPageLineMatches(page, queryOrTerms) {
   const lowerTerms = terms.map(t => t.toLowerCase())
   const locale = page.locale || page.localeCode || ''
   const tags = Array.isArray(page.tags) ? page.tags : []
-  const sourceText = (typeof page.content === 'string' && page.content.length > 0) ?
-    page.content :
-    htmlToLines(page.render)
-
   const matches = []
-  if (sourceText) {
-    const lines = sourceText.split(/\r?\n/)
-    const env = {}
-    markdown.parse(sourceText, env)
-    lines.forEach((rawLine, idx) => {
-      const lineText = _.trim(rawLine)
-      if (!lineText) {
+  const lines = getPageSearchableLines(page)
+  if (lines.length) {
+    lines.forEach((line, idx) => {
+      if (!line.raw) {
         return
       }
-      if (matchesAllTerms(searchableLine(lineText, env), lowerTerms)) {
+      if (matchesAllTerms(line.searchable, lowerTerms)) {
         matches.push({
           id: `${page.id}:${idx + 1}`,
           title: page.title,
-          description: lineText,
+          description: line.raw,
           path: page.path,
           locale,
           tags
@@ -175,9 +189,9 @@ function extractPageLineMatches(page, queryOrTerms) {
  * @param {Object} opts Optional filters (locale, path)
  * @returns {Promise<{results: Object[], suggestions: String[], totalHits: Number}>}
  */
-async function queryPageLineMatches(q, opts = {}) {
+async function queryPageLineMatches(q, opts = {}, candidateIds) {
   const terms = normalizeSearchTerms(q)
-  if (!terms.length) {
+  if (!terms.length || (Array.isArray(candidateIds) && !candidateIds.length)) {
     return {
       results: [],
       suggestions: [],
@@ -196,6 +210,9 @@ async function queryPageLineMatches(q, opts = {}) {
     })
     .where(builder => {
       builder.where('pages.isPublished', true)
+      if (Array.isArray(candidateIds)) {
+        builder.whereIn('pages.id', candidateIds)
+      }
       if (opts && opts.locale) {
         builder.andWhere('pages.localeCode', opts.locale)
       }
@@ -246,6 +263,8 @@ async function queryPageLineMatches(q, opts = {}) {
 
 module.exports = {
   normalizeSearchTerms,
+  matchesAllTerms,
+  getPageSearchableLines,
   extractPageLineMatches,
   queryPageLineMatches
 }

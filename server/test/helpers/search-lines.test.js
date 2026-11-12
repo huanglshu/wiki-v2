@@ -209,4 +209,31 @@ describe('server/helpers/search-lines', () => {
     expect(page.results.map(result => result.path)).toEqual(['docs/a'])
     expect(conditions.andWhere).toHaveBeenCalledWith('pages.path', 'docs/a')
   })
+
+  it('restricts Elasticsearch candidates by page ID and skips empty candidate sets', async () => {
+    const conditions = {
+      where: jest.fn().mockReturnThis(),
+      whereIn: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis()
+    }
+    const builder = {
+      column: jest.fn().mockReturnThis(),
+      withGraphJoined: jest.fn().mockReturnThis(),
+      modifyGraph: jest.fn().mockReturnThis(),
+      where: jest.fn(callback => {
+        callback(conditions)
+        return Promise.resolve([])
+      })
+    }
+    global.WIKI = {
+      config: { db: { type: 'mysql' } },
+      models: { pages: { query: jest.fn(() => builder) } }
+    }
+
+    await queryPageLineMatches('CAS', { scope: 'global' }, [7, 9])
+    expect(conditions.whereIn).toHaveBeenCalledWith('pages.id', [7, 9])
+    global.WIKI.models.pages.query.mockClear()
+    expect(await queryPageLineMatches('CAS', {}, [])).toEqual({ results: [], suggestions: [], totalHits: 0 })
+    expect(global.WIKI.models.pages.query).not.toHaveBeenCalled()
+  })
 })
