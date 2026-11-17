@@ -83,6 +83,12 @@ describe('core/localization', () => {
     ]))
   })
 
+  it('loads the committed login design copy without an offline language import', async () => {
+    await localization.init()
+    expect(localization.engine.t('auth:design.welcome')).toBe('欢迎登录')
+    expect(localization.engine.t('auth:design.externalAction', { provider: 'CAS' })).toBe('前往 CAS')
+  })
+
   it('loads Chinese rendering translations without an offline language import', async () => {
     await localization.init()
     await expect(localization.getByNamespace('zh', 'admin')).resolves.toEqual(expect.arrayContaining([

@@ -99,7 +99,7 @@ module.exports = {
           key.startsWith('common:code.') ||
           key.startsWith('admin:modules.authentication.cas.') ||
           /^admin:modules\.authentication\.[^.]+\.(title|description)$/.test(key) ||
-          key.startsWith('admin:modules.rendering.') ||
+          key.startsWith('admin:modules.rendering.') || key.startsWith('auth:design.') ||
           ['auth:errors.invalidLoginMsg', 'auth:errors.mailNotConfigured', 'auth:errors.securityCodeRequired'].includes(key)) {
           _.set(overrides, key.replace(':', '.'), value)
         }

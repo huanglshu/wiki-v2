@@ -11,12 +11,14 @@ const zh = require('../../../data/sideload/zh.json')
 const en = require('../../../data/sideload/en.json')
 
 const replace = jest.fn()
+const assign = jest.fn()
 const setJwt = jest.fn()
 const clearClientCache = jest.fn().mockResolvedValue()
 const mockWindow = {
   location: {
     protocol: 'https:',
-    replace
+    replace,
+    assign
   }
 }
 
@@ -42,6 +44,39 @@ const localRequire = name => {
 }
 runInThisContext(`(function (require, module, exports, window) {\n${code}\n})`)(localRequire, componentModule, componentModule.exports, mockWindow)
 const component = Object.assign(componentModule.exports.default, compiler.compileToFunctions(pug.render(sfc.template.content)))
+
+describe('login provider selection', () => {
+  const local = { key: 'local', strategy: { key: 'local', useForm: true } }
+  const cas = { key: 'cas', strategy: { key: 'cas', useForm: false } }
+
+  beforeEach(() => jest.clearAllMocks())
+
+  it('compiles the login template without errors', () => {
+    expect(compiler.compile(pug.render(sfc.template.content)).errors).toEqual([])
+  })
+
+  it('selects the first available provider and handles an empty list', () => {
+    const ctx = { selectedStrategyKey: 'unselected' }
+    component.watch.filteredStrategies.call(ctx, [cas, local])
+    expect(ctx.selectedStrategyKey).toBe('cas')
+    component.watch.filteredStrategies.call(ctx, [])
+    expect(ctx.selectedStrategyKey).toBe('unselected')
+  })
+
+  it('keeps the selected provider up to date after a refresh', () => {
+    const ctx = { selectedStrategyKey: 'local' }
+    component.watch.filteredStrategies.call(ctx, [local, cas])
+    expect(ctx.selectedStrategy).toBe(local)
+  })
+
+  it('opens an external provider only after the continue action', () => {
+    const ctx = { strategies: [local, cas], screen: 'login', selectedStrategyKey: 'cas' }
+    component.watch.selectedStrategyKey.call(ctx, 'cas')
+    expect(assign).not.toHaveBeenCalled()
+    component.methods.loginWithProvider.call(ctx)
+    expect(assign).toHaveBeenCalledWith('/login/cas')
+  })
+})
 
 describe('login cache refresh', () => {
   beforeEach(() => {

@@ -1,183 +1,197 @@
 <template lang="pug">
   v-app
-    .login(:style='`background-image: url(` + bgUrl + `);`')
-      .login-sd
-        .d-flex.mb-5
-          .login-logo
-            v-avatar(tile, size='34')
-              v-img(:src='logoUrl')
-          .login-title
-            .text-h6.grey--text.text--darken-4 {{ siteTitle }}
-        v-alert.mb-0(
-          v-model='errorShown'
-          transition='slide-y-reverse-transition'
-          color='red darken-2'
-          tile
-          dark
-          dense
-          icon='mdi-alert'
-          )
-          .body-2 {{errorMessage}}
-        //-------------------------------------------------
-        //- PROVIDERS LIST
-        //-------------------------------------------------
-        template(v-if='screen === `login` && strategies.length > 1')
-          .login-subtitle
-            .text-subtitle-1 {{$t('auth:selectAuthProvider')}}
-          .login-list
-            v-list.elevation-1.radius-7(nav, light)
-              v-list-item-group(v-model='selectedStrategyKey')
-                v-list-item(
-                  v-for='(stg, idx) of filteredStrategies'
-                  :key='stg.key'
-                  :value='stg.key'
-                  :color='stg.strategy.color'
-                  )
-                  v-avatar.mr-3(tile, size='24', v-html='stg.strategy.icon')
-                  span.text-none {{stg.displayName}}
-        //-------------------------------------------------
-        //- LOGIN FORM
-        //-------------------------------------------------
-        template(v-if='screen === `login` && selectedStrategy.strategy.useForm')
-          .login-subtitle
-            .text-subtitle-1 {{$t('auth:enterCredentials')}}
-          .login-form
-            v-text-field(
-              solo
-              flat
-              prepend-inner-icon='mdi-clipboard-account'
-              background-color='white'
-              color='blue darken-2'
-              hide-details
-              ref='iptEmail'
-              v-model='username'
-              :placeholder='isUsernameEmail ? $t(`auth:fields.email`) : $t(`auth:fields.username`)'
-              :type='isUsernameEmail ? `email` : `text`'
-              :autocomplete='isUsernameEmail ? `email` : `username`'
-              light
-              )
-            v-text-field.mt-2(
-              solo
-              flat
-              prepend-inner-icon='mdi-form-textbox-password'
-              background-color='white'
-              color='blue darken-2'
-              hide-details
-              ref='iptPassword'
-              v-model='password'
-              :append-icon='hidePassword ? "mdi-eye-off" : "mdi-eye"'
-              @click:append='() => (hidePassword = !hidePassword)'
-              :type='hidePassword ? "password" : "text"'
-              :placeholder='$t("auth:fields.password")'
-              autocomplete='current-password'
-              @keyup.enter='login'
-              light
+    .login(:style='bgUrl ? { backgroundImage: `url("${bgUrl}")` } : {}')
+      .login-shell
+        .login-brand
+          .login-brand-grid
+          .login-brand-top
+            .login-brand-logo: v-icon(color='white', size='26') mdi-file-document-outline
+            div
+              .login-brand-name {{ siteTitle }}
+              .login-brand-sub AOFEI DOCS
+          .login-brand-center
+            h1 {{ $t('auth:design.brandTitleFirst', { defaultValue: 'Give every document' }) }}
+              br
+              | {{ $t('auth:design.brandTitleSecond', { defaultValue: 'the care it deserves' }) }}
+            p {{ $t('auth:design.brandDescriptionFirst', { defaultValue: 'Centralized storage, access control, and efficient collaboration.' }) }}
+              br
+              | {{ $t('auth:design.brandDescriptionSecond', { defaultValue: 'A secure, reliable document workspace for your team.' }) }}
+            .login-features
+              .login-feature
+                span: v-icon(color='white', size='17') mdi-shield-outline
+                | {{ $t('auth:design.featureSecurity', { defaultValue: 'Enterprise data security and access control' }) }}
+              .login-feature
+                span: v-icon(color='white', size='17') mdi-account-group-outline
+                | {{ $t('auth:design.featureCollaboration', { defaultValue: 'Team collaboration and version tracking' }) }}
+              .login-feature
+                span: v-icon(color='white', size='17') mdi-magnify
+                | {{ $t('auth:design.featureSearch', { defaultValue: 'Find documents quickly with global search' }) }}
+          .login-brand-bottom {{ $t('auth:design.brandFooter', { year: copyrightYear, defaultValue: 'Internal system' }) }}
+        .login-sd
+          .login-heading
+            h2 {{ $t('auth:design.welcome', { defaultValue: 'Welcome' }) }}
+            p {{ $t('auth:design.subtitle', { defaultValue: 'Choose an authentication method and enter your credentials.' }) }}
+          v-alert.mb-0(
+            v-model='errorShown'
+            transition='slide-y-reverse-transition'
+            color='red darken-2'
+            tile
+            dark
+            dense
+            icon='mdi-alert'
             )
-            v-btn.mt-2.text-none(
-              width='100%'
-              large
-              color='blue darken-2'
-              dark
-              @click='login'
-              :loading='isLoading'
-              ) {{ $t('auth:actions.login') }}
-            .text-center.mt-5
-              v-btn.text-none(
-                text
-                rounded
-                color='grey darken-3'
-                @click.stop.prevent='forgotPassword'
-                href='#forgot'
-                ): .caption {{ $t('auth:forgotPasswordLink') }}
-              v-btn.text-none(
-                v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration'
-                color='indigo darken-2'
-                text
-                rounded
-                href='/register'
-                ): .caption {{ $t('auth:switchToRegister.link') }}
-        //-------------------------------------------------
-        //- FORGOT PASSWORD FORM
-        //-------------------------------------------------
-        template(v-if='screen === `forgot`')
-          .login-subtitle
-            .text-subtitle-1 {{$t('auth:forgotPasswordTitle')}}
-          .login-info {{ $t('auth:forgotPasswordSubtitle') }}
-          .login-form
-            v-text-field(
-              solo
-              flat
-              prepend-inner-icon='mdi-clipboard-account'
-              background-color='white'
-              color='blue darken-2'
-              hide-details
-              ref='iptForgotPwdEmail'
-              v-model='username'
-              :placeholder='$t(`auth:fields.email`)'
-              type='email'
-              autocomplete='email'
-              light
+            .body-2 {{errorMessage}}
+          //-------------------------------------------------
+          //- PROVIDERS LIST
+          //-------------------------------------------------
+          .login-tabs(v-if='screen === `login` && filteredStrategies.length > 1', role='group', :aria-label='$t("auth:selectAuthProvider")')
+            button.login-tab(
+              v-for='stg in filteredStrategies'
+              :key='stg.key'
+              type='button'
+              :class='{ active: selectedStrategyKey === stg.key }'
+              :aria-pressed='selectedStrategyKey === stg.key'
+              @click='selectedStrategyKey = stg.key'
               )
-            v-btn.mt-2.text-none(
-              width='100%'
-              large
-              color='blue darken-2'
-              dark
-              @click='forgotPasswordSubmit'
-              :loading='isLoading'
-              ) {{ $t('auth:sendResetPassword') }}
-            .text-center.mt-5
-              v-btn.text-none(
-                text
-                rounded
-                color='grey darken-3'
-                @click.stop.prevent='screen = `login`'
-                href='#forgot'
-                ): .caption {{ $t('auth:forgotPasswordCancel') }}
-        //-------------------------------------------------
-        //- CHANGE PASSWORD FORM
-        //-------------------------------------------------
-        template(v-if='screen === `changePwd`')
-          .login-subtitle
-            .text-subtitle-1 {{ $t('auth:changePwd.subtitle') }}
-          .login-form
-            v-text-field.mt-2(
-              type='password'
-              solo
-              flat
-              prepend-inner-icon='mdi-form-textbox-password'
-              background-color='white'
-              color='blue darken-2'
-              hide-details
-              ref='iptNewPassword'
-              v-model='newPassword'
-              :placeholder='$t(`auth:changePwd.newPasswordPlaceholder`)'
-              autocomplete='new-password'
-              light
+              v-icon(size='18') {{ stg.strategy.useForm ? 'mdi-monitor' : 'mdi-link-variant' }}
+              span {{ stg.strategy.key === 'local' ? $t('auth:design.localLogin', { defaultValue: 'Local login' }) : stg.displayName }}
+          //-------------------------------------------------
+          //- LOGIN FORM
+          //-------------------------------------------------
+          template(v-if='screen === `login` && selectedStrategy.strategy.useForm')
+            .login-form
+              label.login-field-label(for='login-username') {{ isUsernameEmail ? $t('auth:fields.email') : $t('auth:design.username', { defaultValue: 'Username' }) }}
+              v-text-field(
+                id='login-username'
+                outlined
+                prepend-inner-icon='mdi-account-outline'
+                background-color='white'
+                color='blue darken-2'
+                hide-details
+                ref='iptEmail'
+                v-model='username'
+                :placeholder='isUsernameEmail ? $t(`auth:design.emailPlaceholder`, { defaultValue: `Enter your email address` }) : $t(`auth:design.usernamePlaceholder`, { defaultValue: `Enter your username` })'
+                :type='isUsernameEmail ? `email` : `text`'
+                :autocomplete='isUsernameEmail ? `email` : `username`'
+                @keyup.enter='login'
+                light
+                )
+              label.login-field-label(for='login-password') {{ $t('auth:fields.password') }}
+              v-text-field(
+                id='login-password'
+                outlined
+                prepend-inner-icon='mdi-lock-outline'
+                background-color='white'
+                color='blue darken-2'
+                hide-details
+                ref='iptPassword'
+                v-model='password'
+                :append-icon='hidePassword ? "mdi-eye-off" : "mdi-eye"'
+                @click:append='() => (hidePassword = !hidePassword)'
+                :type='hidePassword ? "password" : "text"'
+                :placeholder='$t("auth:design.passwordPlaceholder", { defaultValue: "Enter your password" })'
+                autocomplete='current-password'
+                @keyup.enter='login'
+                light
               )
-              password-strength(slot='progress', v-model='newPassword')
-            v-text-field.mt-2(
-              type='password'
-              solo
-              flat
-              prepend-inner-icon='mdi-form-textbox-password'
-              background-color='white'
-              color='blue darken-2'
-              hide-details
-              v-model='newPasswordVerify'
-              :placeholder='$t(`auth:changePwd.newPasswordVerifyPlaceholder`)'
-              autocomplete='new-password'
-              @keyup.enter='changePassword'
-              light
-            )
-            v-btn.mt-2.text-none(
-              width='100%'
-              large
-              color='blue darken-2'
-              dark
-              @click='changePassword'
-              :loading='isLoading'
-              ) {{ $t('auth:changePwd.proceed') }}
+              .login-options
+                a(href='#forgot', @click.stop.prevent='forgotPassword') {{ $t('auth:forgotPasswordLink') }}
+                a(v-if='selectedStrategyKey === `local` && selectedStrategy.selfRegistration', href='/register') {{ $t('auth:switchToRegister.link') }}
+              v-btn.login-submit.text-none(
+                width='100%'
+                large
+                color='blue darken-2'
+                dark
+                @click='login'
+                :loading='isLoading'
+                ) {{ $t('auth:actions.login') }}
+          .login-external(v-if='screen === `login` && selectedStrategy.key !== `unselected` && !selectedStrategy.strategy.useForm')
+            .login-external-icon: v-icon(color='blue darken-2', size='32') mdi-shield-check-outline
+            h3 {{ $t('auth:design.externalTitle', { defaultValue: 'Sign in with your identity provider' }) }}
+            p {{ $t('auth:design.externalDescription', { provider: selectedStrategy.displayName, defaultValue: 'Continue to your identity provider to sign in with your account.' }) }}
+            v-btn.login-submit.text-none(width='100%', large, color='blue darken-2', dark, :loading='isLoading', @click='loginWithProvider') {{ $t('auth:design.externalAction', { provider: selectedStrategy.displayName, defaultValue: 'Continue to sign in' }) }}
+          //-------------------------------------------------
+          //- FORGOT PASSWORD FORM
+          //-------------------------------------------------
+          template(v-if='screen === `forgot`')
+            .login-subtitle
+              .text-subtitle-1 {{$t('auth:forgotPasswordTitle')}}
+            .login-info {{ $t('auth:forgotPasswordSubtitle') }}
+            .login-form
+              v-text-field(
+                outlined
+                prepend-inner-icon='mdi-clipboard-account'
+                background-color='white'
+                color='blue darken-2'
+                hide-details
+                ref='iptForgotPwdEmail'
+                v-model='username'
+                :placeholder='$t(`auth:fields.email`)'
+                type='email'
+                autocomplete='email'
+                @keyup.enter='forgotPasswordSubmit'
+                light
+                )
+              v-btn.mt-2.text-none(
+                width='100%'
+                large
+                color='blue darken-2'
+                dark
+                @click='forgotPasswordSubmit'
+                :loading='isLoading'
+                ) {{ $t('auth:sendResetPassword') }}
+              .text-center.mt-5
+                v-btn.text-none(
+                  text
+                  rounded
+                  color='grey darken-3'
+                  @click.stop.prevent='screen = `login`'
+                  href='#forgot'
+                  ): .caption {{ $t('auth:forgotPasswordCancel') }}
+          //-------------------------------------------------
+          //- CHANGE PASSWORD FORM
+          //-------------------------------------------------
+          template(v-if='screen === `changePwd`')
+            .login-subtitle
+              .text-subtitle-1 {{ $t('auth:changePwd.subtitle') }}
+            .login-form
+              v-text-field.mt-2(
+                type='password'
+                outlined
+                prepend-inner-icon='mdi-form-textbox-password'
+                background-color='white'
+                color='blue darken-2'
+                hide-details
+                ref='iptNewPassword'
+                v-model='newPassword'
+                :placeholder='$t(`auth:changePwd.newPasswordPlaceholder`)'
+                autocomplete='new-password'
+                light
+                )
+                password-strength(slot='progress', v-model='newPassword')
+              v-text-field.mt-2(
+                type='password'
+                outlined
+                prepend-inner-icon='mdi-form-textbox-password'
+                background-color='white'
+                color='blue darken-2'
+                hide-details
+                v-model='newPasswordVerify'
+                :placeholder='$t(`auth:changePwd.newPasswordVerifyPlaceholder`)'
+                autocomplete='new-password'
+                @keyup.enter='changePassword'
+                light
+              )
+              v-btn.mt-2.text-none(
+                width='100%'
+                large
+                color='blue darken-2'
+                dark
+                @click='changePassword'
+                :loading='isLoading'
+                ) {{ $t('auth:changePwd.proceed') }}
+
+          .login-footer {{ $t('auth:design.footer', { defaultValue: 'Need help? Contact your administrator · Chrome or Edge recommended' }) }}
 
     //-------------------------------------------------
     //- TFA FORM
@@ -304,10 +318,9 @@ export default {
     siteTitle () {
       return siteConfig.title
     },
-    isSocialShown () {
-      return this.strategies.length > 1
+    copyrightYear () {
+      return new Date().getFullYear()
     },
-    logoUrl () { return siteConfig.logoUrl },
     filteredStrategies () {
       const qParams = new URLSearchParams(window.location.search)
       if (this.hideLocal && !qParams.has('all')) {
@@ -322,22 +335,22 @@ export default {
   },
   watch: {
     filteredStrategies (newValue, oldValue) {
-      if (_.head(newValue).strategy.useForm) {
-        this.selectedStrategyKey = _.head(newValue).key
+      const selected = _.find(newValue, ['key', this.selectedStrategyKey])
+      if (selected) {
+        this.selectedStrategy = selected
+      } else {
+        this.selectedStrategyKey = _.get(_.head(newValue), 'key', 'unselected')
       }
     },
     selectedStrategyKey (newValue, oldValue) {
-      this.selectedStrategy = _.find(this.strategies, ['key', newValue])
+      this.selectedStrategy = _.find(this.strategies, ['key', newValue]) || { key: 'unselected', strategy: { useForm: false, usernameType: 'email' } }
       if (this.screen === 'changePwd') {
         return
       }
       this.screen = 'login'
-      if (!this.selectedStrategy.strategy.useForm) {
-        this.isLoading = true
-        window.location.assign('/login/' + newValue)
-      } else {
+      if (this.selectedStrategy.strategy.useForm) {
         this.$nextTick(() => {
-          this.$refs.iptEmail.focus()
+          if (this.$refs.iptEmail) this.$refs.iptEmail.focus()
         })
       }
     }
@@ -350,6 +363,10 @@ export default {
     }
   },
   methods: {
+    loginWithProvider () {
+      this.isLoading = true
+      window.location.assign('/login/' + this.selectedStrategyKey)
+    },
     /**
      * LOGIN
      */
@@ -702,102 +719,155 @@ export default {
 
 <style lang="scss">
   .login {
-    // background-image: url('/_assets/img/splash/1.jpg');
-    background-color: mc('grey', '900');
+    min-height: 100vh;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #eef2f7;
     background-size: cover;
-    background-position: center center;
-    width: 100%;
-    height: 100%;
+    background-position: center;
+    color: #1f2937;
 
-    &-sd {
-      background-color: rgba(255,255,255,.8);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-left: 1px solid rgba(255,255,255,.85);
-      border-right: 1px solid rgba(255,255,255,.85);
-      width: 450px;
-      height: 100%;
-      margin-left: 5vw;
+    &-shell {
+      width: 100%;
+      max-width: 1080px;
+      min-height: 640px;
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      overflow: hidden;
+      border-radius: 24px;
+      background: #fff;
+      box-shadow: 0 20px 60px rgba(15, 23, 42, .12), 0 2px 8px rgba(15, 23, 42, .05);
+    }
 
-      @at-root .no-backdropfilter & {
-        background-color: rgba(255,255,255,.95);
+    &-brand {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      padding: 56px 52px;
+      color: #fff;
+      background: linear-gradient(145deg, #1e3a8a 0%, #2563eb 55%, #3b82f6 100%);
+
+      &::before, &::after {
+        position: absolute;
+        content: '';
+        border-radius: 50%;
+        pointer-events: none;
       }
-
-      @include until($tablet) {
-        margin-left: 0;
-        width: 100%;
+      &::before {
+        width: 520px;
+        height: 520px;
+        right: -220px;
+        top: -180px;
+        background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, .22), transparent 70%);
+      }
+      &::after {
+        width: 420px;
+        height: 420px;
+        left: -160px;
+        bottom: -200px;
+        background: radial-gradient(circle, rgba(255, 255, 255, .14), transparent 70%);
       }
     }
 
-    &-logo {
-      padding: 12px 0 0 12px;
-      width: 58px;
-      height: 58px;
-      background-color: #222;
-      margin-left: 12px;
-      border-bottom-left-radius: 7px;
-      border-bottom-right-radius: 7px;
+    &-brand-grid {
+      position: absolute;
+      inset: 0;
+      opacity: .12;
+      background-image: linear-gradient(rgba(255, 255, 255, .6) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, .6) 1px, transparent 1px);
+      background-size: 44px 44px;
+      mask-image: linear-gradient(135deg, #000, transparent 75%);
+      -webkit-mask-image: linear-gradient(135deg, #000, transparent 75%);
+      pointer-events: none;
     }
-
-    &-title {
-      height: 58px;
-      padding-left: 12px;
+    &-brand-top, &-brand-center, &-brand-bottom { position: relative; z-index: 1; }
+    &-brand-top { display: flex; align-items: center; gap: 14px; }
+    &-brand-logo {
+      width: 48px;
+      height: 48px;
+      flex: none;
       display: flex;
       align-items: center;
-      text-shadow: .5px .5px #FFF;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, .35);
+      border-radius: 13px;
+      background: rgba(255, 255, 255, .16);
     }
+    &-brand-name { font-size: 17px; font-weight: 600; letter-spacing: .5px; }
+    &-brand-sub { margin-top: 2px; font-size: 11px; opacity: .75; letter-spacing: 2px; }
+    &-brand-center { max-width: 400px; }
+    &-brand-center h1 { font-size: 38px; line-height: 1.3; font-weight: 700; letter-spacing: 1px; }
+    &-brand-center p { margin-top: 18px; font-size: 15px; line-height: 1.9; opacity: .82; }
+    &-features { display: flex; flex-direction: column; gap: 16px; margin-top: 34px; }
+    &-feature { display: flex; align-items: center; gap: 12px; font-size: 14px; }
+    &-feature > span {
+      width: 30px;
+      height: 30px;
+      flex: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, .14);
+    }
+    &-brand-bottom { font-size: 12px; opacity: .6; letter-spacing: .5px; }
 
-    &-subtitle {
-      padding: 24px 12px 12px 12px;
-      color: #111;
-      font-weight: 500;
-      text-shadow: 1px 1px rgba(255,255,255,.5);
-      background-image: linear-gradient(to bottom, rgba(0,0,0,0), rgba(0,0,0,.15));
-      text-align: center;
-      border-bottom: 1px solid rgba(0,0,0,.3);
+    &-sd { min-width: 0; padding: 56px 60px; display: flex; flex-direction: column; justify-content: center; background: #fff; }
+    &-heading { margin-bottom: 30px; }
+    &-heading h2 { font-size: 27px; font-weight: 700; letter-spacing: .5px; }
+    &-heading p { margin-top: 8px; margin-bottom: 0; color: #6b7280; font-size: 14px; }
+    &-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 5px; margin-bottom: 26px; border: 1px solid #e5e7eb; border-radius: 12px; background: #f8fafc; }
+    &-tab {
+      min-width: 120px;
+      flex: 1 1 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 8px;
+      border-radius: 9px;
+      color: #6b7280;
+      font-size: 14px;
+      line-height: 1.4;
+      cursor: pointer;
+      &.active { color: #2563eb; background: #fff; font-weight: 600; box-shadow: 0 2px 8px rgba(37, 99, 235, .13); }
+      &:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
     }
-
-    &-info {
-      border-top: 1px solid rgba(255,255,255,.85);
-      background-color: rgba(255,255,255,.15);
-      border-bottom: 1px solid rgba(0,0,0,.15);
-      padding: 12px;
-      font-size: 13px;
-      text-align: center;
-      color: mc('grey', '900');
-    }
-
-    &-list {
-      border-top: 1px solid rgba(255,255,255,.85);
-      padding: 12px;
-    }
-
-    &-form {
-      padding: 12px;
-      border-top: 1px solid rgba(255,255,255,.85);
-    }
-
-    &-main {
-      flex: 1 0 100vw;
-      height: 100vh;
-    }
+    &-tab .v-icon { color: inherit; }
+    &-field-label { display: block; margin: 18px 0 8px; color: #374151; font-size: 13px; font-weight: 600; }
+    &-form .v-text-field--outlined > .v-input__control > .v-input__slot { min-height: 48px; border-radius: 11px; }
+    &-form .v-text-field--outlined fieldset { border-color: #e5e7eb; }
+    &-form .v-text-field--outlined.v-input--is-focused fieldset { border-color: #2563eb; }
+    &-options { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; margin: 20px 0 24px; font-size: 13px; }
+    &-options a { color: #2563eb; text-decoration: none; }
+    &-options a:hover { text-decoration: underline; }
+    &-submit.v-btn { height: 50px; border-radius: 11px; background: linear-gradient(135deg, #2563eb, #1d4ed8) !important; box-shadow: 0 8px 20px rgba(37, 99, 235, .28); }
+    &-external { padding: 18px 4px 4px; text-align: center; }
+    &-external-icon { width: 64px; height: 64px; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; border-radius: 18px; background: linear-gradient(135deg, #dbeafe, #eff6ff); }
+    &-external h3 { margin-bottom: 8px; font-size: 17px; }
+    &-external p { margin-bottom: 22px; color: #6b7280; font-size: 13px; line-height: 1.8; }
+    &-subtitle { margin-bottom: 12px; font-weight: 600; }
+    &-info { margin-bottom: 12px; color: #6b7280; font-size: 13px; }
+    &-footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #e5e7eb; color: #9ca3af; font-size: 12px; text-align: center; }
 
     &-tfa {
-      background-color: #EEE;
-      border: 7px solid #FFF;
+      background-color: #eee;
+      border: 7px solid #fff;
+      &-field input { text-align: center; }
+      &-qr { background-color: #fff; padding: 5px; border-radius: 5px; width: 200px; height: 200px; margin: 0 auto; }
+    }
 
-      &-field input {
-        text-align: center;
-      }
-
-      &-qr {
-        background-color: #FFF;
-        padding: 5px;
-        border-radius: 5px;
-        width: 200px;
-        height: 200px;
-        margin: 0 auto;
-      }
+    @media (max-width: 880px) {
+      &-shell { max-width: 540px; min-height: 0; grid-template-columns: 1fr; }
+      &-brand { display: none; }
+      &-sd { padding: 44px 28px; }
+    }
+    @media (max-width: 480px) {
+      padding: 16px;
+      &-sd { padding: 36px 22px; }
     }
   }
 </style>
