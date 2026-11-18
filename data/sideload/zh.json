@@ -59,7 +59,7 @@
   "auth:design.featureSecurity": "企业级数据安全与权限隔离",
   "auth:design.featureCollaboration": "多人实时协作与版本追踪",
   "auth:design.featureSearch": "全局检索，快速定位文档",
-  "auth:design.brandFooter": "© {{year}} 奥飞科技 · 内部系统，请勿外传",
+  "auth:design.brandFooter": "© {{year}} 奥飞娱乐 · 内部系统，请勿外传",
   "auth:design.welcome": "欢迎登录",
   "auth:design.subtitle": "请选择身份验证方式并输入您的凭证",
   "auth:design.localLogin": "本地登录",

@@ -8,7 +8,7 @@
             .login-brand-logo: v-icon(color='white', size='26') mdi-file-document-outline
             div
               .login-brand-name {{ siteTitle }}
-              .login-brand-sub AOFEI DOCS
+              .login-brand-sub AOFEI WIKI
           .login-brand-center
             h1 {{ $t('auth:design.brandTitleFirst', { defaultValue: 'Give every document' }) }}
               br
@@ -271,6 +271,7 @@ import Cookies from 'js-cookie'
 import gql from 'graphql-tag'
 import { sync } from 'vuex-pathify'
 import clearClientCache from '../helpers/client-cache'
+import zhTranslations from '../../data/sideload/zh.json'
 
 export default {
   i18nOptions: { namespaces: 'auth' },
@@ -311,6 +312,11 @@ export default {
       tfaQRImage: '',
       errorShown: false,
       errorMessage: ''
+    }
+  },
+  created () {
+    if (this.$i18n && this.$i18n.i18next) {
+      this.$i18n.i18next.addResource('zh', 'auth', 'design.brandFooter', zhTranslations['auth:design.brandFooter'])
     }
   },
   computed: {
